@@ -1,0 +1,15 @@
+--- org/apache/poi/ss/formula/functions/WeekdayFunc.java
++++ org/apache/poi/ss/formula/functions/WeekdayFunc.java
+@@ -69,10 +69,10 @@
+             // extract first parameter
+             ValueEval serialDateVE = OperandResolver.getSingleValue(args[0], srcRowIndex, srcColumnIndex);
+             double serialDate = OperandResolver.coerceValueToDouble(serialDateVE);
+-            if (!DateUtil.isValidExcelDate(serialDate) || serialDate >= DateUtil.MAX_EXCEL_DATE_SERIAL + 1) {
++            if (!DateUtil.isValidExcelDate(serialDate) || serialDate >= org.apache.poi.ss.usermodel.DateSystemContext.maximumSerial() + 1) {
+                 return ErrorEval.NUM_ERROR;                     // EXCEL uses this and no VALUE_ERROR
+             }
+-            Calendar date = DateUtil.getJavaCalendar(serialDate, false);        // (XXX 1904-windowing not respected)
++            Calendar date = DateUtil.getJavaCalendar(serialDate, org.apache.poi.ss.usermodel.DateSystemContext.is1904());        // (XXX 1904-windowing not respected)
+             int weekday = date.get(Calendar.DAY_OF_WEEK);       // => sunday = 1, monday = 2, ..., saturday = 7
+ 
+             // extract second parameter

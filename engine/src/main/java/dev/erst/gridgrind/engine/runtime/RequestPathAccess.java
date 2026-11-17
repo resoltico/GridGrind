@@ -24,14 +24,17 @@ import java.util.Optional;
  * artifact is committed. The original request path is never reopened after preflight.
  */
 final class RequestPathAccess implements AutoCloseable {
+  private final PublicationFacts publicationFacts;
+  private final InputSnapshots snapshots;
   private final Path executionRoot;
+  private final RequestPathIdentity pathIdentity;
   private final TempFileFactory tempFileFactory;
   private final ExecutionGrant executionGrant;
 
   // One request owns this capability on one execution thread; insertion order is
   // response-deterministic.
   @SuppressWarnings("PMD.UseConcurrentHashMap")
-  private final Map<String, MaterializedRead> materializedReads = new LinkedHashMap<>();
+  private final Map<Path, MaterializedRead> materializedReads = new LinkedHashMap<>();
 
   private final List<Path> ownedMaterializations = new ArrayList<>();
 
@@ -45,10 +48,30 @@ final class RequestPathAccess implements AutoCloseable {
 
   RequestPathAccess(
       Path executionRoot, TempFileFactory tempFileFactory, ExecutionGrant executionGrant) {
+    this(executionRoot, tempFileFactory, executionGrant, new InputSnapshots(executionGrant));
+  }
+
+  RequestPathAccess(
+      Path executionRoot,
+      TempFileFactory tempFileFactory,
+      ExecutionGrant executionGrant,
+      InputSnapshots snapshots) {
+    this(executionRoot, tempFileFactory, executionGrant, snapshots, new PublicationFacts());
+  }
+
+  RequestPathAccess(
+      Path executionRoot,
+      TempFileFactory tempFileFactory,
+      ExecutionGrant executionGrant,
+      InputSnapshots snapshots,
+      PublicationFacts publicationFacts) {
+    this.publicationFacts = Objects.requireNonNull(publicationFacts);
+    this.snapshots = Objects.requireNonNull(snapshots);
     this.executionRoot =
         Objects.requireNonNull(executionRoot, "executionRoot must not be null")
             .toAbsolutePath()
             .normalize();
+    this.pathIdentity = new RequestPathIdentity(this.executionRoot);
     this.tempFileFactory =
         Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
     this.executionGrant = Objects.requireNonNull(executionGrant, "executionGrant must not be null");
@@ -57,16 +80,42 @@ final class RequestPathAccess implements AutoCloseable {
   /** Returns a private materialization of one verified request-owned input file. */
   Path materializeRead(String rawPath, String pathRole, String prefix, String suffix)
       throws IOException {
+    return materialize(rawPath, pathRole, prefix, suffix, Optional.empty());
+  }
+
+  /** Adds an explicit consumer bound while keeping one host-charged immutable snapshot. */
+  Path materializeReadWithin(
+      String rawPath, String pathRole, String prefix, String suffix, InputSnapshotLimit limit)
+      throws IOException {
+    return materialize(
+        rawPath, pathRole, prefix, suffix, Optional.of(Objects.requireNonNull(limit)));
+  }
+
+  private Path materialize(
+      String rawPath,
+      String pathRole,
+      String prefix,
+      String suffix,
+      Optional<InputSnapshotLimit> limit)
+      throws IOException {
     Objects.requireNonNull(rawPath, "rawPath must not be null");
     Objects.requireNonNull(pathRole, "pathRole must not be null");
     Objects.requireNonNull(prefix, "prefix must not be null");
     Objects.requireNonNull(suffix, "suffix must not be null");
-    MaterializedRead existing = materializedReads.get(rawPath);
+    Path identity = pathIdentity.resolve(rawPath);
+    requireReadAuthority(identity, pathRole);
+    recordAbsolutePathWarning(rawPath, pathRole, identity);
+    MaterializedRead existing = materializedReads.get(identity);
     if (existing != null) {
+      limit.ifPresent(bound -> bound.require(existing.byteSize()));
       return existing.materializedPath();
     }
+    snapshots.requireAcquisitionAvailable();
 
-    try (RequestPathBinding binding = RequestPathBinding.bindExistingRead(rawPath, executionRoot)) {
+    try (RequestPathBinding binding =
+        RequestPathBinding.bindExistingRead(identity.toString(), executionRoot)) {
+      binding.requireRootIdentity(pathIdentity.rootIdentity());
+      pathIdentity.verifyRoot();
       if (Files.isDirectory(binding.resolvedPath(), java.nio.file.LinkOption.NOFOLLOW_LINKS)
           && "source".equals(pathRole)) {
         throw new SourcePathIsDirectoryException(rawPath);
@@ -78,10 +127,14 @@ final class RequestPathAccess implements AutoCloseable {
       try {
         try (InputStream input = binding.openInputStream();
             OutputStream output = Files.newOutputStream(materialized)) {
-          input.transferTo(output);
+          if (limit.isPresent()) {
+            snapshots.copyWithin(input, output, limit.orElseThrow());
+          } else {
+            snapshots.copy(input, output);
+          }
         }
         materializedReads.put(
-            rawPath,
+            identity,
             new MaterializedRead(
                 pathRole,
                 binding.resolvedPath(),
@@ -102,8 +155,8 @@ final class RequestPathAccess implements AutoCloseable {
   /**
    * Binds the sole persistence target during phase-four preflight without creating or writing it.
    */
-  @SuppressWarnings(
-      "PMD.CloseResource") // Ownership transfers to outputBinding until this capability closes.
+  @SuppressWarnings("PMD.CloseResource")
+  // The verified binding transfers to outputBinding and closes with this invocation capability.
   void prepareOutput(String rawPath, String pathRole, WorkbookArtifactWriteDisposition disposition)
       throws IOException {
     Objects.requireNonNull(rawPath, "rawPath must not be null");
@@ -115,7 +168,20 @@ final class RequestPathAccess implements AutoCloseable {
       }
       return;
     }
-    RequestPathBinding binding = RequestPathBinding.bindWriteTarget(rawPath, executionRoot);
+    Path resolved = pathIdentity.resolve(rawPath);
+    RequestPathBinding binding =
+        RequestPathBinding.bindWriteTarget(resolved.toString(), executionRoot);
+    try {
+      binding.requireRootIdentity(pathIdentity.rootIdentity());
+      pathIdentity.verifyRoot();
+    } catch (IOException | RuntimeException failure) {
+      try {
+        binding.close();
+      } catch (IOException cleanup) {
+        failure.addSuppressed(cleanup);
+      }
+      throw failure;
+    }
     recordAbsolutePathWarning(rawPath, pathRole, binding.resolvedPath());
     if (binding.hasExistingLeaf()
         && Files.isDirectory(binding.resolvedPath(), java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
@@ -141,12 +207,11 @@ final class RequestPathAccess implements AutoCloseable {
     Objects.requireNonNull(
         stagedArtifactVerification, "stagedArtifactVerification must not be null");
     PublicationAttempt attempt =
-        new RequestPathPublication()
+        new RequestPathPublication(publicationFacts)
             .publish(
-                outputBinding.orElseThrow(
-                    () ->
-                        new IllegalStateException(
-                            "a persistence write requires a phase-four-bound output target")),
+                outputBinding.orElseThrow(() ->
+                    new IllegalStateException(
+                        "a persistence write requires a phase-four-bound output target")),
                 stagedFile,
                 disposition,
                 stagedArtifactVerification);
@@ -171,6 +236,10 @@ final class RequestPathAccess implements AutoCloseable {
         .resolvedPath();
   }
 
+  RequestPathIdentity pathIdentity() {
+    return pathIdentity;
+  }
+
   List<RequestWarning> warnings() {
     return List.copyOf(absolutePathWarnings.values());
   }
@@ -178,17 +247,17 @@ final class RequestPathAccess implements AutoCloseable {
   /** Returns immutable identities for every private input copy retained by this request. */
   List<MaterializedReadIdentity> materializedReadIdentities() {
     return materializedReads.values().stream()
-        .map(
-            read ->
-                new MaterializedReadIdentity(
-                    read.role(), read.resolvedPath().toString(), read.byteSize(), read.sha256()))
+        .map(read ->
+            new MaterializedReadIdentity(
+                read.role(), read.resolvedPath().toString(), read.byteSize(), read.sha256()))
         .toList();
   }
 
   /** Returns the private immutable materialization previously bound for this exact request path. */
   Path materializedReadPath(String rawPath) {
     Objects.requireNonNull(rawPath, "rawPath must not be null");
-    MaterializedRead materializedRead = materializedReads.get(rawPath);
+    MaterializedRead materializedRead =
+        materializedReads.get(pathIdentity.previouslyResolved(rawPath));
     if (materializedRead == null) {
       throw new IllegalStateException(
           "request path was not materialized during admission: " + rawPath);
@@ -247,7 +316,7 @@ final class RequestPathAccess implements AutoCloseable {
         executionGrant.readableResources().stream()
             .filter(ExecutionGrant.ReadAuthority.File.class::isInstance)
             .map(ExecutionGrant.ReadAuthority.File.class::cast)
-            .anyMatch(resource -> resource.path().equals(resolvedPath));
+            .anyMatch(resource -> pathIdentity.matchesGrant(resource.path(), resolvedPath));
     if (!allowed) {
       throw new ExecutionAuthorityDeniedException(
           "host grant does not permit reading " + pathRole + ": " + resolvedPath);

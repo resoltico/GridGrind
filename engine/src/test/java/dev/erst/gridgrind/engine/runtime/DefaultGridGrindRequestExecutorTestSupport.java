@@ -9,6 +9,8 @@ import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.PreparedMutationStep;
+import dev.erst.gridgrind.core.plan.PreparedStep;
 import dev.erst.gridgrind.core.plan.ResolvedInspectionStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
@@ -16,6 +18,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import java.io.IOException;
@@ -286,11 +289,13 @@ class DefaultGridGrindRequestExecutorTestSupport
   }
 
   static ResolvedStep command(Selector target, MutationAction action) {
+    var prepared =
+        (PreparedMutationStep)
+            PreparedStep.prepare(new MutationStep(new StepId("command"), target, action));
     return new ResolvedStep(
         (ResolvedTarget) target,
-        MutationResolution.finish(
-            MutationResolution.prepare(action),
-            ExecutionInputBindingsFixtureSupport.bindings(Path.of("."))));
+        MutationSecrets.finish(
+            prepared.action(), ExecutionInputBindingsFixtureSupport.bindings(Path.of("."))));
   }
 
   static ResolvedInspectionStep readCommand(InspectionStep step) {

@@ -2,26 +2,29 @@ package dev.erst.gridgrind.core.authoring;
 
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
-import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
-import dev.erst.gridgrind.core.plan.InspectionStep;
-import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.DuplicateStepId;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Primary fluent Java entrypoint that authors focused workbook workflows and compiles them to the
  * canonical {@link WorkbookPlan}.
+ *
+ * <p>Mutating a builder requires exclusive access. Its immutable emitted plans may be shared.
  *
  * <p>This module intentionally stops at the contract boundary. Callers that need in-process
  * execution should pass {@link #toPlan()} to an executor explicitly instead of relying on hidden
@@ -35,9 +38,14 @@ public final class GridGrindPlan {
   private ExecutionPolicySpec execution;
   private FormulaEnvironmentSpec formulaEnvironment;
   private final List<WorkbookStep> steps;
-  private int mutationCount;
-  private int inspectionCount;
-  private int assertionCount;
+  private final Set<StepId> occupiedStepIds;
+
+  // Appends never free an ID: each cursor skips only candidates already known to be occupied.
+  @SuppressWarnings(
+      "PMD.UseConcurrentHashMap") // Builder mutations require exclusive access, including steps and
+  // occupied IDs.
+  private final java.util.Map<String, Integer> generatedStepSearchStarts =
+      new java.util.HashMap<>();
 
   private GridGrindPlan(WorkbookPlan.WorkbookSource source) {
     this(
@@ -67,7 +75,8 @@ public final class GridGrindPlan {
     this.formulaEnvironment =
         Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentSpec::empty);
     this.steps = new ArrayList<>(Objects.requireNonNull(steps, "steps must not be null"));
-    recountStepIds(this.steps);
+    this.occupiedStepIds = new HashSet<>();
+    this.steps.forEach(step -> occupiedStepIds.add(step.stepId()));
   }
 
   /** Starts one plan against a brand-new empty workbook. */
@@ -161,24 +170,21 @@ public final class GridGrindPlan {
   /** Appends one authored mutation with an auto-generated step id when needed. */
   public GridGrindPlan mutate(PlannedMutation mutation) {
     Objects.requireNonNull(mutation, "mutation must not be null");
-    mutationCount++;
-    steps.add(mutation.toStep(nextStepId("mutation", mutationCount)));
+    append(mutation.toStep(nextStepId("mutation")));
     return this;
   }
 
   /** Appends one authored inspection with an auto-generated step id when needed. */
   public GridGrindPlan inspect(PlannedInspection inspection) {
     Objects.requireNonNull(inspection, "inspection must not be null");
-    inspectionCount++;
-    steps.add(inspection.toStep(nextStepId("inspection", inspectionCount)));
+    append(inspection.toStep(nextStepId("inspection")));
     return this;
   }
 
   /** Appends one authored assertion with an auto-generated step id when needed. */
   public GridGrindPlan assertThat(PlannedAssertion assertion) {
     Objects.requireNonNull(assertion, "assertion must not be null");
-    assertionCount++;
-    steps.add(assertion.toStep(nextStepId("assertion", assertionCount)));
+    append(assertion.toStep(nextStepId("assertion")));
     return this;
   }
 
@@ -188,20 +194,33 @@ public final class GridGrindPlan {
         protocolVersion, planId, source, persistence, execution, formulaEnvironment, steps);
   }
 
-  private StepId nextStepId(String prefix, int index) {
-    return new StepId(prefix + "-" + String.format(java.util.Locale.ROOT, "%03d", index));
-  }
-
-  private void recountStepIds(List<WorkbookStep> existingSteps) {
-    mutationCount = 0;
-    inspectionCount = 0;
-    assertionCount = 0;
-    for (WorkbookStep step : existingSteps) {
-      switch (step) {
-        case MutationStep _ -> mutationCount++;
-        case InspectionStep _ -> inspectionCount++;
-        case AssertionStep _ -> assertionCount++;
+  @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+  // Each distinct candidate must be an immutable validated StepId for the occupied-ID identity
+  // check.
+  private StepId nextStepId(String prefix) {
+    for (int index = generatedStepSearchStarts.getOrDefault(prefix, 1); ; index++) {
+      StepId candidate =
+          new StepId(prefix + "-" + String.format(java.util.Locale.ROOT, "%03d", index));
+      if (!occupiedStepIds.contains(candidate)) {
+        // Memoize the free candidate, not its successor, so a failed or explicitly named append
+        // cannot consume an automatic ID.
+        generatedStepSearchStarts.put(prefix, index);
+        return candidate;
       }
     }
+  }
+
+  private void append(WorkbookStep step) {
+    if (occupiedStepIds.contains(step.stepId())) {
+      String path = "steps[" + steps.size() + "].stepId";
+      throw new InvalidRequestException(
+          new DuplicateStepId(step.stepId(), path),
+          Optional.of(path),
+          Optional.empty(),
+          Optional.empty(),
+          null);
+    }
+    steps.add(step);
+    occupiedStepIds.add(step.stepId());
   }
 }

@@ -24,7 +24,7 @@ class PresentationContractTest {
   void sheetPresentationValueObjectsNormalizeConvertAndValidate() {
     IgnoredErrorSpec ignoredError =
         new IgnoredErrorSpec(
-            new dev.erst.gridgrind.core.vocabulary.RangeRef("B2:A1"),
+            new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
             List.of(ExcelIgnoredErrorType.FORMULA, ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT));
     SheetPresentationSpec presentation =
         new SheetPresentationSpec(
@@ -33,7 +33,7 @@ class PresentationContractTest {
             new SheetOutlineSummarySpec(false, false),
             new SheetDefaultsSpec(11, 18.5d),
             List.of(ignoredError));
-    assertEquals("B2:A1", ignoredError.range().value());
+    assertEquals("A1:B2", ignoredError.range().value());
     assertEquals(List.of(ignoredError), presentation.ignoredErrors());
 
     List<ExcelIgnoredErrorType> errorTypesWithNull =

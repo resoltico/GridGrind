@@ -239,8 +239,8 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void passesExplicitTempRootIntoExecutionBindings() throws IOException {
-    Path workspace = Files.createTempDirectory("gridgrind-cli-temp-binding-");
+  void passesExplicitTempRootIntoExecutionBindings(@org.junit.jupiter.api.io.TempDir Path workspace)
+      throws IOException {
     Path requestPath = workspace.resolve("request.json");
     Path customTempRoot = workspace.resolve("custom-scratch");
     AtomicReference<Path> observedTempRoot = new AtomicReference<>();
@@ -269,7 +269,10 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertEquals(customTempRoot.toAbsolutePath().normalize(), observedTempRoot.get().getParent());
     assertTrue(Files.notExists(observedTempRoot.get()));
-    assertTrue(Files.notExists(customTempRoot.toAbsolutePath().normalize()));
+    assertTrue(Files.isDirectory(customTempRoot.toAbsolutePath().normalize()));
+    try (var retained = Files.list(customTempRoot)) {
+      assertTrue(retained.findAny().isEmpty());
+    }
   }
 
   @Test
@@ -343,21 +346,19 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
         stderr
             .toString(StandardCharsets.UTF_8)
             .lines()
-            .map(
-                line -> {
-                  try {
-                    return dev.erst.gridgrind.cli.render.GridGrindCliJson.readBytes(
-                        line.getBytes(StandardCharsets.UTF_8), ExecutionProgressEvent.class);
-                  } catch (IOException exception) {
-                    throw new java.io.UncheckedIOException(exception);
-                  }
-                })
-            .anyMatch(
-                event ->
-                    event
-                        .stepId()
-                        .map(dev.erst.gridgrind.core.vocabulary.StepId::value)
-                        .equals(Optional.of("ensure-ledger"))),
+            .map(line -> {
+              try {
+                return dev.erst.gridgrind.cli.render.GridGrindCliJson.readBytes(
+                    line.getBytes(StandardCharsets.UTF_8), ExecutionProgressEvent.class);
+              } catch (IOException exception) {
+                throw new java.io.UncheckedIOException(exception);
+              }
+            })
+            .anyMatch(event ->
+                event
+                    .stepId()
+                    .map(dev.erst.gridgrind.core.vocabulary.StepId::value)
+                    .equals(Optional.of("ensure-ledger"))),
         "verbose execution must stream a step-scoped progress event to stderr");
     assertFalse(
         stdout.toString(StandardCharsets.UTF_8).contains("\"events\""),

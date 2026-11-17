@@ -37,7 +37,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -67,20 +66,22 @@ class RequestPreflightTest {
             FormulaEnvironmentSpec.empty(),
             List.of());
 
-    RequestPreflight.Result result =
-        RequestPreflight.verify(
-            request,
-            new ExecutionInputBindings(
+    ExecutionInputBindings ownedBindings =
+        new ExecutionInputBindings(
+            temporaryDirectory,
+            temporaryDirectory.resolve("scratch"),
+            ExecutionGrantTestSupport.forPlan(
+                request,
                 temporaryDirectory,
-                temporaryDirectory.resolve("scratch"),
-                ExecutionGrantTestSupport.forPlan(request, temporaryDirectory)));
+                temporaryDirectory.resolve("missing-signing-material.p12")));
+    RequestPreflight.Result result = RequestPreflight.verify(request, ownedBindings);
     try {
       assertEquals(
           List.of(GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION),
           result.problems().stream().map(GridGrindProblemDetail.Problem::code).toList());
       assertTrue(result.preparedRequest().isEmpty());
     } finally {
-      result.release();
+      ownedBindings.closeRunResources();
     }
 
     assertThrows(
@@ -126,7 +127,11 @@ class RequestPreflightTest {
             new ExecutionInputBindings(
                 temporaryDirectory,
                 tempRoot,
-                ExecutionGrantTestSupport.forPlan(request, temporaryDirectory)));
+                ExecutionGrantTestSupport.forPlan(
+                    request,
+                    temporaryDirectory,
+                    temporaryDirectory.resolve("missing-title.txt"),
+                    temporaryDirectory.resolve("missing-subtitle.txt"))));
 
     assertFalse(result.preparedRequest().isPresent());
     assertEquals(
@@ -142,10 +147,9 @@ class RequestPreflightTest {
     assertFalse(Files.exists(tempRoot));
     assertTrue(
         result.problems().stream()
-            .allMatch(
-                problem ->
-                    problem.context().type().endsWith("INPUTS")
-                        || "OPEN_WORKBOOK".equals(problem.context().type())));
+            .allMatch(problem ->
+                problem.context().type().endsWith("INPUTS")
+                    || "OPEN_WORKBOOK".equals(problem.context().type())));
   }
 
   @Test
@@ -197,7 +201,7 @@ class RequestPreflightTest {
   }
 
   @Test
-  void doctorBatchesIndependentPreflightFailuresAlongsideStaticFindings() {
+  void doctorStopsBeforePreflightIoAfterAStaticFinding() {
     var analysis =
         GridGrindJson.analyzeRequest(
             """
@@ -223,7 +227,9 @@ class RequestPreflightTest {
                 .getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
     var report =
-        new GridGrindRequestDoctor()
+        new GridGrindRequestDoctor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .diagnose(
                 analysis,
                 ProblemContextRequestSurfaces.RequestInput.standardInput(),
@@ -235,10 +241,7 @@ class RequestPreflightTest {
 
     assertFalse(report.valid());
     assertEquals(
-        List.of(
-            GridGrindProblemCode.INVALID_REQUEST,
-            GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND,
-            GridGrindProblemCode.WORKBOOK_NOT_FOUND),
+        List.of(GridGrindProblemCode.INVALID_REQUEST),
         report.problems().stream().map(GridGrindProblemDetail.Problem::code).toList());
     assertFalse(Files.exists(temporaryDirectory.resolve("missing-source.xlsx")));
     assertFalse(Files.exists(temporaryDirectory.resolve("scratch")));
@@ -280,7 +283,10 @@ class RequestPreflightTest {
                 temporaryDirectory,
                 temporaryDirectory.resolve("scratch"),
                 ExecutionGrantTestSupport.forPlan(
-                    analysis.requireCompletePlan(), temporaryDirectory)),
+                    analysis.requireCompletePlan(),
+                    temporaryDirectory,
+                    temporaryDirectory.resolve("missing-first.txt"),
+                    temporaryDirectory.resolve("missing-second.txt"))),
             analysis);
 
     assertEquals(2, result.problems().size());
@@ -315,7 +321,9 @@ class RequestPreflightTest {
             List.of(
                 new MutationStep(
                     new StepId("set-values"),
-                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                    new dev.erst.gridgrind.core.plan.RangeSelector.ByRange(
+                        new SheetName("Budget"),
+                        new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B1")),
                     new CellMutationAction.SetRange(
                         new CellGridSpec.Typed(
                             List.of(
@@ -331,7 +339,11 @@ class RequestPreflightTest {
             new ExecutionInputBindings(
                 temporaryDirectory,
                 temporaryDirectory.resolve("scratch"),
-                ExecutionGrantTestSupport.forPlan(request, temporaryDirectory)));
+                ExecutionGrantTestSupport.forPlan(
+                    request,
+                    temporaryDirectory,
+                    temporaryDirectory.resolve("missing-first.txt"),
+                    temporaryDirectory.resolve("missing-second.txt"))));
 
     assertFalse(result.preparedRequest().isPresent());
     assertEquals(
@@ -362,7 +374,9 @@ class RequestPreflightTest {
             List.of(
                 new MutationStep(
                     new StepId("set-rich-text"),
-                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                    new dev.erst.gridgrind.core.plan.RangeSelector.ByRange(
+                        new SheetName("Budget"),
+                        new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B1")),
                     new CellMutationAction.SetRange(
                         new CellGridSpec.Typed(
                             List.of(
@@ -384,7 +398,11 @@ class RequestPreflightTest {
             new ExecutionInputBindings(
                 temporaryDirectory,
                 temporaryDirectory.resolve("scratch"),
-                ExecutionGrantTestSupport.forPlan(request, temporaryDirectory, emptyRun)));
+                ExecutionGrantTestSupport.forPlan(
+                    request,
+                    temporaryDirectory,
+                    emptyRun,
+                    temporaryDirectory.resolve("missing-run.txt"))));
 
     assertFalse(result.preparedRequest().isPresent());
     assertEquals(
@@ -395,7 +413,8 @@ class RequestPreflightTest {
   }
 
   @Test
-  void recordsUnexpectedPerStepResolutionFailuresAndKeepsResultInvariantsHonest() {
+  void recordsUnexpectedPerStepResolutionFailuresAndKeepsResultInvariantsHonest()
+      throws java.io.IOException {
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
@@ -424,23 +443,19 @@ class RequestPreflightTest {
     assertFalse(failed.preparedRequest().isPresent());
     assertInstanceOf(ProblemContext.ResolveInputs.class, failed.problems().getFirst().context());
     assertThrows(IllegalStateException.class, failed::requirePreparedRequest);
-    assertEquals(
-        request,
-        new RequestPreflight.PreparedRequest(MutationResolution.preparePlan(request), bindings)
-            .plan()
-            .request());
+    assertTrue(
+        java.util.Arrays.stream(RequestPreflight.PreparedRequest.class.getDeclaredConstructors())
+            .allMatch(
+                constructor -> java.lang.reflect.Modifier.isPrivate(constructor.getModifiers())));
+    RequestPreflight.Result valid = RequestPreflight.verify(request, bindings);
+    assertEquals(request, valid.requirePreparedRequest().plan().request());
     assertThrows(
         IllegalArgumentException.class,
         () -> new RequestPreflight.Result(java.util.Optional.empty(), List.of(), List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new RequestPreflight.Result(
-                java.util.Optional.of(
-                    new RequestPreflight.PreparedRequest(
-                        MutationResolution.preparePlan(request), bindings)),
-                failed.problems(),
-                List.of()));
+        () -> new RequestPreflight.Result(valid.preparedRequest(), failed.problems(), List.of()));
+    bindings.closeRunResources();
   }
 
   @Test
@@ -461,6 +476,7 @@ class RequestPreflightTest {
             temporaryDirectory,
             temporaryDirectory.resolve("scratch"),
             new dev.erst.gridgrind.core.grant.ExecutionGrant(
+                16L * 1024 * 1024,
                 List.of(),
                 List.of(),
                 new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority
@@ -485,7 +501,7 @@ class RequestPreflightTest {
   }
 
   @Test
-  void warnsForContainedAbsolutePersistencePathsAndSuppressesInvalidOverwriteOutputBinding()
+  void warnsForContainedAbsolutePersistencePathsAndRejectsStaticallyInvalidOverwrite()
       throws Exception {
     Path absoluteOutput = temporaryDirectory.resolve("output.xlsx");
     WorkbookPlan saveAs =
@@ -496,20 +512,19 @@ class RequestPreflightTest {
             ExecutionPolicySpec.defaults(),
             FormulaEnvironmentSpec.empty(),
             List.of());
-    RequestPreflight.Result saveAsResult =
-        RequestPreflight.verify(
-            saveAs,
-            new ExecutionInputBindings(
-                temporaryDirectory,
-                temporaryDirectory.resolve("scratch"),
-                ExecutionGrantTestSupport.forPlan(saveAs, temporaryDirectory)));
+    ExecutionInputBindings saveAsBindings =
+        new ExecutionInputBindings(
+            temporaryDirectory,
+            temporaryDirectory.resolve("scratch"),
+            ExecutionGrantTestSupport.forPlan(saveAs, temporaryDirectory));
+    RequestPreflight.Result saveAsResult = RequestPreflight.verify(saveAs, saveAsBindings);
     try {
       assertTrue(saveAsResult.problems().isEmpty());
       assertEquals(
           dev.erst.gridgrind.core.problem.GridGrindWarningCode.NON_PORTABLE_ABSOLUTE_PATH,
           saveAsResult.warnings().getFirst().code());
     } finally {
-      saveAsResult.release();
+      saveAsBindings.closeRunResources();
     }
 
     WorkbookPlan invalidOverwrite =
@@ -520,18 +535,23 @@ class RequestPreflightTest {
             ExecutionPolicySpec.defaults(),
             FormulaEnvironmentSpec.empty(),
             List.of());
+    ExecutionInputBindings overwriteBindings =
+        new ExecutionInputBindings(
+            temporaryDirectory,
+            temporaryDirectory.resolve("scratch"),
+            ExecutionGrantTestSupport.forPlan(invalidOverwrite, temporaryDirectory));
     RequestPreflight.Result invalidOverwriteResult =
-        RequestPreflight.verify(
-            invalidOverwrite,
-            new ExecutionInputBindings(
-                temporaryDirectory,
-                temporaryDirectory.resolve("scratch"),
-                ExecutionGrantTestSupport.forPlan(invalidOverwrite, temporaryDirectory)));
+        RequestPreflight.verify(invalidOverwrite, overwriteBindings);
     try {
-      assertTrue(invalidOverwriteResult.problems().isEmpty());
-      assertTrue(invalidOverwriteResult.preparedRequest().isPresent());
+      assertEquals(
+          List.of(GridGrindProblemCode.INVALID_REQUEST),
+          invalidOverwriteResult.problems().stream()
+              .map(GridGrindProblemDetail.Problem::code)
+              .toList());
+      assertTrue(invalidOverwriteResult.preparedRequest().isEmpty());
+      assertThrows(IllegalStateException.class, invalidOverwriteResult::requirePreparedRequest);
     } finally {
-      invalidOverwriteResult.release();
+      overwriteBindings.closeRunResources();
     }
 
     assertInstanceOf(RequestPreflightPaths.class, RequestPreflightPaths.newForVerification());
@@ -636,18 +656,5 @@ class RequestPreflightTest {
         ExecutionPolicySpec.defaults(),
         FormulaEnvironmentSpec.empty(),
         List.of());
-  }
-
-  @Test
-  void neverMasksAnEarlierPreflightProblemWithCleanupFailure() {
-    AtomicBoolean attemptedClose = new AtomicBoolean();
-
-    RequestPreflight.closeQuietly(
-        () -> {
-          attemptedClose.set(true);
-          throw new java.io.IOException("private cleanup failed");
-        });
-
-    assertTrue(attemptedClose.get());
   }
 }

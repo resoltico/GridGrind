@@ -53,7 +53,9 @@ class DefaultGridGrindRequestExecutorFormulaOriginTest {
                         new CellValueSpec.Formula(TextSourceSpec.inline("SUM("))))));
 
     WorkbookResult result =
-        new DefaultGridGrindRequestExecutor()
+        new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .execute(
                 request,
                 new ExecutionInputBindings(

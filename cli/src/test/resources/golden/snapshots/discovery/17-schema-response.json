@@ -78,6 +78,8 @@
             "type" : "array"
           },
           "gapDepth" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "grouping" : {
@@ -105,8 +107,7 @@
         "description" : "Exact chart-axis report.",
         "properties" : {
           "crosses" : {
-            "enum" : [ "AUTO_ZERO", "MAX", "MIN" ],
-            "type" : "string"
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing"
           },
           "kind" : {
             "enum" : [ "CATEGORY", "DATE", "SERIES", "VALUE" ],
@@ -121,6 +122,55 @@
           }
         },
         "required" : [ "kind", "position", "crosses", "visible" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing" : {
+        "oneOf" : [ {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing$Missing"
+        }, {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing$Mode"
+        }, {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing$Value"
+        } ]
+      },
+      "dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing$Missing" : {
+        "additionalProperties" : false,
+        "description" : "No axis crossing declaration is stored.",
+        "properties" : {
+          "type" : {
+            "const" : "MISSING"
+          }
+        },
+        "required" : [ "type" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing$Mode" : {
+        "additionalProperties" : false,
+        "description" : "Stored axis crossing mode.",
+        "properties" : {
+          "mode" : {
+            "enum" : [ "AUTO_ZERO", "MAX", "MIN" ],
+            "type" : "string"
+          },
+          "type" : {
+            "const" : "MODE"
+          }
+        },
+        "required" : [ "mode", "type" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing$Value" : {
+        "additionalProperties" : false,
+        "description" : "Stored numeric axis crossing with its exact native attribute text.",
+        "properties" : {
+          "type" : {
+            "const" : "VALUE"
+          },
+          "valueText" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "valueText", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.chart.ChartReport$Bar" : {
@@ -138,6 +188,8 @@
             "type" : "string"
           },
           "gapWidth" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "grouping" : {
@@ -145,6 +197,8 @@
             "type" : "string"
           },
           "overlap" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "series" : {
@@ -178,9 +232,13 @@
             "type" : "string"
           },
           "gapDepth" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "gapWidth" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "grouping" : {
@@ -209,6 +267,8 @@
       },
       "dev.erst.gridgrind.core.model.chart.ChartReport$DataSource" : {
         "oneOf" : [ {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$Missing"
+        }, {
           "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$NumericLiteral"
         }, {
           "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$NumericReference"
@@ -216,40 +276,41 @@
           "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$StringLiteral"
         }, {
           "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$StringReference"
+        }, {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$Unsupported"
         } ]
+      },
+      "dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$Missing" : {
+        "additionalProperties" : false,
+        "description" : "No chart data-source element is stored.",
+        "properties" : {
+          "type" : {
+            "const" : "MISSING"
+          }
+        },
+        "required" : [ "type" ],
+        "type" : "object"
       },
       "dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$NumericLiteral" : {
         "additionalProperties" : false,
-        "description" : "Literal numeric chart source stored directly in the chart part.",
+        "description" : "Stored literal numeric data, retaining raw value text, counts and formats.",
         "properties" : {
-          "formatCode" : {
-            "type" : "string"
+          "data" : {
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$NumericCache$Stored"
           },
           "type" : {
             "const" : "NUMERIC_LITERAL"
-          },
-          "values" : {
-            "items" : {
-              "type" : "string"
-            },
-            "type" : "array"
           }
         },
-        "required" : [ "values", "type" ],
+        "required" : [ "data", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$NumericReference" : {
         "additionalProperties" : false,
-        "description" : "Formula-backed numeric chart source plus cached values.",
+        "description" : "Stored numeric reference and numeric-cache facts; no values are substituted from live cells.",
         "properties" : {
-          "cachedValues" : {
-            "items" : {
-              "type" : "string"
-            },
-            "type" : "array"
-          },
-          "formatCode" : {
-            "type" : "string"
+          "cache" : {
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$NumericCache"
           },
           "formula" : {
             "type" : "string"
@@ -258,35 +319,29 @@
             "const" : "NUMERIC_REFERENCE"
           }
         },
-        "required" : [ "formula", "cachedValues", "type" ],
+        "required" : [ "cache", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$StringLiteral" : {
         "additionalProperties" : false,
-        "description" : "Literal string chart source stored directly in the chart part.",
+        "description" : "Stored literal string data, including declared count and physical point order.",
         "properties" : {
+          "data" : {
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$StringCache$Stored"
+          },
           "type" : {
             "const" : "STRING_LITERAL"
-          },
-          "values" : {
-            "items" : {
-              "type" : "string"
-            },
-            "type" : "array"
           }
         },
-        "required" : [ "values", "type" ],
+        "required" : [ "data", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$StringReference" : {
         "additionalProperties" : false,
-        "description" : "Formula-backed string chart source plus cached values.",
+        "description" : "Stored string reference and string-cache facts; formula absence/blankness is preserved.",
         "properties" : {
-          "cachedValues" : {
-            "items" : {
-              "type" : "string"
-            },
-            "type" : "array"
+          "cache" : {
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$StringCache"
           },
           "formula" : {
             "type" : "string"
@@ -295,7 +350,24 @@
             "const" : "STRING_REFERENCE"
           }
         },
-        "required" : [ "formula", "cachedValues", "type" ],
+        "required" : [ "cache", "type" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$Unsupported" : {
+        "additionalProperties" : false,
+        "description" : "A stored chart data-source kind outside the typed observation contract; no substitute values are reported.",
+        "properties" : {
+          "detail" : {
+            "type" : "string"
+          },
+          "nativeType" : {
+            "type" : "string"
+          },
+          "type" : {
+            "const" : "UNSUPPORTED"
+          }
+        },
+        "required" : [ "nativeType", "detail", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.chart.ChartReport$Doughnut" : {
@@ -303,9 +375,13 @@
         "description" : "Exact doughnut-chart plot report.",
         "properties" : {
           "firstSliceAngle" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "holeSize" : {
+            "maximum" : 90.0,
+            "minimum" : 1.0,
             "type" : "integer"
           },
           "series" : {
@@ -344,7 +420,7 @@
       },
       "dev.erst.gridgrind.core.model.chart.ChartReport$Legend$Visible" : {
         "additionalProperties" : false,
-        "description" : "Visible legend at one persisted position.",
+        "description" : "Visible legend with its effective native position, including the default.",
         "properties" : {
           "position" : {
             "enum" : [ "BOTTOM", "LEFT", "RIGHT", "TOP", "TOP_RIGHT" ],
@@ -398,6 +474,8 @@
             "type" : "array"
           },
           "gapDepth" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "grouping" : {
@@ -420,11 +498,75 @@
         "required" : [ "varyColors", "grouping", "axes", "series", "type" ],
         "type" : "object"
       },
+      "dev.erst.gridgrind.core.model.chart.ChartReport$NumericCache" : {
+        "oneOf" : [ {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$NumericCache$Missing"
+        }, {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$NumericCache$Stored"
+        } ]
+      },
+      "dev.erst.gridgrind.core.model.chart.ChartReport$NumericCache$Missing" : {
+        "additionalProperties" : false,
+        "description" : "No numeric cache element is stored.",
+        "properties" : {
+          "type" : {
+            "const" : "MISSING"
+          }
+        },
+        "required" : [ "type" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.model.chart.ChartReport$NumericCache$Stored" : {
+        "additionalProperties" : false,
+        "description" : "Stored numeric cache. Count, formats and raw point text are never inferred from live cells.",
+        "properties" : {
+          "declaredCount" : {
+            "maximum" : 4294967295,
+            "minimum" : 0.0,
+            "type" : "integer"
+          },
+          "formatCode" : {
+            "type" : "string"
+          },
+          "points" : {
+            "items" : {
+              "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$NumericPoint"
+            },
+            "type" : "array"
+          },
+          "type" : {
+            "const" : "STORED"
+          }
+        },
+        "required" : [ "points", "type" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.model.chart.ChartReport$NumericPoint" : {
+        "additionalProperties" : false,
+        "description" : "One stored numeric-cache point with raw value text and optional per-point format. Missing, blank, error and nonfinite-looking text remain distinct facts.",
+        "properties" : {
+          "formatCode" : {
+            "type" : "string"
+          },
+          "index" : {
+            "maximum" : 4294967295,
+            "minimum" : 0.0,
+            "type" : "integer"
+          },
+          "valueText" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ ],
+        "type" : "object"
+      },
       "dev.erst.gridgrind.core.model.chart.ChartReport$Pie" : {
         "additionalProperties" : false,
         "description" : "Exact pie-chart plot report.",
         "properties" : {
           "firstSliceAngle" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "series" : {
@@ -562,9 +704,13 @@
             "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$DataSource"
           },
           "explosion" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "markerSize" : {
+            "maximum" : 32767,
+            "minimum" : -32768,
             "type" : "integer"
           },
           "markerStyle" : {
@@ -582,6 +728,62 @@
           }
         },
         "required" : [ "title", "categories", "values" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.model.chart.ChartReport$StringCache" : {
+        "oneOf" : [ {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$StringCache$Missing"
+        }, {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$StringCache$Stored"
+        } ]
+      },
+      "dev.erst.gridgrind.core.model.chart.ChartReport$StringCache$Missing" : {
+        "additionalProperties" : false,
+        "description" : "No string cache element is stored.",
+        "properties" : {
+          "type" : {
+            "const" : "MISSING"
+          }
+        },
+        "required" : [ "type" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.model.chart.ChartReport$StringCache$Stored" : {
+        "additionalProperties" : false,
+        "description" : "Stored string cache with its optional declared count and physical point order.",
+        "properties" : {
+          "declaredCount" : {
+            "maximum" : 4294967295,
+            "minimum" : 0.0,
+            "type" : "integer"
+          },
+          "points" : {
+            "items" : {
+              "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$StringPoint"
+            },
+            "type" : "array"
+          },
+          "type" : {
+            "const" : "STORED"
+          }
+        },
+        "required" : [ "points", "type" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.model.chart.ChartReport$StringPoint" : {
+        "additionalProperties" : false,
+        "description" : "One stored string-cache point. Missing index/value declarations stay absent; list position does not infer the index.",
+        "properties" : {
+          "index" : {
+            "maximum" : 4294967295,
+            "minimum" : 0.0,
+            "type" : "integer"
+          },
+          "valueText" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.chart.ChartReport$Surface" : {
@@ -653,10 +855,10 @@
       },
       "dev.erst.gridgrind.core.model.chart.ChartReport$Title$Formula" : {
         "additionalProperties" : false,
-        "description" : "Formula-backed title with cached text.",
+        "description" : "Stored formula-backed title with its cache; never live-resolved text.",
         "properties" : {
-          "cachedText" : {
-            "type" : "string"
+          "cache" : {
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$StringCache"
           },
           "formula" : {
             "type" : "string"
@@ -665,7 +867,7 @@
             "const" : "FORMULA"
           }
         },
-        "required" : [ "formula", "cachedText", "type" ],
+        "required" : [ "cache", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.chart.ChartReport$Title$None" : {
@@ -715,6 +917,8 @@
         "description" : "Optional custom-XML data-binding metadata attached to one workbook mapping.",
         "properties" : {
           "connectionId" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "dataBindingName" : {
@@ -727,6 +931,8 @@
             "type" : "string"
           },
           "loadMode" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           }
         },
@@ -801,6 +1007,8 @@
         "description" : "One locator for an existing workbook custom-XML mapping. Supply mapId, name, or both; the locator must resolve to exactly one existing mapping.",
         "properties" : {
           "mapId" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "name" : {
@@ -830,6 +1038,8 @@
             "type" : "array"
           },
           "mapId" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "name" : {
@@ -912,15 +1122,23 @@
         "description" : "Exact comment-anchor bounds reported from worksheet drawing metadata.",
         "properties" : {
           "firstColumn" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "firstRow" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "lastColumn" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "lastRow" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -964,29 +1182,33 @@
       },
       "dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport$Absolute" : {
         "additionalProperties" : false,
-        "description" : "Drawing anchor with absolute EMU coordinates and size.",
+        "description" : "Drawing anchor with stored absolute coordinates and size.",
         "properties" : {
           "behavior" : {
             "enum" : [ "MOVE_AND_RESIZE", "MOVE_DONT_RESIZE", "DONT_MOVE_AND_RESIZE" ],
             "type" : "string"
           },
           "heightEmu" : {
+            "maximum" : 2.72730423169E13,
+            "minimum" : 0.0,
             "type" : "integer"
           },
           "type" : {
             "const" : "ABSOLUTE"
           },
           "widthEmu" : {
+            "maximum" : 2.72730423169E13,
+            "minimum" : 0.0,
             "type" : "integer"
           },
-          "xEmu" : {
-            "type" : "integer"
+          "x" : {
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport"
           },
-          "yEmu" : {
-            "type" : "integer"
+          "y" : {
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport"
           }
         },
-        "required" : [ "xEmu", "yEmu", "widthEmu", "heightEmu", "behavior", "type" ],
+        "required" : [ "x", "y", "widthEmu", "heightEmu", "behavior", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport$OneCell" : {
@@ -1001,12 +1223,16 @@
             "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport"
           },
           "heightEmu" : {
+            "maximum" : 2.72730423169E13,
+            "minimum" : 0.0,
             "type" : "integer"
           },
           "type" : {
             "const" : "ONE_CELL"
           },
           "widthEmu" : {
+            "maximum" : 2.72730423169E13,
+            "minimum" : 0.0,
             "type" : "integer"
           }
         },
@@ -1034,20 +1260,82 @@
         "required" : [ "from", "to", "behavior", "type" ],
         "type" : "object"
       },
+      "dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport" : {
+        "oneOf" : [ {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport$Emu"
+        }, {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport$Measured"
+        }, {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport$Pixels"
+        } ]
+      },
+      "dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport$Emu" : {
+        "additionalProperties" : false,
+        "description" : "Stored integer DrawingML coordinate in English metric units.",
+        "properties" : {
+          "type" : {
+            "const" : "EMU"
+          },
+          "value" : {
+            "maximum" : 2.72730423169E13,
+            "minimum" : -2.72730423296E13,
+            "type" : "integer"
+          }
+        },
+        "required" : [ "value", "type" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport$Measured" : {
+        "additionalProperties" : false,
+        "description" : "Stored DrawingML measurement with its exact native units and lexical form.",
+        "properties" : {
+          "type" : {
+            "const" : "MEASURED"
+          },
+          "valueText" : {
+            "allOf" : [ {
+              "pattern" : "^(?:-?[0-9]+(\\.[0-9]+)?(mm|cm|in|pt|pc|pi))(?![\\s\\S])"
+            } ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "valueText", "type" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport$Pixels" : {
+        "additionalProperties" : false,
+        "description" : "Stored nonnegative VML client-anchor offset in pixels.",
+        "properties" : {
+          "type" : {
+            "const" : "PIXELS"
+          },
+          "value" : {
+            "maximum" : 2147483647,
+            "minimum" : 0.0,
+            "type" : "integer"
+          }
+        },
+        "required" : [ "value", "type" ],
+        "type" : "object"
+      },
       "dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport" : {
         "additionalProperties" : false,
         "description" : "Exact cell-relative drawing marker report.",
         "properties" : {
           "columnIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : 0.0,
             "type" : "integer"
           },
           "dx" : {
-            "type" : "integer"
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport"
           },
           "dy" : {
-            "type" : "integer"
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport"
           },
           "rowIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : 0.0,
             "type" : "integer"
           }
         },
@@ -1163,7 +1451,7 @@
             "type" : "boolean"
           },
           "title" : {
-            "type" : "string"
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$Title"
           },
           "type" : {
             "const" : "CHART"
@@ -1180,6 +1468,8 @@
             "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport"
           },
           "byteSize" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "command" : {
@@ -1202,6 +1492,8 @@
             "type" : "string"
           },
           "previewByteSize" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "previewFormat" : {
@@ -1229,6 +1521,8 @@
             "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport"
           },
           "byteSize" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "contentType" : {
@@ -1242,6 +1536,8 @@
             "type" : "string"
           },
           "heightPixels" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "name" : {
@@ -1254,6 +1550,8 @@
             "const" : "PICTURE"
           },
           "widthPixels" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -1268,6 +1566,8 @@
             "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport"
           },
           "childCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "kind" : {
@@ -1317,6 +1617,8 @@
         "additionalProperties" : false,
         "properties" : {
           "byteSize" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "contentType" : {
@@ -1327,12 +1629,16 @@
             "type" : "string"
           },
           "heightPixels" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "sha256" : {
             "type" : "string"
           },
           "widthPixels" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -1430,6 +1736,8 @@
             "type" : "boolean"
           },
           "evaluatedFormulaCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "markRecalculateOnOpenApplied" : {
@@ -1464,7 +1772,7 @@
             "type" : "string"
           },
           "problemCode" : {
-            "enum" : [ "INVALID_ARGUMENTS", "INVALID_JSON", "INVALID_ENCODING", "INVALID_REQUEST_SHAPE", "INVALID_REQUEST", "NUMBER_NOT_REPRESENTABLE", "PATH_ESCAPES_ROOT", "ASSERTION_FAILED", "PRESERVATION_FAILED", "INVALID_CELL_ADDRESS", "INVALID_RANGE_ADDRESS", "INVALID_FORMULA", "INVALID_FORMULA_TEXT", "UNSUPPORTED_FORMULA_CONSTRUCT", "CIRCULAR_FORMULA_REFERENCE", "MISSING_EXTERNAL_WORKBOOK", "UNREGISTERED_USER_DEFINED_FUNCTION", "UNSUPPORTED_FORMULA", "WORKBOOK_NOT_FOUND", "INPUT_SOURCE_NOT_FOUND", "INPUT_SOURCE_UNAVAILABLE", "INPUT_SOURCE_IO_ERROR", "SHEET_NOT_FOUND", "NAMED_RANGE_NOT_FOUND", "CELL_NOT_FOUND", "WORKBOOK_NOT_OPENABLE", "SOURCE_PATH_IS_DIRECTORY", "OUTPUT_PATH_IS_DIRECTORY", "OUTPUT_PATH_ALREADY_EXISTS", "WORKBOOK_PASSWORD_REQUIRED", "INVALID_WORKBOOK_PASSWORD", "ENCRYPTION_SOURCE_NOT_ENCRYPTED", "ENCRYPTION_SOURCE_NOT_PRESERVABLE", "INVALID_SIGNING_CONFIGURATION", "WORKBOOK_SECURITY_ERROR", "UNSAFE_PATH_ACCESS", "AUTHORITY_DENIED", "PUBLICATION_UNCERTAIN", "IO_ERROR", "INTERNAL_ERROR" ],
+            "enum" : [ "INVALID_ARGUMENTS", "INVALID_JSON", "INVALID_AUTHORITY", "INVALID_ENCODING", "INVALID_REQUEST_SHAPE", "INVALID_REQUEST", "NUMBER_NOT_REPRESENTABLE", "PATH_ESCAPES_ROOT", "ASSERTION_FAILED", "PRESERVATION_FAILED", "INVALID_CELL_ADDRESS", "INVALID_RANGE_ADDRESS", "INVALID_FORMULA", "INVALID_FORMULA_TEXT", "UNSUPPORTED_FORMULA_CONSTRUCT", "CIRCULAR_FORMULA_REFERENCE", "MISSING_EXTERNAL_WORKBOOK", "UNREGISTERED_USER_DEFINED_FUNCTION", "UNSUPPORTED_FORMULA", "WORKBOOK_NOT_FOUND", "INVALID_WORKBOOK_CONTENT", "UNSUPPORTED_WORKBOOK_CONTENT", "INPUT_SOURCE_NOT_FOUND", "INPUT_SOURCE_UNAVAILABLE", "INPUT_SOURCE_IO_ERROR", "SHEET_NOT_FOUND", "NAMED_RANGE_NOT_FOUND", "CELL_NOT_FOUND", "WORKBOOK_NOT_OPENABLE", "SOURCE_PATH_IS_DIRECTORY", "OUTPUT_PATH_IS_DIRECTORY", "OUTPUT_PATH_ALREADY_EXISTS", "WORKBOOK_PASSWORD_REQUIRED", "INVALID_WORKBOOK_PASSWORD", "ENCRYPTION_SOURCE_NOT_ENCRYPTED", "ENCRYPTION_SOURCE_NOT_PRESERVABLE", "INVALID_SIGNING_CONFIGURATION", "WORKBOOK_SECURITY_ERROR", "UNSAFE_PATH_ACCESS", "AUTHORITY_DENIED", "PUBLICATION_UNCERTAIN", "IO_ERROR", "INTERNAL_ERROR" ],
             "type" : "string"
           }
         },
@@ -1476,6 +1784,8 @@
         "description" : "Formula capability classification captured before server-side evaluation begins.",
         "properties" : {
           "checkedFormulaCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "formulas" : {
@@ -1500,12 +1810,18 @@
         "description" : "Aggregate counts for evaluable, unevaluable, and unparseable formulas.",
         "properties" : {
           "evaluableNowCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "unevaluableNowCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "unparseableByPoiCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -1617,6 +1933,8 @@
         "additionalProperties" : false,
         "properties" : {
           "checkedFormulaCellCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "findings" : {
@@ -1645,6 +1963,8 @@
             "type" : "string"
           },
           "occurrenceCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -1661,6 +1981,8 @@
             "type" : "array"
           },
           "totalFormulaCellCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -1671,6 +1993,8 @@
         "additionalProperties" : false,
         "properties" : {
           "checkedNamedRangeCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "findings" : {
@@ -1792,6 +2116,8 @@
         "additionalProperties" : false,
         "properties" : {
           "formulaBackedCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "namedRanges" : {
@@ -1801,12 +2127,18 @@
             "type" : "array"
           },
           "rangeBackedCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "sheetScopedCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "workbookScopedCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -1855,9 +2187,13 @@
         "additionalProperties" : false,
         "properties" : {
           "distinctFormulaCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "formulaCellCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "formulas" : {
@@ -1880,12 +2216,16 @@
             "type" : "boolean"
           },
           "columnIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "hidden" : {
             "type" : "boolean"
           },
           "outlineLevel" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "widthCharacters" : {
@@ -1924,15 +2264,23 @@
         "description" : "Sheet is frozen at the provided split and visible-origin coordinates.",
         "properties" : {
           "leftmostColumn" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "splitColumn" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "splitRow" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "topRow" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "type" : {
@@ -1962,18 +2310,26 @@
             "type" : "string"
           },
           "leftmostColumn" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "topRow" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "type" : {
             "const" : "SPLIT"
           },
           "xSplitPosition" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "ySplitPosition" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -1998,9 +2354,13 @@
             "type" : "boolean"
           },
           "outlineLevel" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "rowIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -2011,6 +2371,8 @@
         "additionalProperties" : false,
         "properties" : {
           "defaultColumnWidth" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "defaultRowHeightPoints" : {
@@ -2072,6 +2434,8 @@
             "type" : "string"
           },
           "zoomPercent" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -2121,9 +2485,13 @@
         "description" : "Published row and column dimensions for one rectangular cell window.",
         "properties" : {
           "columnCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "rowCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -2200,6 +2568,8 @@
             "type" : "array"
           },
           "rowIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -2210,6 +2580,8 @@
         "additionalProperties" : false,
         "properties" : {
           "checkedPivotTableCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "findings" : {
@@ -2258,6 +2630,8 @@
             "type" : "string"
           },
           "sourceColumnIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "sourceColumnName" : {
@@ -2275,6 +2649,8 @@
         "description" : "Exact pivot field report bound to one source column.",
         "properties" : {
           "sourceColumnIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "sourceColumnName" : {
@@ -2584,12 +2960,16 @@
         "description" : "Sheet fits printed content into the provided page counts.",
         "properties" : {
           "heightPages" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "type" : {
             "const" : "FIT"
           },
           "widthPages" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -2604,17 +2984,23 @@
           },
           "columnBreaks" : {
             "items" : {
+              "maximum" : 2147483647,
+              "minimum" : -2147483648,
               "type" : "integer"
             },
             "type" : "array"
           },
           "copies" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "draft" : {
             "type" : "boolean"
           },
           "firstPageNumber" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "horizontallyCentered" : {
@@ -2624,6 +3010,8 @@
             "$ref" : "#/$defs/dev.erst.gridgrind.core.model.print.PrintMarginsReport"
           },
           "paperSize" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "printGridlines" : {
@@ -2631,6 +3019,8 @@
           },
           "rowBreaks" : {
             "items" : {
+              "maximum" : 2147483647,
+              "minimum" : -2147483648,
               "type" : "integer"
             },
             "type" : "array"
@@ -2657,9 +3047,13 @@
         "description" : "Sheet repeats the provided inclusive zero-based column band on every printed page.",
         "properties" : {
           "firstColumnIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "lastColumnIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "type" : {
@@ -2692,9 +3086,13 @@
         "description" : "Sheet repeats the provided inclusive zero-based row band on every printed page.",
         "properties" : {
           "firstRowIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "lastRowIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "type" : {
@@ -2849,6 +3247,8 @@
         "description" : "Package is encrypted with one fully specified OOXML encryption envelope.",
         "properties" : {
           "blockSize" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "chainingMode" : {
@@ -2864,6 +3264,8 @@
             "type" : "string"
           },
           "keyBits" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "mode" : {
@@ -2871,6 +3273,8 @@
             "type" : "string"
           },
           "spinCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "type" : {
@@ -2952,9 +3356,13 @@
             "type" : "string"
           },
           "indentation" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "textRotation" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "verticalAlignment" : {
@@ -3055,6 +3463,8 @@
         "description" : "Read one indexed-palette workbook color plus optional tint metadata.",
         "properties" : {
           "indexed" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "tint" : {
@@ -3099,6 +3509,8 @@
         "description" : "Read one workbook theme-slot color plus optional tint metadata.",
         "properties" : {
           "theme" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "tint" : {
@@ -3413,6 +3825,8 @@
         "description" : "Write one indexed-palette color reference plus optional tint metadata.",
         "properties" : {
           "indexed" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "tint" : {
@@ -3460,6 +3874,8 @@
         "description" : "Write one workbook theme-slot color reference plus optional tint metadata.",
         "properties" : {
           "theme" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "tint" : {
@@ -3562,6 +3978,8 @@
             "type" : "number"
           },
           "twips" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -3594,6 +4012,8 @@
         "description" : "Specify font height in exact twips (20 twips = 1 point). Write format: {\"type\":\"TWIPS\",\"twips\":260}. Read-back returns the same plain object shape as POINTS.",
         "properties" : {
           "twips" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "type" : {
@@ -3691,6 +4111,8 @@
         "additionalProperties" : false,
         "properties" : {
           "columnId" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "criterion" : {
@@ -3803,6 +4225,8 @@
         "description" : "One icon-based filter rule.",
         "properties" : {
           "iconId" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "iconSet" : {
@@ -3872,6 +4296,8 @@
         "additionalProperties" : false,
         "properties" : {
           "checkedAutofilterCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "findings" : {
@@ -3946,6 +4372,8 @@
             "type" : "boolean"
           },
           "iconId" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "range" : {
@@ -4005,12 +4433,16 @@
         "additionalProperties" : false,
         "properties" : {
           "blankCellCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "columnAddress" : {
             "type" : "string"
           },
           "columnIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "dominantType" : {
@@ -4026,6 +4458,8 @@
             "type" : "array"
           },
           "populatedCellCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -4036,6 +4470,8 @@
         "additionalProperties" : false,
         "properties" : {
           "columnCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "columns" : {
@@ -4045,9 +4481,13 @@
             "type" : "array"
           },
           "dataRowCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "rowCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "sheetName" : {
@@ -4068,6 +4508,8 @@
             "type" : "string"
           },
           "id" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "name" : {
@@ -4179,9 +4621,13 @@
             "type" : "array"
           },
           "headerRowCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "totalsRowCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -4192,6 +4638,8 @@
         "additionalProperties" : false,
         "properties" : {
           "checkedTableCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "findings" : {
@@ -4274,6 +4722,8 @@
         "additionalProperties" : false,
         "properties" : {
           "checkedConditionalFormattingBlockCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "findings" : {
@@ -4321,6 +4771,8 @@
             "type" : "string"
           },
           "priority" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "stopIfTrue" : {
@@ -4347,6 +4799,8 @@
             "type" : "array"
           },
           "priority" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "stopIfTrue" : {
@@ -4382,6 +4836,8 @@
             "$ref" : "#/$defs/dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdReport"
           },
           "priority" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "stopIfTrue" : {
@@ -4391,9 +4847,13 @@
             "const" : "DATA_BAR_RULE"
           },
           "widthMax" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "widthMin" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -4408,6 +4868,8 @@
             "type" : "string"
           },
           "priority" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "stopIfTrue" : {
@@ -4435,6 +4897,8 @@
             "type" : "string"
           },
           "priority" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "reversed" : {
@@ -4467,9 +4931,13 @@
             "type" : "boolean"
           },
           "priority" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "rank" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "stopIfTrue" : {
@@ -4496,6 +4964,8 @@
             "type" : "string"
           },
           "priority" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "stopIfTrue" : {
@@ -4627,6 +5097,8 @@
         "additionalProperties" : false,
         "properties" : {
           "checkedValidationCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "findings" : {
@@ -5039,7 +5511,7 @@
       },
       "dev.erst.gridgrind.core.model.value.CellReport$NumberReport" : {
         "additionalProperties" : false,
-        "description" : "Factual numeric cell report. VALUE projects value; TEMPORAL adds date, time, or date-time semantics when a numeric Excel value is format-derived rather than a plain number.",
+        "description" : "Factual numeric cell report. VALUE projects the original number; TEMPORAL independently reports whether its format has a supported civil interpretation or an explicit unrepresentability reason.",
         "properties" : {
           "address" : {
             "type" : "string"
@@ -5105,21 +5577,60 @@
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.value.CellTemporalReport" : {
+        "oneOf" : [ {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.value.CellTemporalReport$Interpreted"
+        }, {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.value.CellTemporalReport$NotTemporal"
+        }, {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.value.CellTemporalReport$Unrepresentable"
+        } ]
+      },
+      "dev.erst.gridgrind.core.model.value.CellTemporalReport$Interpreted" : {
         "additionalProperties" : false,
-        "description" : "Projected temporal facet for one numeric cell value, including whether Excel formatting marks it as date-like and any derived DATE, TIME, or DATE_TIME semantic kind.",
+        "description" : "The numeric fact has a supported civil DATE, TIME or DATE_TIME interpretation.",
         "properties" : {
-          "isDate" : {
-            "type" : "boolean"
-          },
           "isoValue" : {
             "type" : "string"
           },
           "kind" : {
-            "enum" : [ "DATE", "TIME", "DATE_TIME" ],
+            "enum" : [ "DATE", "TIME", "DATE_TIME", "ELAPSED" ],
             "type" : "string"
+          },
+          "type" : {
+            "const" : "INTERPRETED"
           }
         },
-        "required" : [ "isDate" ],
+        "required" : [ "kind", "isoValue", "type" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.model.value.CellTemporalReport$NotTemporal" : {
+        "additionalProperties" : false,
+        "description" : "The observed format does not denote a temporal value.",
+        "properties" : {
+          "type" : {
+            "const" : "NOT_TEMPORAL"
+          }
+        },
+        "required" : [ "type" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.model.value.CellTemporalReport$Unrepresentable" : {
+        "additionalProperties" : false,
+        "description" : "The format is temporal, but its numeric fact has no supported interpretation; request VALUE for the original number.",
+        "properties" : {
+          "kind" : {
+            "enum" : [ "DATE", "TIME", "DATE_TIME", "ELAPSED" ],
+            "type" : "string"
+          },
+          "reason" : {
+            "enum" : [ "NONFINITE", "NEGATIVE", "OUTSIDE_CIVIL_RANGE", "FICTITIOUS_1900_LEAP_DAY", "UNSUPPORTED_ELAPSED_FORMAT" ],
+            "type" : "string"
+          },
+          "type" : {
+            "const" : "UNREPRESENTABLE"
+          }
+        },
+        "required" : [ "kind", "reason", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.model.value.CellValue" : {
@@ -5258,7 +5769,7 @@
       },
       "dev.erst.gridgrind.core.model.value.CellValueSpec$Date" : {
         "additionalProperties" : false,
-        "description" : "Write an ISO-8601 date value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE.",
+        "description" : "Write a timezone-free Gregorian date within the receiving workbook calendar, through 9999-12-31. Stored as a numeric serial; TEMPORAL may interpret it as DATE.",
         "properties" : {
           "type" : {
             "const" : "DATE"
@@ -5272,7 +5783,7 @@
       },
       "dev.erst.gridgrind.core.model.value.CellValueSpec$DateTime" : {
         "additionalProperties" : false,
-        "description" : "Write an ISO-8601 date-time value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE_TIME.",
+        "description" : "Write a timezone-free Gregorian date-time within the receiving workbook calendar at millisecond precision. Finer precision refuses; numeric readback may expose an INTERPRETED DATE_TIME facet.",
         "properties" : {
           "type" : {
             "const" : "DATE_TIME"
@@ -5381,6 +5892,8 @@
         "additionalProperties" : false,
         "properties" : {
           "checkedHyperlinkCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "findings" : {
@@ -5713,7 +6226,7 @@
       },
       "dev.erst.gridgrind.core.plan.CellReadProjection" : {
         "additionalProperties" : false,
-        "description" : "Shared readback projection that selects which factual cell facets are included on cell-returning inspection surfaces. Facets default to VALUE when omitted by the enclosing query. The facets field publishes enumValueDocs so each facet token explains the response fields it unlocks. Catalog field descriptors publish facet-gated response fields through projectedByFacets so agents can derive the required facet directly from the machine contract. Date-like numeric cells still read back as type=NUMBER until TEMPORAL is requested.",
+        "description" : "Shared readback projection that selects which factual cell facets are included on cell-returning inspection surfaces. Facets default to VALUE when omitted by the enclosing query. The facets field publishes enumValueDocs so each facet token explains the response fields it unlocks. Catalog field descriptors publish facet-gated response fields through projectedByFacets so agents can derive the required facet directly from the machine contract. Date-like numeric cells retain type=NUMBER; TEMPORAL adds NOT_TEMPORAL, INTERPRETED or UNREPRESENTABLE without duplicating the VALUE fact.",
         "properties" : {
           "facets" : {
             "items" : {
@@ -5813,9 +6326,13 @@
         "description" : "Select one column insertion point plus column count on one sheet.",
         "properties" : {
           "beforeColumnIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "columnCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "sheetName" : {
@@ -5833,9 +6350,13 @@
         "description" : "Select one inclusive zero-based column span on one sheet.",
         "properties" : {
           "firstColumnIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "lastColumnIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "sheetName" : {
@@ -6534,9 +7055,13 @@
         "description" : "Select one rectangular window anchored at one top-left cell.",
         "properties" : {
           "columnCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "rowCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "sheetName" : {
@@ -6557,9 +7082,13 @@
         "description" : "Select one row insertion point plus row count on one sheet.",
         "properties" : {
           "beforeRowIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "rowCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "sheetName" : {
@@ -6577,9 +7106,13 @@
         "description" : "Select one inclusive zero-based row span on one sheet.",
         "properties" : {
           "firstRowIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "lastRowIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "sheetName" : {
@@ -7147,6 +7680,8 @@
         "description" : "Select one zero-based data row by index in one selected table.",
         "properties" : {
           "rowIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "table" : {
@@ -7940,7 +8475,7 @@
             "type" : "array"
           },
           "code" : {
-            "enum" : [ "INVALID_ARGUMENTS", "INVALID_JSON", "INVALID_ENCODING", "INVALID_REQUEST_SHAPE", "INVALID_REQUEST", "NUMBER_NOT_REPRESENTABLE", "PATH_ESCAPES_ROOT", "ASSERTION_FAILED", "PRESERVATION_FAILED", "INVALID_CELL_ADDRESS", "INVALID_RANGE_ADDRESS", "INVALID_FORMULA", "INVALID_FORMULA_TEXT", "UNSUPPORTED_FORMULA_CONSTRUCT", "CIRCULAR_FORMULA_REFERENCE", "MISSING_EXTERNAL_WORKBOOK", "UNREGISTERED_USER_DEFINED_FUNCTION", "UNSUPPORTED_FORMULA", "WORKBOOK_NOT_FOUND", "INPUT_SOURCE_NOT_FOUND", "INPUT_SOURCE_UNAVAILABLE", "INPUT_SOURCE_IO_ERROR", "SHEET_NOT_FOUND", "NAMED_RANGE_NOT_FOUND", "CELL_NOT_FOUND", "WORKBOOK_NOT_OPENABLE", "SOURCE_PATH_IS_DIRECTORY", "OUTPUT_PATH_IS_DIRECTORY", "OUTPUT_PATH_ALREADY_EXISTS", "WORKBOOK_PASSWORD_REQUIRED", "INVALID_WORKBOOK_PASSWORD", "ENCRYPTION_SOURCE_NOT_ENCRYPTED", "ENCRYPTION_SOURCE_NOT_PRESERVABLE", "INVALID_SIGNING_CONFIGURATION", "WORKBOOK_SECURITY_ERROR", "UNSAFE_PATH_ACCESS", "AUTHORITY_DENIED", "PUBLICATION_UNCERTAIN", "IO_ERROR", "INTERNAL_ERROR" ],
+            "enum" : [ "INVALID_ARGUMENTS", "INVALID_JSON", "INVALID_AUTHORITY", "INVALID_ENCODING", "INVALID_REQUEST_SHAPE", "INVALID_REQUEST", "NUMBER_NOT_REPRESENTABLE", "PATH_ESCAPES_ROOT", "ASSERTION_FAILED", "PRESERVATION_FAILED", "INVALID_CELL_ADDRESS", "INVALID_RANGE_ADDRESS", "INVALID_FORMULA", "INVALID_FORMULA_TEXT", "UNSUPPORTED_FORMULA_CONSTRUCT", "CIRCULAR_FORMULA_REFERENCE", "MISSING_EXTERNAL_WORKBOOK", "UNREGISTERED_USER_DEFINED_FUNCTION", "UNSUPPORTED_FORMULA", "WORKBOOK_NOT_FOUND", "INVALID_WORKBOOK_CONTENT", "UNSUPPORTED_WORKBOOK_CONTENT", "INPUT_SOURCE_NOT_FOUND", "INPUT_SOURCE_UNAVAILABLE", "INPUT_SOURCE_IO_ERROR", "SHEET_NOT_FOUND", "NAMED_RANGE_NOT_FOUND", "CELL_NOT_FOUND", "WORKBOOK_NOT_OPENABLE", "SOURCE_PATH_IS_DIRECTORY", "OUTPUT_PATH_IS_DIRECTORY", "OUTPUT_PATH_ALREADY_EXISTS", "WORKBOOK_PASSWORD_REQUIRED", "INVALID_WORKBOOK_PASSWORD", "ENCRYPTION_SOURCE_NOT_ENCRYPTED", "ENCRYPTION_SOURCE_NOT_PRESERVABLE", "INVALID_SIGNING_CONFIGURATION", "WORKBOOK_SECURITY_ERROR", "UNSAFE_PATH_ACCESS", "AUTHORITY_DENIED", "PUBLICATION_UNCERTAIN", "IO_ERROR", "INTERNAL_ERROR" ],
             "type" : "string"
           },
           "context" : {
@@ -7967,7 +8502,7 @@
         "additionalProperties" : false,
         "properties" : {
           "code" : {
-            "enum" : [ "INVALID_ARGUMENTS", "INVALID_JSON", "INVALID_ENCODING", "INVALID_REQUEST_SHAPE", "INVALID_REQUEST", "NUMBER_NOT_REPRESENTABLE", "PATH_ESCAPES_ROOT", "ASSERTION_FAILED", "PRESERVATION_FAILED", "INVALID_CELL_ADDRESS", "INVALID_RANGE_ADDRESS", "INVALID_FORMULA", "INVALID_FORMULA_TEXT", "UNSUPPORTED_FORMULA_CONSTRUCT", "CIRCULAR_FORMULA_REFERENCE", "MISSING_EXTERNAL_WORKBOOK", "UNREGISTERED_USER_DEFINED_FUNCTION", "UNSUPPORTED_FORMULA", "WORKBOOK_NOT_FOUND", "INPUT_SOURCE_NOT_FOUND", "INPUT_SOURCE_UNAVAILABLE", "INPUT_SOURCE_IO_ERROR", "SHEET_NOT_FOUND", "NAMED_RANGE_NOT_FOUND", "CELL_NOT_FOUND", "WORKBOOK_NOT_OPENABLE", "SOURCE_PATH_IS_DIRECTORY", "OUTPUT_PATH_IS_DIRECTORY", "OUTPUT_PATH_ALREADY_EXISTS", "WORKBOOK_PASSWORD_REQUIRED", "INVALID_WORKBOOK_PASSWORD", "ENCRYPTION_SOURCE_NOT_ENCRYPTED", "ENCRYPTION_SOURCE_NOT_PRESERVABLE", "INVALID_SIGNING_CONFIGURATION", "WORKBOOK_SECURITY_ERROR", "UNSAFE_PATH_ACCESS", "AUTHORITY_DENIED", "PUBLICATION_UNCERTAIN", "IO_ERROR", "INTERNAL_ERROR" ],
+            "enum" : [ "INVALID_ARGUMENTS", "INVALID_JSON", "INVALID_AUTHORITY", "INVALID_ENCODING", "INVALID_REQUEST_SHAPE", "INVALID_REQUEST", "NUMBER_NOT_REPRESENTABLE", "PATH_ESCAPES_ROOT", "ASSERTION_FAILED", "PRESERVATION_FAILED", "INVALID_CELL_ADDRESS", "INVALID_RANGE_ADDRESS", "INVALID_FORMULA", "INVALID_FORMULA_TEXT", "UNSUPPORTED_FORMULA_CONSTRUCT", "CIRCULAR_FORMULA_REFERENCE", "MISSING_EXTERNAL_WORKBOOK", "UNREGISTERED_USER_DEFINED_FUNCTION", "UNSUPPORTED_FORMULA", "WORKBOOK_NOT_FOUND", "INVALID_WORKBOOK_CONTENT", "UNSUPPORTED_WORKBOOK_CONTENT", "INPUT_SOURCE_NOT_FOUND", "INPUT_SOURCE_UNAVAILABLE", "INPUT_SOURCE_IO_ERROR", "SHEET_NOT_FOUND", "NAMED_RANGE_NOT_FOUND", "CELL_NOT_FOUND", "WORKBOOK_NOT_OPENABLE", "SOURCE_PATH_IS_DIRECTORY", "OUTPUT_PATH_IS_DIRECTORY", "OUTPUT_PATH_ALREADY_EXISTS", "WORKBOOK_PASSWORD_REQUIRED", "INVALID_WORKBOOK_PASSWORD", "ENCRYPTION_SOURCE_NOT_ENCRYPTED", "ENCRYPTION_SOURCE_NOT_PRESERVABLE", "INVALID_SIGNING_CONFIGURATION", "WORKBOOK_SECURITY_ERROR", "UNSAFE_PATH_ACCESS", "AUTHORITY_DENIED", "PUBLICATION_UNCERTAIN", "IO_ERROR", "INTERNAL_ERROR" ],
             "type" : "string"
           },
           "message" : {
@@ -8016,6 +8551,8 @@
           "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContext$ParseArguments"
         }, {
           "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContext$PersistWorkbook"
+        }, {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContext$ReadAuthority"
         }, {
           "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContext$ReadRequest"
         }, {
@@ -8118,6 +8655,9 @@
         "additionalProperties" : false,
         "description" : "Context for failures that occur while opening the source workbook.",
         "properties" : {
+          "content" : {
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.WorkbookContentLocation"
+          },
           "request" : {
             "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces$RequestShape"
           },
@@ -8163,6 +8703,23 @@
           }
         },
         "required" : [ "request", "type" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.problem.ProblemContext$ReadAuthority" : {
+        "additionalProperties" : false,
+        "description" : "Strict host-authority document intake.",
+        "properties" : {
+          "authorityPath" : {
+            "type" : "string"
+          },
+          "json" : {
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces$JsonLocation"
+          },
+          "type" : {
+            "const" : "READ_AUTHORITY"
+          }
+        },
+        "required" : [ "authorityPath", "json", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.problem.ProblemContext$ReadRequest" : {
@@ -8289,6 +8846,8 @@
         "description" : "A structural parser located an offending token without a JSON path.",
         "properties" : {
           "byteOffset" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "type" : {
@@ -8303,12 +8862,18 @@
         "description" : "A syntax location with both exact UTF-8 offset and one-based line/column coordinates.",
         "properties" : {
           "byteOffset" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "jsonColumn" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "jsonLine" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "type" : {
@@ -8323,6 +8888,8 @@
         "description" : "One duplicate property occurrence, which has no unique JSON path of its own.",
         "properties" : {
           "byteOffset" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "containingObjectPath" : {
@@ -8332,6 +8899,8 @@
             "type" : "string"
           },
           "occurrenceOrdinal" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "type" : {
@@ -8346,9 +8915,13 @@
         "description" : "Only the request line and column were available from the parser.",
         "properties" : {
           "jsonColumn" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "jsonLine" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "type" : {
@@ -8363,9 +8936,13 @@
         "description" : "One precise JSON cursor extracted from a payload failure.",
         "properties" : {
           "jsonColumn" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "jsonLine" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "jsonPath" : {
@@ -8383,6 +8960,8 @@
         "description" : "A structural parser located an offending object member or scalar token precisely.",
         "properties" : {
           "byteOffset" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "jsonPath" : {
@@ -8578,7 +9157,11 @@
         }, {
           "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces$ProblemLocation$FormulaCell"
         }, {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces$ProblemLocation$MappedXmlField"
+        }, {
           "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces$ProblemLocation$NamedRange"
+        }, {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces$ProblemLocation$NativeContent"
         }, {
           "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces$ProblemLocation$Range"
         }, {
@@ -8642,6 +9225,28 @@
         "required" : [ "sheetName", "address", "formula", "type" ],
         "type" : "object"
       },
+      "dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces$ProblemLocation$MappedXmlField" : {
+        "additionalProperties" : false,
+        "description" : "An authored XML field and mapping occurrence.",
+        "properties" : {
+          "mappingRowIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
+            "type" : "integer"
+          },
+          "sheetName" : {
+            "type" : "string"
+          },
+          "type" : {
+            "const" : "MAPPED_XML_FIELD"
+          },
+          "xpath" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "xpath", "mappingRowIndex", "type" ],
+        "type" : "object"
+      },
       "dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces$ProblemLocation$NamedRange" : {
         "additionalProperties" : false,
         "description" : "The failure was localized to one named range.",
@@ -8654,6 +9259,20 @@
           }
         },
         "required" : [ "name", "type" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces$ProblemLocation$NativeContent" : {
+        "additionalProperties" : false,
+        "description" : "Known native package or parser coordinates.",
+        "properties" : {
+          "content" : {
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.WorkbookContentLocation"
+          },
+          "type" : {
+            "const" : "NATIVE_CONTENT"
+          }
+        },
+        "required" : [ "content", "type" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces$ProblemLocation$Range" : {
@@ -8736,6 +9355,8 @@
             "type" : "string"
           },
           "stepIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "stepKind" : {
@@ -8785,7 +9406,7 @@
         "description" : "Non-fatal authored-plan warning surfaced at the response root.",
         "properties" : {
           "code" : {
-            "enum" : [ "UNQUOTED_SHEET_NAME_IN_FORMULA", "NON_PORTABLE_ABSOLUTE_PATH", "UTF8_BOM_IGNORED", "FORMULA_NOT_EVALUATED" ],
+            "enum" : [ "UNQUOTED_SHEET_NAME_IN_FORMULA", "NON_PORTABLE_ABSOLUTE_PATH", "UTF8_BOM_IGNORED", "PROGRESS_SINK_FAILED", "FORMULA_NOT_EVALUATED" ],
             "type" : "string"
           },
           "location" : {
@@ -8800,6 +9421,8 @@
       },
       "dev.erst.gridgrind.core.problem.RequestWarningLocation" : {
         "oneOf" : [ {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.RequestWarningLocation$Execution"
+        }, {
           "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.RequestWarningLocation$FormulaCell"
         }, {
           "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.RequestWarningLocation$RequestByteOffset"
@@ -8808,6 +9431,17 @@
         }, {
           "$ref" : "#/$defs/dev.erst.gridgrind.core.problem.RequestWarningLocation$Step"
         } ]
+      },
+      "dev.erst.gridgrind.core.problem.RequestWarningLocation$Execution" : {
+        "additionalProperties" : false,
+        "description" : "Warning about this execution's optional infrastructure.",
+        "properties" : {
+          "type" : {
+            "const" : "EXECUTION"
+          }
+        },
+        "required" : [ "type" ],
+        "type" : "object"
       },
       "dev.erst.gridgrind.core.problem.RequestWarningLocation$FormulaCell" : {
         "additionalProperties" : false,
@@ -8834,6 +9468,8 @@
         "description" : "Warning located at one authored request byte offset.",
         "properties" : {
           "byteOffset" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "type" : {
@@ -8868,6 +9504,8 @@
             "type" : "string"
           },
           "stepIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "stepType" : {
@@ -8878,6 +9516,32 @@
           }
         },
         "required" : [ "stepIndex", "stepId", "stepType", "type" ],
+        "type" : "object"
+      },
+      "dev.erst.gridgrind.core.problem.WorkbookContentLocation" : {
+        "additionalProperties" : false,
+        "properties" : {
+          "column" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
+            "type" : "integer"
+          },
+          "fieldName" : {
+            "type" : "string"
+          },
+          "line" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
+            "type" : "integer"
+          },
+          "partName" : {
+            "type" : "string"
+          },
+          "sheetName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.result.AnalysisFindingReport" : {
@@ -9003,15 +9667,23 @@
         "additionalProperties" : false,
         "properties" : {
           "errorCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "infoCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "totalCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "warningCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -9083,7 +9755,7 @@
             "type" : "string"
           },
           "code" : {
-            "enum" : [ "INVALID_ARGUMENTS", "INVALID_JSON", "INVALID_ENCODING", "INVALID_REQUEST_SHAPE", "INVALID_REQUEST", "NUMBER_NOT_REPRESENTABLE", "PATH_ESCAPES_ROOT", "ASSERTION_FAILED", "PRESERVATION_FAILED", "INVALID_CELL_ADDRESS", "INVALID_RANGE_ADDRESS", "INVALID_FORMULA", "INVALID_FORMULA_TEXT", "UNSUPPORTED_FORMULA_CONSTRUCT", "CIRCULAR_FORMULA_REFERENCE", "MISSING_EXTERNAL_WORKBOOK", "UNREGISTERED_USER_DEFINED_FUNCTION", "UNSUPPORTED_FORMULA", "WORKBOOK_NOT_FOUND", "INPUT_SOURCE_NOT_FOUND", "INPUT_SOURCE_UNAVAILABLE", "INPUT_SOURCE_IO_ERROR", "SHEET_NOT_FOUND", "NAMED_RANGE_NOT_FOUND", "CELL_NOT_FOUND", "WORKBOOK_NOT_OPENABLE", "SOURCE_PATH_IS_DIRECTORY", "OUTPUT_PATH_IS_DIRECTORY", "OUTPUT_PATH_ALREADY_EXISTS", "WORKBOOK_PASSWORD_REQUIRED", "INVALID_WORKBOOK_PASSWORD", "ENCRYPTION_SOURCE_NOT_ENCRYPTED", "ENCRYPTION_SOURCE_NOT_PRESERVABLE", "INVALID_SIGNING_CONFIGURATION", "WORKBOOK_SECURITY_ERROR", "UNSAFE_PATH_ACCESS", "AUTHORITY_DENIED", "PUBLICATION_UNCERTAIN", "IO_ERROR", "INTERNAL_ERROR" ],
+            "enum" : [ "INVALID_ARGUMENTS", "INVALID_JSON", "INVALID_AUTHORITY", "INVALID_ENCODING", "INVALID_REQUEST_SHAPE", "INVALID_REQUEST", "NUMBER_NOT_REPRESENTABLE", "PATH_ESCAPES_ROOT", "ASSERTION_FAILED", "PRESERVATION_FAILED", "INVALID_CELL_ADDRESS", "INVALID_RANGE_ADDRESS", "INVALID_FORMULA", "INVALID_FORMULA_TEXT", "UNSUPPORTED_FORMULA_CONSTRUCT", "CIRCULAR_FORMULA_REFERENCE", "MISSING_EXTERNAL_WORKBOOK", "UNREGISTERED_USER_DEFINED_FUNCTION", "UNSUPPORTED_FORMULA", "WORKBOOK_NOT_FOUND", "INVALID_WORKBOOK_CONTENT", "UNSUPPORTED_WORKBOOK_CONTENT", "INPUT_SOURCE_NOT_FOUND", "INPUT_SOURCE_UNAVAILABLE", "INPUT_SOURCE_IO_ERROR", "SHEET_NOT_FOUND", "NAMED_RANGE_NOT_FOUND", "CELL_NOT_FOUND", "WORKBOOK_NOT_OPENABLE", "SOURCE_PATH_IS_DIRECTORY", "OUTPUT_PATH_IS_DIRECTORY", "OUTPUT_PATH_ALREADY_EXISTS", "WORKBOOK_PASSWORD_REQUIRED", "INVALID_WORKBOOK_PASSWORD", "ENCRYPTION_SOURCE_NOT_ENCRYPTED", "ENCRYPTION_SOURCE_NOT_PRESERVABLE", "INVALID_SIGNING_CONFIGURATION", "WORKBOOK_SECURITY_ERROR", "UNSAFE_PATH_ACCESS", "AUTHORITY_DENIED", "PUBLICATION_UNCERTAIN", "IO_ERROR", "INTERNAL_ERROR" ],
             "type" : "string"
           },
           "message" : {
@@ -9104,6 +9776,8 @@
             "type" : "string"
           },
           "failedStepIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           }
         },
@@ -9122,6 +9796,8 @@
         "description" : "Execution outcome summary for a failed run, including the canonical failure code and an optional failing-step reference.",
         "properties" : {
           "completedStepCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "durationMillis" : "<durationMillis>",
@@ -9129,10 +9805,12 @@
             "$ref" : "#/$defs/dev.erst.gridgrind.core.result.ExecutionJournal$FailureStep"
           },
           "plannedStepCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "problemCode" : {
-            "enum" : [ "INVALID_ARGUMENTS", "INVALID_JSON", "INVALID_ENCODING", "INVALID_REQUEST_SHAPE", "INVALID_REQUEST", "NUMBER_NOT_REPRESENTABLE", "PATH_ESCAPES_ROOT", "ASSERTION_FAILED", "PRESERVATION_FAILED", "INVALID_CELL_ADDRESS", "INVALID_RANGE_ADDRESS", "INVALID_FORMULA", "INVALID_FORMULA_TEXT", "UNSUPPORTED_FORMULA_CONSTRUCT", "CIRCULAR_FORMULA_REFERENCE", "MISSING_EXTERNAL_WORKBOOK", "UNREGISTERED_USER_DEFINED_FUNCTION", "UNSUPPORTED_FORMULA", "WORKBOOK_NOT_FOUND", "INPUT_SOURCE_NOT_FOUND", "INPUT_SOURCE_UNAVAILABLE", "INPUT_SOURCE_IO_ERROR", "SHEET_NOT_FOUND", "NAMED_RANGE_NOT_FOUND", "CELL_NOT_FOUND", "WORKBOOK_NOT_OPENABLE", "SOURCE_PATH_IS_DIRECTORY", "OUTPUT_PATH_IS_DIRECTORY", "OUTPUT_PATH_ALREADY_EXISTS", "WORKBOOK_PASSWORD_REQUIRED", "INVALID_WORKBOOK_PASSWORD", "ENCRYPTION_SOURCE_NOT_ENCRYPTED", "ENCRYPTION_SOURCE_NOT_PRESERVABLE", "INVALID_SIGNING_CONFIGURATION", "WORKBOOK_SECURITY_ERROR", "UNSAFE_PATH_ACCESS", "AUTHORITY_DENIED", "PUBLICATION_UNCERTAIN", "IO_ERROR", "INTERNAL_ERROR" ],
+            "enum" : [ "INVALID_ARGUMENTS", "INVALID_JSON", "INVALID_AUTHORITY", "INVALID_ENCODING", "INVALID_REQUEST_SHAPE", "INVALID_REQUEST", "NUMBER_NOT_REPRESENTABLE", "PATH_ESCAPES_ROOT", "ASSERTION_FAILED", "PRESERVATION_FAILED", "INVALID_CELL_ADDRESS", "INVALID_RANGE_ADDRESS", "INVALID_FORMULA", "INVALID_FORMULA_TEXT", "UNSUPPORTED_FORMULA_CONSTRUCT", "CIRCULAR_FORMULA_REFERENCE", "MISSING_EXTERNAL_WORKBOOK", "UNREGISTERED_USER_DEFINED_FUNCTION", "UNSUPPORTED_FORMULA", "WORKBOOK_NOT_FOUND", "INVALID_WORKBOOK_CONTENT", "UNSUPPORTED_WORKBOOK_CONTENT", "INPUT_SOURCE_NOT_FOUND", "INPUT_SOURCE_UNAVAILABLE", "INPUT_SOURCE_IO_ERROR", "SHEET_NOT_FOUND", "NAMED_RANGE_NOT_FOUND", "CELL_NOT_FOUND", "WORKBOOK_NOT_OPENABLE", "SOURCE_PATH_IS_DIRECTORY", "OUTPUT_PATH_IS_DIRECTORY", "OUTPUT_PATH_ALREADY_EXISTS", "WORKBOOK_PASSWORD_REQUIRED", "INVALID_WORKBOOK_PASSWORD", "ENCRYPTION_SOURCE_NOT_ENCRYPTED", "ENCRYPTION_SOURCE_NOT_PRESERVABLE", "INVALID_SIGNING_CONFIGURATION", "WORKBOOK_SECURITY_ERROR", "UNSAFE_PATH_ACCESS", "AUTHORITY_DENIED", "PUBLICATION_UNCERTAIN", "IO_ERROR", "INTERNAL_ERROR" ],
             "type" : "string"
           },
           "status" : {
@@ -9147,10 +9825,14 @@
         "description" : "Execution outcome summary for a successful run.",
         "properties" : {
           "completedStepCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "durationMillis" : "<durationMillis>",
           "plannedStepCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "status" : {
@@ -9259,6 +9941,8 @@
             "type" : "string"
           },
           "stepIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "stepKind" : {
@@ -9301,12 +9985,18 @@
         "description" : "Exact sheet summary report including visibility, protection, and structural counts.",
         "properties" : {
           "lastColumnIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "lastRowIndex" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "physicalRowCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "protection" : {
@@ -9327,6 +10017,8 @@
         "additionalProperties" : false,
         "properties" : {
           "count" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "type" : {
@@ -9367,6 +10059,9 @@
       "dev.erst.gridgrind.core.result.WorkbookExecutionEvidence$Admission" : {
         "additionalProperties" : false,
         "properties" : {
+          "executionStrategy" : {
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.result.WorkbookExecutionEvidence$ExecutionStrategy"
+          },
           "materializedInputs" : {
             "items" : {
               "$ref" : "#/$defs/dev.erst.gridgrind.core.result.WorkbookExecutionEvidence$MaterializedInput"
@@ -9425,10 +10120,26 @@
         "required" : [ "status" ],
         "type" : "object"
       },
+      "dev.erst.gridgrind.core.result.WorkbookExecutionEvidence$ExecutionStrategy" : {
+        "additionalProperties" : false,
+        "properties" : {
+          "backend" : {
+            "enum" : [ "FULL_XSSF", "EVENT_READ", "STREAMING_WRITE" ],
+            "type" : "string"
+          },
+          "fullWorkbookMaterializationRequired" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "backend", "fullWorkbookMaterializationRequired" ],
+        "type" : "object"
+      },
       "dev.erst.gridgrind.core.result.WorkbookExecutionEvidence$MaterializedInput" : {
         "additionalProperties" : false,
         "properties" : {
           "byteSize" : {
+            "maximum" : 9223372036854775807,
+            "minimum" : -9223372036854775808,
             "type" : "integer"
           },
           "path" : {
@@ -9912,10 +10623,10 @@
       },
       "dev.erst.gridgrind.core.result.WorkbookResultPersistence$PublicationOutcome$NotPublished" : {
         "additionalProperties" : false,
-        "description" : "Final destination remains provably absent or unchanged after publication did not complete.",
+        "description" : "This run did not commit; destination evidence is reported separately.",
         "properties" : {
           "destinationState" : {
-            "enum" : [ "ABSENT", "PRESERVED" ],
+            "enum" : [ "ABSENT", "PRESERVED", "COLLISION_OBSERVED" ],
             "type" : "string"
           },
           "status" : {
@@ -9957,6 +10668,10 @@
         "additionalProperties" : false,
         "description" : "Final destination may have changed, so automated retry is unsafe without inspection.",
         "properties" : {
+          "commitObservation" : {
+            "enum" : [ "NOT_ESTABLISHED", "RETURNED_SUCCESSFULLY" ],
+            "type" : "string"
+          },
           "executionPath" : {
             "type" : "string"
           },
@@ -9968,7 +10683,7 @@
             "const" : "UNCERTAIN"
           }
         },
-        "required" : [ "executionPath", "recovery", "status" ],
+        "required" : [ "executionPath", "recovery", "commitObservation", "status" ],
         "type" : "object"
       },
       "dev.erst.gridgrind.core.result.WorkbookSummary" : {
@@ -9986,9 +10701,13 @@
             "type" : "boolean"
           },
           "namedRangeCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "sheetCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "sheetNames" : {
@@ -10015,6 +10734,8 @@
             "type" : "boolean"
           },
           "namedRangeCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "selectedSheetNames" : {
@@ -10024,6 +10745,8 @@
             "type" : "array"
           },
           "sheetCount" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "sheetNames" : {

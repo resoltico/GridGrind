@@ -26,6 +26,9 @@ public record RequestIntake(
       throw new IllegalArgumentException(
           "An invalid request intake cannot contain a complete plan");
     }
+    if (completePlan.isPresent() && !boundFragments.matches(completePlan.orElseThrow())) {
+      throw new IllegalArgumentException("Complete plan must match its bound request fragments");
+    }
   }
 
   /** Returns the plan after the caller has handled every intake finding. */
@@ -37,10 +40,9 @@ public record RequestIntake(
     if (!bindingFailures.isEmpty()) {
       throw bindingFailures.getFirst().exception();
     }
-    return completePlan.orElseThrow(
-        () ->
-            new IllegalStateException(
-                "A structurally valid request must bind every required request fragment"));
+    return completePlan.orElseThrow(() ->
+        new IllegalStateException(
+            "A structurally valid request must bind every required request fragment"));
   }
 
   /** Returns whether tolerant parsing and structural collection found no request-shape defects. */

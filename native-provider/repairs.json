@@ -1,0 +1,228 @@
+{
+  "formatVersion": 1,
+  "resourcePrefix": "META-INF/gridgrind/native-provider/",
+  "requiredClassList": "required-classes.list",
+  "classDirectory": "classes",
+  "component": {
+    "group": "dev.erst.gridgrind",
+    "artifact": "native-provider",
+    "versionFrom": "project.version"
+  },
+  "sourceArtifacts": [
+    {
+      "id": "poi",
+      "group": "org.apache.poi",
+      "artifact": "poi",
+      "version": "6.0.0",
+      "classifier": "sources",
+      "sha256": "b5982791803174c040e774708d28ace281a59c1c5e6c5bb0b63653fab2aa2a20",
+      "publisherUrl": "https://repo.maven.apache.org/maven2/org/apache/poi/poi/6.0.0/poi-6.0.0-sources.jar",
+      "upstreamLicense": "Apache-2.0"
+    },
+    {
+      "id": "poi-ooxml",
+      "group": "org.apache.poi",
+      "artifact": "poi-ooxml",
+      "version": "6.0.0",
+      "classifier": "sources",
+      "sha256": "5e0b67c4dc4628ca02a200d67118e9631936109b7ed47a52a4738d41a619f7dc",
+      "publisherUrl": "https://repo.maven.apache.org/maven2/org/apache/poi/poi-ooxml/6.0.0/poi-ooxml-6.0.0-sources.jar",
+      "upstreamLicense": "Apache-2.0"
+    }
+  ],
+  "repairs": [
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/OperationEvaluatorFactory.java",
+      "upstreamSourceSha256": "5f7639e6e0b5988fb95e56fe38ab9cb252ac73f69c83d12aaadcbe9cd5860948",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/OperationEvaluatorFactory.java.patch",
+      "patchSha256": "61c8f5f82acc23b1b10ddba718d2a335a59e0184b259263d3ca60c6047ba5c61"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/atp/ArgumentsEvaluator.java",
+      "upstreamSourceSha256": "c0a2ca226c0ad6f41de7ab0c5db1d736336db878bddbe461c0cf3546b307a0a8",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/atp/ArgumentsEvaluator.java.patch",
+      "patchSha256": "b3f97890fbdbcfbacc334315c2ea7a60e27be548dd277bb2b8e8523022eca74e"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/atp/WorkdayCalculator.java",
+      "upstreamSourceSha256": "7e7704161048066a7dc453556e61bb78179b68cdc266bdfc4315e76bdd4226e7",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/atp/WorkdayCalculator.java.patch",
+      "patchSha256": "d3b855ba02762d280378ecec8b6f0f41b5be2345f181821a219fd461717a74e3"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/atp/WorkdayFunction.java",
+      "upstreamSourceSha256": "270dc97758e09675168d4e5039a0c3b34ba7ac568ef32a8293b3d6154b9e3352",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/atp/WorkdayFunction.java.patch",
+      "patchSha256": "368592343691a04ba8871368ece2e3b696d6b7d4336a33a961eb8ea50a7f794d"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/atp/WorkdayIntlFunction.java",
+      "upstreamSourceSha256": "8894dbf195187de150c5835a25221d2a255f0ceebd45f7ab0ac2014780e74e68",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/atp/WorkdayIntlFunction.java.patch",
+      "patchSha256": "c4dfdc0044867befe52e6508c7008df75f655d27b80ab6c7280a7712ebefbb36"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/atp/YearFrac.java",
+      "upstreamSourceSha256": "9f5bb08c8ea98c1e9884a09fa51c1664320f502c67858afa48cd786ad2285510",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/atp/YearFrac.java.patch",
+      "patchSha256": "90316b59affcbd5f26cdf874def2a975ffdaecbfffd0e64e4f8123d224c8a018"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/atp/YearFracCalculator.java",
+      "upstreamSourceSha256": "80168bd954d8f57f4fddafe30de5df4e911c4a98781d4ca39b931574704a9962",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/atp/YearFracCalculator.java.patch",
+      "patchSha256": "a8b739450ef4f76ad13a0af8e81e06e7c01f0aec9853585454eaf7631f18d97b"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/eval/OperandResolver.java",
+      "upstreamSourceSha256": "eae904159654d15744661480c919a2c926f039a83ded246ee34f74b7f60490b5",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/eval/OperandResolver.java.patch",
+      "patchSha256": "aac6eca42c08f190ce937c6330a0748a80dc8ed25d2e5d05db6e4d17c636681e"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/functions/CalendarFieldFunction.java",
+      "upstreamSourceSha256": "0f682ea93b5cd4904bddc9c38184cb3259fdc74ef9e8459231a94798bd0907fb",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/functions/CalendarFieldFunction.java.patch",
+      "patchSha256": "6edfe748d013a1fec4f4b6e00e41232e7340863fc0e59e1e48d15a37b3933db1"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/functions/DateFunc.java",
+      "upstreamSourceSha256": "eb7598f12993d1a03a7b797492585ec6bcf335dca9dba1c0c2e1babac163df24",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/functions/DateFunc.java.patch",
+      "patchSha256": "a8c31a44ee39a0573385a73517ab2cc2b56d4e0d5a7b6d2f8eed4b2bb8e756e9"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/functions/DateValue.java",
+      "upstreamSourceSha256": "146b4fa82929f1f3915c5b0f8ca04a865198db93cac98732e12b1d4494d17961",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/functions/DateValue.java.patch",
+      "patchSha256": "7773cae2861dda0d90c6013cbfc334187e184ea438219d99d2c19e6a2cf87df5"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/functions/Days.java",
+      "upstreamSourceSha256": "8744157b6f1d08f926540ff24b893a2b7ed1e89d7d30c66bbe4892d9342159ce",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/functions/Days.java.patch",
+      "patchSha256": "75748506f0dd2687bfd0576447b1d33ad6d1c151a9d65320afbcde88bb6953d8"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/functions/EDate.java",
+      "upstreamSourceSha256": "81822a404ba2ac074f3789a5b1a21432ee569745e9ee13bd82fc2877429d00fd",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/functions/EDate.java.patch",
+      "patchSha256": "69289c46c784216763022408c0072bc21826dfffe058851fe950fc2855df2ce5"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/functions/EOMonth.java",
+      "upstreamSourceSha256": "170da5a401ebe94a5a369d002ba5eed8cfc38783ae98a6e5a6f9bcc520ebc3dd",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/functions/EOMonth.java.patch",
+      "patchSha256": "c73e8316cea2acaa9d0ff176cb4bb8e885b0978ab4fca739c77566096d1905f1"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/functions/Now.java",
+      "upstreamSourceSha256": "20c9b0a24365a45be640ba07638297451c64362dfb5d223ca58c1f941b1a755e",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/functions/Now.java.patch",
+      "patchSha256": "456147c2c61d7e49f374c3fe4f141b7fdbeb789649967ef4e9a603978b5b92ee"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/functions/TextFunction.java",
+      "upstreamSourceSha256": "91aa31ac6feed5cc4fefb540a9e86e103d9a3586bb556e4f9987f89f28cdcd9f",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/functions/TextFunction.java.patch",
+      "patchSha256": "1e8e466f32e4e38f0c86ac8c19a45e921ede9d0cbb1ba05cff4ed3fc23f6fafd"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/functions/TimeValue.java",
+      "upstreamSourceSha256": "f5c8dce8be86f858655b49b5b686eb28a9fc33a25733a030eb99b40b6dae18e2",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/functions/TimeValue.java.patch",
+      "patchSha256": "aa601217130393d341dec701a1f7d9975a2bdc996644f9589ef244bdd4bb6e37"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/functions/Today.java",
+      "upstreamSourceSha256": "5ebe180b587332b3d4a2e6f038b118fcbf85d0998e5bde691f5371d0b5daa8b9",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/functions/Today.java.patch",
+      "patchSha256": "560f1a0277e25e5c10a4c0a66f62b1380029ca301c247ea5a529c1ea71b53a8e"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/functions/Value.java",
+      "upstreamSourceSha256": "ba8ca8cb7fe376172acbd90ea806923a13f3c86b26f9004d3a403601f709784a",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/functions/Value.java.patch",
+      "patchSha256": "abd1bffbd272b5f5a2a9e6da0932632f6d04ccf2aa00a89f079cedd09a90e88d"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/functions/WeekNum.java",
+      "upstreamSourceSha256": "3cadfe9765dbff84bcef366e19878b20110727a09164bdc138e9f174ee114fb5",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/functions/WeekNum.java.patch",
+      "patchSha256": "3bb5560951c0bb1fe89266b982367d415d8bad53f3a1619494d3b4dc4e693ca7"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/formula/functions/WeekdayFunc.java",
+      "upstreamSourceSha256": "1e75868a1afd290173154143966f758baf6c0acc2416a64fa0ea071504d5ed17",
+      "patchPath": "patches/poi/org/apache/poi/ss/formula/functions/WeekdayFunc.java.patch",
+      "patchSha256": "a5da9096c3588baa67316540e9ea75900f683fb43fcfd32f7218b2624a0e0111"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/usermodel/DataFormatter.java",
+      "upstreamSourceSha256": "c8f7be47b1dbcfc9f57a2f613af009e162e190e7a017c7f3fdefd862e1a5c1c0",
+      "patchPath": "patches/poi/org/apache/poi/ss/usermodel/DataFormatter.java.patch",
+      "patchSha256": "f48bc8b67393720991a36871231012e1c63e6f9f7a04b8461f06707cd8dc41f4"
+    },
+    {
+      "component": "poi",
+      "sourcePath": "org/apache/poi/ss/usermodel/DateUtil.java",
+      "upstreamSourceSha256": "0efda4c0123da7ad6a95429f64996afb186475fa3651024040c28476ddd89342",
+      "patchPath": "patches/poi/org/apache/poi/ss/usermodel/DateUtil.java.patch",
+      "patchSha256": "8eaf7aebf5bfb045c0a1427e4f4fa58436d8417f7a9358699546763e2258bec8"
+    },
+    {
+      "component": "poi-ooxml",
+      "sourcePath": "org/apache/poi/xssf/extractor/XSSFImportFromXML.java",
+      "upstreamSourceSha256": "983b0eef76ccf7b87d703337ec1657b5b64aacd49d230cd0ff63260e4e39049a",
+      "patchPath": "patches/poi-ooxml/org/apache/poi/xssf/extractor/XSSFImportFromXML.java.patch",
+      "patchSha256": "98d9fe926470f832e40a437ece590ee7c2db32c7dc9b5a8f6c57f80bf5a4bd01"
+    },
+    {
+      "component": "poi-ooxml",
+      "sourcePath": "org/apache/poi/xssf/usermodel/BaseXSSFEvaluationWorkbook.java",
+      "upstreamSourceSha256": "fc37de90048c7063cb8d565ae1495c05d6ed47bd6f6f5438187b8fa7a29bd4ba",
+      "patchPath": "patches/poi-ooxml/org/apache/poi/xssf/usermodel/BaseXSSFEvaluationWorkbook.java.patch",
+      "patchSha256": "f9a52f005e4a3434458cab3e63a028cb5b55a4b3e2b59e849e83b13aef9914d4"
+    },
+    {
+      "component": "poi-ooxml",
+      "sourcePath": "org/apache/poi/xssf/usermodel/XSSFWorkbook.java",
+      "upstreamSourceSha256": "ece6a418d9d1862e011ce2ad24058f00a65c96af8f3b5b7cbe5e51008c95bf5e",
+      "patchPath": "patches/poi-ooxml/org/apache/poi/xssf/usermodel/XSSFWorkbook.java.patch",
+      "patchSha256": "0ea36bdf53a5544d447ed4bf97d41fedc9ffc29cd4148868a66cb1431550425c",
+      "modifiedSourceSha256": "91fbd91cd690e9caa0785489ea65bcd2a20b4ec65b151b1bfb82491398c9f799",
+      "role": "Skip clone-shared Comments and normal VML before target.read; preserve header/footer VML."
+    }
+  ],
+  "helpers": [
+    {
+      "sourcePath": "src/helper/java/org/apache/poi/ss/usermodel/DateSystemContext.java",
+      "sha256": "f16dbb6cc6d12b1737345c28dd34ab15244d661f7cc81ef32bc546751044bcbf",
+      "license": "AGPL-3.0-only"
+    }
+  ],
+  "targetReleaseFrom": "gridgrindJavaTargetVersion",
+  "compilerVersionFrom": "gridgrindJavaVersion"
+}

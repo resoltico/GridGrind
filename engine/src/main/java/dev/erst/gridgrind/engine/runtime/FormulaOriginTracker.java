@@ -9,9 +9,9 @@ import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
 import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
-import dev.erst.gridgrind.engine.cells.CellAccess;
-import dev.erst.gridgrind.engine.poi.CellBounds;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -31,7 +31,7 @@ final class FormulaOriginTracker {
               Map.of(
                   new CellCoordinate(
                       ((CellSelector.ByAddress) step.target()).sheetName().value(),
-                      ((CellSelector.ByAddress) step.target()).address().value()),
+                      ((CellSelector.ByAddress) step.target()).address()),
                   formulaFor(setCell.value())));
       case ResolvedMutationAction.SetRange setRange -> rangeWrites(step, setRange);
       case ResolvedMutationAction.SetArrayFormula setArrayFormula ->
@@ -42,7 +42,7 @@ final class FormulaOriginTracker {
               Map.of(
                   new CellCoordinate(
                       ((CellSelector.ByAddress) step.target()).sheetName().value(),
-                      ((CellSelector.ByAddress) step.target()).address().value()),
+                      ((CellSelector.ByAddress) step.target()).address()),
                   Optional.empty()));
       case ResolvedMutationAction.AppendRow appendRow -> appendWrites(workbook, step, appendRow);
       default -> FormulaWrites.none();
@@ -64,27 +64,24 @@ final class FormulaOriginTracker {
       return Optional.empty();
     }
     return ExecutionExceptionDiagnosticFields.sheetNameFor(exception)
-        .flatMap(
-            sheetName ->
-                ExecutionExceptionDiagnosticFields.addressFor(exception)
-                    .flatMap(address -> originFor(sheetName, address)));
+        .flatMap(sheetName ->
+            ExecutionExceptionDiagnosticFields.addressFor(exception)
+                .flatMap(address -> originFor(sheetName, address)));
   }
 
   Optional<StepReference> originFor(String sheetName, String address) {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(address, "address must not be null");
     return origins.entrySet().stream()
-        .filter(
-            entry ->
-                entry.getKey().sheetName().equals(sheetName)
-                    && entry.getKey().address().equals(address))
+        .filter(entry ->
+            entry.getKey().sheetName().equals(sheetName)
+                && entry.getKey().address().value().equals(address))
         .map(Map.Entry::getValue)
         .findFirst();
   }
 
   private FormulaWrites rangeWrites(ResolvedStep step, ResolvedMutationAction.SetRange setRange) {
-    CellBounds range =
-        CellAccess.rangeBounds(((RangeSelector.ByRange) step.target()).range().value());
+    RangeRef range = ((RangeSelector.ByRange) step.target()).range();
     Map<CellCoordinate, Optional<String>> writes = new ConcurrentHashMap<>();
     for (int rowOffset = 0; rowOffset < setRange.rows().size(); rowOffset++) {
       for (int columnOffset = 0;
@@ -103,40 +100,34 @@ final class FormulaOriginTracker {
 
   private FormulaWrites arrayFormulaWrites(
       ResolvedStep step, ResolvedMutationAction.SetArrayFormula setArrayFormula) {
-    CellBounds range =
-        CellAccess.rangeBounds(((RangeSelector.ByRange) step.target()).range().value());
+    RangeRef range = ((RangeSelector.ByRange) step.target()).range();
     Map<CellCoordinate, Optional<String>> writes = new ConcurrentHashMap<>();
     IntStream.rangeClosed(range.firstRow(), range.lastRow())
-        .forEach(
-            row ->
-                IntStream.rangeClosed(range.firstColumn(), range.lastColumn())
-                    .forEach(
-                        column ->
-                            writes.put(
-                                coordinate(
-                                    ((RangeSelector.ByRange) step.target()).sheetName().value(),
-                                    row,
-                                    column),
-                                Optional.of(setArrayFormula.formula().formula()))));
+        .forEach(row ->
+            IntStream.rangeClosed(range.firstColumn(), range.lastColumn())
+                .forEach(column ->
+                    writes.put(
+                        coordinate(
+                            ((RangeSelector.ByRange) step.target()).sheetName().value(),
+                            row,
+                            column),
+                        Optional.of(setArrayFormula.formula().formula()))));
     return new FormulaWrites(writes);
   }
 
   private FormulaWrites clearRangeWrites(ResolvedStep step) {
-    CellBounds range =
-        CellAccess.rangeBounds(((RangeSelector.ByRange) step.target()).range().value());
+    RangeRef range = ((RangeSelector.ByRange) step.target()).range();
     Map<CellCoordinate, Optional<String>> writes = new ConcurrentHashMap<>();
     IntStream.rangeClosed(range.firstRow(), range.lastRow())
-        .forEach(
-            row ->
-                IntStream.rangeClosed(range.firstColumn(), range.lastColumn())
-                    .forEach(
-                        column ->
-                            writes.put(
-                                coordinate(
-                                    ((RangeSelector.ByRange) step.target()).sheetName().value(),
-                                    row,
-                                    column),
-                                Optional.empty())));
+        .forEach(row ->
+            IntStream.rangeClosed(range.firstColumn(), range.lastColumn())
+                .forEach(column ->
+                    writes.put(
+                        coordinate(
+                            ((RangeSelector.ByRange) step.target()).sheetName().value(),
+                            row,
+                            column),
+                        Optional.empty())));
     return new FormulaWrites(writes);
   }
 
@@ -169,17 +160,16 @@ final class FormulaOriginTracker {
   }
 
   private static CellCoordinate coordinate(String sheetName, int rowIndex, int columnIndex) {
-    return new CellCoordinate(sheetName, CellAccess.address(rowIndex, columnIndex));
+    return new CellCoordinate(sheetName, new CellAddress(rowIndex, columnIndex));
   }
 
   private void pruneStaleOrigins(XssfWorkbook workbook) {
     origins
         .keySet()
-        .removeIf(
-            key ->
-                !workbook
-                    .formulas()
-                    .matchesStoredFormula(key.sheetName(), key.address(), key.formula()));
+        .removeIf(key ->
+            !workbook
+                .formulas()
+                .matchesStoredFormula(key.sheetName(), key.address(), key.formula()));
   }
 
   record FormulaWrites(Map<CellCoordinate, Optional<String>> cells) {
@@ -193,14 +183,14 @@ final class FormulaOriginTracker {
     }
   }
 
-  record CellCoordinate(String sheetName, String address) {
+  record CellCoordinate(String sheetName, CellAddress address) {
     CellCoordinate {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(address, "address must not be null");
     }
   }
 
-  private record CellKey(String sheetName, String address, String formula) {
+  private record CellKey(String sheetName, CellAddress address, String formula) {
     private CellKey {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(address, "address must not be null");

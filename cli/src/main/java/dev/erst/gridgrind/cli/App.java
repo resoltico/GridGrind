@@ -26,11 +26,57 @@ public final class App {
   }
 
   /** Entry point: creates an App with production defaults and runs the CLI. */
+  @SuppressWarnings({"PMD.UseProperClassLoader", "PMD.UnusedLocalVariable"})
+  // The shipped provider belongs to App, never an embedding TCCL; logging is a close-only owner.
   public static void main(String[] args) {
-    new App().run(args, System.in, System.out, System.err);
+    var diagnostics = new dev.erst.gridgrind.cli.io.CliDiagnosticChannel(System.err);
+    String threshold;
+    try {
+      threshold =
+          dev.erst.gridgrind.cli.logging.StandaloneLoggingPreflight.validate(
+              App.class.getClassLoader());
+    } catch (dev.erst.gridgrind.cli.logging.StandaloneLoggingRefusal refusal) {
+      int code =
+          dev.erst.gridgrind.cli.command.CliStandaloneFailureSupport.emit(
+              args, System.out, diagnostics, refusal);
+      if (code != 0) System.exit(code);
+      return;
+    } catch (Throwable failure) {
+      int code =
+          CliUnexpectedFailureSupport.emit(
+              args,
+              CliPathArguments.responsePathHint(args),
+              CliArguments.prettyJsonHint(args),
+              System.out,
+              diagnostics,
+              failure);
+      if (code != 0) System.exit(code);
+      return;
+    }
+    var result = new java.util.concurrent.atomic.AtomicInteger();
+    boolean invocationStarted = false;
+    try (var logging =
+        dev.erst.gridgrind.cli.logging.StandaloneLogging.open(
+            App.class.getClassLoader(), threshold, diagnostics)) {
+      invocationStarted = true;
+      new App(new ProductionCliFactory(), result::set)
+          .run(args, System.in, System.out, diagnostics);
+    } catch (Throwable failure) {
+      if (invocationStarted) result.set(1);
+      else
+        result.set(
+            CliUnexpectedFailureSupport.emit(
+                args,
+                CliPathArguments.responsePathHint(args),
+                CliArguments.prettyJsonHint(args),
+                System.out,
+                diagnostics,
+                failure));
+    }
+    if (result.get() != 0) System.exit(result.get());
   }
 
-  void run(String[] args) {
+  void run(String... args) {
     run(args, System.in, System.out, System.err);
   }
 

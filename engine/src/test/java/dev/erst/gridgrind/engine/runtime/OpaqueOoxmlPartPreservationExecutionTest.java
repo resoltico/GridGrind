@@ -48,7 +48,9 @@ class OpaqueOoxmlPartPreservationExecutionTest {
     WorkbookResult.Success success =
         assertInstanceOf(
             WorkbookResult.Success.class,
-            new DefaultGridGrindRequestExecutor()
+            new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
                 .execute(
                     request,
                     ExecutionInputBindingsFixtureSupport.bindings(
@@ -72,7 +74,9 @@ class OpaqueOoxmlPartPreservationExecutionTest {
     WorkbookResult.Failure failure =
         assertInstanceOf(
             WorkbookResult.Failure.class,
-            new DefaultGridGrindRequestExecutor()
+            new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
                 .execute(
                     request,
                     ExecutionInputBindingsFixtureSupport.bindings(

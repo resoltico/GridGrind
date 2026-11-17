@@ -6,7 +6,7 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
-import dev.erst.gridgrind.core.vocabulary.TextValidation;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.engine.autofilter.AutofilterAdapter;
 import dev.erst.gridgrind.engine.conditionalformatting.ConditionalFormattingAdapter;
 import dev.erst.gridgrind.engine.validation.DataValidationAdapter;
@@ -47,8 +47,8 @@ public final class SheetMetadata {
   }
 
   /** Creates or replaces the validation rule over the selected range. */
-  public SheetMetadata setDataValidation(String range, ResolvedDataValidation validation) {
-    TextValidation.requireNonBlank(range, "range");
+  public SheetMetadata setDataValidation(RangeRef range, ResolvedDataValidation validation) {
+    Objects.requireNonNull(range, "range must not be null");
     Objects.requireNonNull(validation, "validation must not be null");
     dataValidationAdapter.setDataValidation(xssfSheet(), range, validation);
     return this;
@@ -64,16 +64,16 @@ public final class SheetMetadata {
   }
 
   /** Creates or replaces the sheet autofilter and any authored criteria. */
-  public SheetMetadata setAutofilter(String range) {
+  public SheetMetadata setAutofilter(RangeRef range) {
     return setAutofilter(range, List.of(), Optional.empty());
   }
 
   /** Creates or replaces the sheet autofilter and any authored criteria. */
   public SheetMetadata setAutofilter(
-      String range,
+      RangeRef range,
       List<AutofilterFilterColumnSpec> criteria,
       Optional<AutofilterSortStateSpec> sortState) {
-    TextValidation.requireNonBlank(range, "range");
+    Objects.requireNonNull(range, "range must not be null");
     Objects.requireNonNull(criteria, "criteria must not be null");
     Objects.requireNonNull(sortState, "sortState must not be null");
     autofilterAdapter.setSheetAutofilter(xssfSheet(), range, criteria, sortState);

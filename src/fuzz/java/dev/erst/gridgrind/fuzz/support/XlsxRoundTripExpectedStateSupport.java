@@ -93,9 +93,8 @@ final class XlsxRoundTripExpectedStateSupport {
           metadata.hyperlink(),
           metadata
               .comment()
-              .map(
-                  comment ->
-                      new ResolvedComment(comment.text(), comment.author(), comment.visible())));
+              .map(comment ->
+                  new ResolvedComment(comment.text(), comment.author(), comment.visible())));
     }
   }
 

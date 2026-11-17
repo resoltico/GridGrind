@@ -30,7 +30,8 @@ public sealed interface DataValidationRuleSpec
   @Variant(
       id = "EXPLICIT_LIST",
       summary =
-          "Allow only one of the supplied explicit values. An empty values array preserves Excel's explicit-empty-list state.")
+          "Allow only one of the supplied explicit values. An empty values array preserves Excel's"
+              + " explicit-empty-list state.")
   record ExplicitList(List<String> values) implements DataValidationRuleSpec {
     public ExplicitList {
       values = copyValues(values);
@@ -54,7 +55,8 @@ public sealed interface DataValidationRuleSpec
   @Variant(
       id = "WHOLE_NUMBER",
       summary =
-          "Apply a whole-number comparison rule. formula2 is used only for BETWEEN and NOT_BETWEEN.")
+          "Apply a whole-number comparison rule. formula2 is used only for BETWEEN and"
+              + " NOT_BETWEEN.")
   record WholeNumber(
       ExcelComparisonOperator operator,
       @dev.erst.gridgrind.core.metadata.FieldRule(
@@ -76,7 +78,8 @@ public sealed interface DataValidationRuleSpec
   @Variant(
       id = "DECIMAL_NUMBER",
       summary =
-          "Apply a decimal-number comparison rule. formula2 is used only for BETWEEN and NOT_BETWEEN.")
+          "Apply a decimal-number comparison rule. formula2 is used only for BETWEEN and"
+              + " NOT_BETWEEN.")
   record DecimalNumber(
       ExcelComparisonOperator operator,
       @dev.erst.gridgrind.core.metadata.FieldRule(
@@ -204,11 +207,10 @@ public sealed interface DataValidationRuleSpec
         || operator == ExcelComparisonOperator.NOT_BETWEEN) {
       String upperBound =
           TextValidation.requireNonBlank(
-              formula2.orElseThrow(
-                  () ->
-                      new IllegalArgumentException(
-                          "formula2 must not be blank for "
-                              + operator.name().toLowerCase(java.util.Locale.ROOT))),
+              formula2.orElseThrow(() ->
+                  new IllegalArgumentException(
+                      "formula2 must not be blank for "
+                          + operator.name().toLowerCase(java.util.Locale.ROOT))),
               "formula2");
       FormulaInputSecurity.rejectDde(upperBound);
       return Optional.of(upperBound);

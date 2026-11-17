@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.engine.drawing.DrawingAdapter;
@@ -34,8 +35,8 @@ class DrawingGeometryContractTest {
         assertInstanceOf(DrawingAnchorReport.TwoCell.class, DrawingAdapter.snapshotAnchor(shape));
     assertEquals(4, report.from().columnIndex());
     assertEquals(5, report.from().rowIndex());
-    assertEquals(3, report.from().dx());
-    assertEquals(7, report.from().dy());
+    assertEquals(new DrawingCoordinateReport.Emu(3), report.from().dx());
+    assertEquals(new DrawingCoordinateReport.Emu(7), report.from().dy());
     assertEquals(1, report.to().columnIndex());
     assertEquals(2, report.to().rowIndex());
     assertThrows(

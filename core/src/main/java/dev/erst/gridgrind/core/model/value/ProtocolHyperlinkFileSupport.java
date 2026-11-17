@@ -101,14 +101,13 @@ final class ProtocolHyperlinkFileSupport {
   private static String encodePath(String path) {
     StringBuilder builder = new StringBuilder(path.length());
     path.codePoints()
-        .forEach(
-            codePoint -> {
-              if (isPlainUriPathCodePoint(codePoint)) {
-                builder.appendCodePoint(codePoint);
-                return;
-              }
-              appendPercentEncoded(builder, codePoint);
-            });
+        .forEach(codePoint -> {
+          if (isPlainUriPathCodePoint(codePoint)) {
+            builder.appendCodePoint(codePoint);
+            return;
+          }
+          appendPercentEncoded(builder, codePoint);
+        });
     return builder.toString();
   }
 

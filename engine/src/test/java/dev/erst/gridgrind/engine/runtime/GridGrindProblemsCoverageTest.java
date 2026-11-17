@@ -131,7 +131,8 @@ class GridGrindProblemsCoverageTest {
     ProblemContext.OpenWorkbook openWorkbookContext =
         new ProblemContext.OpenWorkbook(
             ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "NONE"),
-            ProblemContextWorkbookSurfaces.WorkbookReference.existingFile("/tmp/source.xlsx"));
+            ProblemContextWorkbookSurfaces.WorkbookReference.existingFile("/tmp/source.xlsx"),
+            java.util.Optional.empty());
     ProblemContext.WriteResponse writeResponseContext =
         new ProblemContext.WriteResponse(
             ProblemContextRequestSurfaces.ResponseOutput.responseFile("/tmp/report.json"));
@@ -159,7 +160,8 @@ class GridGrindProblemsCoverageTest {
 
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, assertionFailure.code());
     assertEquals(
-        "Inspect problem.assertionFailure observations, then adjust the failing assertion or preceding workbook mutations and retry.",
+        "Inspect problem.assertionFailure observations, then adjust the failing assertion or"
+            + " preceding workbook mutations and retry.",
         assertionFailure.resolution());
 
     assertEquals(GridGrindProblemCode.IO_ERROR, saveAsConflict.code());
@@ -177,7 +179,8 @@ class GridGrindProblemsCoverageTest {
         "Check the source workbook path, permissions, and file locks before retrying.",
         openWorkbookDenied.resolution());
     assertEquals(
-        "Check the response destination path, parent directory permissions, free disk space, and file locks before retrying.",
+        "Check the response destination path, parent directory permissions, free disk space, and"
+            + " file locks before retrying.",
         writeResponseDenied.resolution());
   }
 

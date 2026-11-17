@@ -19,9 +19,11 @@ import java.util.Optional;
 @SuppressWarnings(
     "PMD.LooseCoupling") // Identity keys distinguish equal source records at distinct paths.
 final class InputResolutionOrigins {
-  private final IdentityHashMap<Object, JsonLocation> locations;
+  private final IdentityHashMap<Object, java.util.ArrayDeque<JsonLocation>> locations;
+  private final IdentityHashMap<Object, JsonLocation> recent = new IdentityHashMap<>();
 
-  private InputResolutionOrigins(IdentityHashMap<Object, JsonLocation> locations) {
+  private InputResolutionOrigins(
+      IdentityHashMap<Object, java.util.ArrayDeque<JsonLocation>> locations) {
     this.locations = new IdentityHashMap<>(locations);
   }
 
@@ -29,30 +31,66 @@ final class InputResolutionOrigins {
       WorkbookPlan request, Optional<RequestIntake> requestAnalysis) {
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(requestAnalysis, "requestAnalysis must not be null");
-    IdentityHashMap<Object, JsonLocation> locations = new IdentityHashMap<>();
+    IdentityHashMap<Object, java.util.ArrayDeque<JsonLocation>> locations = new IdentityHashMap<>();
     collect(request, "", requestAnalysis, locations);
     return new InputResolutionOrigins(locations);
   }
 
+  static InputResolutionOrigins forValue(Object value, String path) {
+    IdentityHashMap<Object, java.util.ArrayDeque<JsonLocation>> locations = new IdentityHashMap<>();
+    collect(value, path, Optional.empty(), locations);
+    return new InputResolutionOrigins(locations);
+  }
+
+  InputResolutionOrigins scoped(String path) {
+    IdentityHashMap<Object, java.util.ArrayDeque<JsonLocation>> selected = new IdentityHashMap<>();
+    locations.forEach((source, occurrences) -> {
+      var matching = new java.util.ArrayDeque<JsonLocation>();
+      for (var occurrence : occurrences) {
+        if (occurrence
+            .jsonPathValue()
+            .filter(candidate ->
+                candidate.equals(path)
+                    || candidate.startsWith(path + ".")
+                    || candidate.startsWith(path + "["))
+            .isPresent()) {
+          matching.add(occurrence);
+        }
+      }
+      if (!matching.isEmpty()) selected.put(source, matching);
+    });
+    return new InputResolutionOrigins(selected);
+  }
+
   Optional<JsonLocation> locationFor(Object source) {
-    return Optional.ofNullable(
-        locations.get(Objects.requireNonNull(source, "source must not be null")));
+    var occurrences = locations.get(Objects.requireNonNull(source, "source must not be null"));
+    JsonLocation location = occurrences == null ? null : occurrences.pollFirst();
+    if (location != null) recent.put(source, location);
+    return Optional.ofNullable(location);
+  }
+
+  Optional<JsonLocation> lastLocationFor(Object source) {
+    return Optional.ofNullable(recent.get(source));
   }
 
   private static void collect(
       Object value,
       String jsonPath,
       Optional<RequestIntake> requestAnalysis,
-      IdentityHashMap<Object, JsonLocation> locations) {
+      IdentityHashMap<Object, java.util.ArrayDeque<JsonLocation>> locations) {
     if (value == null || value instanceof WireScalar) {
       return;
     }
     if (value instanceof TextSourceSpec textSource) {
-      locations.put(textSource, locationFor(textSource, jsonPath, requestAnalysis));
+      locations
+          .computeIfAbsent(textSource, ignored -> new java.util.ArrayDeque<>())
+          .add(locationFor(textSource, jsonPath, requestAnalysis));
       return;
     }
     if (value instanceof BinarySourceSpec binarySource) {
-      locations.put(binarySource, locationFor(binarySource, jsonPath, requestAnalysis));
+      locations
+          .computeIfAbsent(binarySource, ignored -> new java.util.ArrayDeque<>())
+          .add(locationFor(binarySource, jsonPath, requestAnalysis));
       return;
     }
     if (value instanceof Optional<?> optional) {

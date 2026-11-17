@@ -30,11 +30,10 @@ class InspectionStepTest {
 
   @Test
   void keepsIncompatibleTargetsForTheStaticContractPhase() {
-    assertDoesNotThrow(
-        () ->
-            new InspectionStep(
-                new StepId("bad-target"),
-                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
-                new WorkbookIntrospectionQuery.GetWorkbookSummary()));
+    assertDoesNotThrow(() ->
+        new InspectionStep(
+            new StepId("bad-target"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
+            new WorkbookIntrospectionQuery.GetWorkbookSummary()));
   }
 }

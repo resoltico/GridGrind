@@ -267,7 +267,8 @@ class GridGrindProblemsTest {
     ProblemContext.OpenWorkbook openWorkbook =
         new ProblemContext.OpenWorkbook(
             ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "NONE"),
-            ProblemContextWorkbookSurfaces.WorkbookReference.existingFile("/tmp/source.xlsx"));
+            ProblemContextWorkbookSurfaces.WorkbookReference.existingFile("/tmp/source.xlsx"),
+            java.util.Optional.empty());
     ProblemContext.PersistWorkbook persistWorkbook =
         new ProblemContext.PersistWorkbook(
             ProblemContextRequestSurfaces.RequestShape.known("NEW", "SAVE_AS"),

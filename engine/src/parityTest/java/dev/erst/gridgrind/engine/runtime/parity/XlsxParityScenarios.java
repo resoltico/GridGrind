@@ -56,6 +56,7 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.semantics.ExecutionConventions;
 import dev.erst.gridgrind.core.source.BinarySourceSpec;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
@@ -81,6 +82,7 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
+import dev.erst.gridgrind.engine.runtime.NativeInvocationContext;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.ByteArrayOutputStream;
@@ -257,7 +259,8 @@ public final class XlsxParityScenarios {
           Path workbookPath = scenarioDirectory.resolve("core.xlsx");
           WorkbookPlan request = coreWorkbookRequest(workbookPath);
           WorkbookResult response =
-              new DefaultGridGrindRequestExecutor()
+              new DefaultGridGrindRequestExecutor(
+                      NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD))
                   .execute(
                       request,
                       XlsxParitySupport.bindings(scenarioDirectory, request),
@@ -569,7 +572,8 @@ public final class XlsxParityScenarios {
 
           WorkbookPlan request = chartAuthoringRequest(workbookPath);
           WorkbookResult response =
-              new DefaultGridGrindRequestExecutor()
+              new DefaultGridGrindRequestExecutor(
+                      NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD))
                   .execute(
                       request,
                       XlsxParitySupport.bindings(scenarioDirectory, request),
@@ -685,7 +689,8 @@ public final class XlsxParityScenarios {
 
           WorkbookPlan request = pivotAuthoringRequest(workbookPath);
           WorkbookResult response =
-              new DefaultGridGrindRequestExecutor()
+              new DefaultGridGrindRequestExecutor(
+                      NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD))
                   .execute(
                       request,
                       XlsxParitySupport.bindings(scenarioDirectory, request),
@@ -742,7 +747,8 @@ public final class XlsxParityScenarios {
           Path workbookPath = scenarioDirectory.resolve("drawing-authoring.xlsx");
           WorkbookPlan request = drawingAuthoringRequest(workbookPath);
           WorkbookResult response =
-              new DefaultGridGrindRequestExecutor()
+              new DefaultGridGrindRequestExecutor(
+                      NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD))
                   .execute(
                       request,
                       XlsxParitySupport.bindings(scenarioDirectory, request),

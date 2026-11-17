@@ -61,9 +61,8 @@ public final class ShippedExamples {
   /** Returns built-in examples that require copied repository asset directories. */
   public static List<ShippedExample> repositoryAssetBackedExamples() {
     return examples().stream()
-        .filter(
-            example ->
-                requirementsFor(example).advisory() == RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS)
+        .filter(example ->
+            requirementsFor(example).advisory() == RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS)
         .toList();
   }
 
@@ -100,10 +99,9 @@ public final class ShippedExamples {
     Recipe recipe =
         RecipeRegistry.recipeFor(example.id())
             .filter(candidate -> candidate.type() == RecipeType.EXAMPLE)
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "Missing shipped-example requirements for " + example.id()));
+            .orElseThrow(() ->
+                new IllegalStateException(
+                    "Missing shipped-example requirements for " + example.id()));
     return new ExampleRequirements(recipe.advisory(), recipe.requiredWorkspacePaths());
   }
 

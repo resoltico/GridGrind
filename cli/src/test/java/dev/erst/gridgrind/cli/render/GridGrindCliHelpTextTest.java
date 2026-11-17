@@ -94,12 +94,12 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
 
   @Test
   void licenseTextContainsMplLicenseWhenResourcePresent() {
-    String mpl = "Mozilla Public License Version 2.0\n\nCopyright (c) 2026 Ervins Strauhmanis\n";
-    InputStream own = new ByteArrayInputStream(mpl.getBytes(StandardCharsets.UTF_8));
+    String agpl = "GNU AFFERO GENERAL PUBLIC LICENSE\n\nCopyright (c) 2026 Ervins Strauhmanis\n";
+    InputStream own = new ByteArrayInputStream(agpl.getBytes(StandardCharsets.UTF_8));
 
     String result = ProductInfo.licenseText(own, null, null, null, null);
 
-    assertTrue(result.contains("Mozilla Public License Version 2.0"));
+    assertTrue(result.contains("GNU AFFERO GENERAL PUBLIC LICENSE"));
     assertTrue(result.contains("Ervins Strauhmanis"));
     assertFalse(result.contains("Third-party notices and licenses:"));
   }
@@ -108,7 +108,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   void packagedLicenseTextCoversResolvedRuntimeTerms() {
     String result = ProductInfo.licenseText(GridGrindCli.class);
 
-    assertTrue(result.contains("Mozilla Public License Version 2.0"));
+    assertTrue(result.contains("GNU AFFERO GENERAL PUBLIC LICENSE"));
     assertTrue(result.contains("https://github.com/resoltico/GridGrind/releases"));
     assertTrue(result.contains("Copyright (c) 2026 Ervins Strauhmanis"));
     assertTrue(result.contains("Jakarta Activation API"));
@@ -116,7 +116,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(result.contains("BSD 3-Clause"));
     assertTrue(result.contains("Eclipse Distribution License v1.0"));
     assertTrue(result.contains("FastDoubleParser"));
-    assertTrue(result.contains("Schubfach"));
+    assertTrue(result.contains("jsoniter-scala"));
+    assertTrue(result.contains("xjb"));
     assertTrue(result.contains("Boost Software License, Version 1.0"));
   }
 
@@ -124,7 +125,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   void licenseTextContainsThirdPartySectionWhenDependencyLicensesPresent() {
     InputStream own =
         new ByteArrayInputStream(
-            "Mozilla Public License Version 2.0\n".getBytes(StandardCharsets.UTF_8));
+            "GNU AFFERO GENERAL PUBLIC LICENSE\n".getBytes(StandardCharsets.UTF_8));
     InputStream notice = new ByteArrayInputStream("NOTICE info\n".getBytes(StandardCharsets.UTF_8));
     InputStream apache =
         new ByteArrayInputStream("Apache License\n".getBytes(StandardCharsets.UTF_8));
@@ -134,7 +135,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
 
     String result = ProductInfo.licenseText(own, notice, apache, bsd2, bsd3);
 
-    assertTrue(result.contains("Mozilla Public License Version 2.0"));
+    assertTrue(result.contains("GNU AFFERO GENERAL PUBLIC LICENSE"));
     assertTrue(result.contains("Third-party notices and licenses:"));
     assertTrue(result.contains("NOTICE info"));
     assertTrue(result.contains("Apache License"));
@@ -176,13 +177,13 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     String text =
         ProductInfo.licenseText(
             new ByteArrayInputStream(
-                "Mozilla Public License Version 2.0".getBytes(StandardCharsets.UTF_8)),
+                "GNU AFFERO GENERAL PUBLIC LICENSE".getBytes(StandardCharsets.UTF_8)),
             null,
             null,
             null,
             null);
 
-    assertEquals("Mozilla Public License Version 2.0\n", text);
+    assertEquals("GNU AFFERO GENERAL PUBLIC LICENSE\n", text);
   }
 
   @Test

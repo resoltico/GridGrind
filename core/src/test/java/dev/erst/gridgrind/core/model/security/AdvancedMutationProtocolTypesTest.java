@@ -213,10 +213,10 @@ class AdvancedMutationProtocolTypesTest {
     assertEquals(ref("review-secret"), protection.revisionsPasswordRef().orElseThrow());
 
     NamedRangeTarget.Range explicit =
-        NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("C3:A1"));
+        NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("A1:C3"));
     NamedRangeTarget.Formula formula = NamedRangeTarget.formula("SUM(Budget!A1:A3)");
     assertEquals("Budget", explicit.sheetName().value());
-    assertEquals("C3:A1", explicit.range().value());
+    assertEquals("A1:C3", explicit.range().value());
     assertEquals("SUM(Budget!A1:A3)", formula.formula());
     assertThrows(IllegalArgumentException.class, () -> NamedRangeTarget.formula(" "));
     assertThrows(
@@ -580,24 +580,24 @@ class AdvancedMutationProtocolTypesTest {
     ChartPlotSpec.Pie explicitPiePlot =
         assertInstanceOf(ChartPlotSpec.Pie.class, explicitPie.plots().getFirst());
 
-    assertTrue(bar.title() instanceof ChartTitleSpec.None);
+    assertInstanceOf(ChartTitleSpec.None.class, bar.title());
     assertEquals(new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT), bar.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, bar.displayBlanksAs());
     assertTrue(bar.plotOnlyVisibleCells());
     assertFalse(barPlot.varyColors());
     assertEquals(ExcelChartBarDirection.COLUMN, barPlot.barDirection());
     assertEquals("B1", ((ChartTitleSpec.Formula) barPlot.series().getFirst().title()).formula());
-    assertTrue(secondSeries.title() instanceof ChartTitleSpec.None);
+    assertInstanceOf(ChartTitleSpec.None.class, secondSeries.title());
     assertEquals(ExcelChartDisplayBlanksAs.ZERO, line.displayBlanksAs());
     assertFalse(line.plotOnlyVisibleCells());
     assertTrue(linePlot.varyColors());
     assertEquals(Optional.of(180), piePlot.firstSliceAngle());
-    assertTrue(defaultLine.title() instanceof ChartTitleSpec.None);
+    assertInstanceOf(ChartTitleSpec.None.class, defaultLine.title());
     assertEquals(new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT), defaultLine.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, defaultLine.displayBlanksAs());
     assertTrue(defaultLine.plotOnlyVisibleCells());
     assertFalse(defaultLinePlot.varyColors());
-    assertTrue(defaultPie.title() instanceof ChartTitleSpec.None);
+    assertInstanceOf(ChartTitleSpec.None.class, defaultPie.title());
     assertEquals(new ChartLegendSpec.Visible(ExcelChartLegendPosition.RIGHT), defaultPie.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, defaultPie.displayBlanksAs());
     assertTrue(defaultPie.plotOnlyVisibleCells());
@@ -1386,7 +1386,7 @@ class AdvancedMutationProtocolTypesTest {
         new dev.erst.gridgrind.core.plan.PivotTableSelector.ByNames(
             List.of("Sales Pivot 2026", "Ops Pivot"));
 
-    assertEquals("$C$5", input.anchor().topLeftAddress().value());
+    assertEquals("C5", input.anchor().topLeftAddress().value());
     assertEquals("Amount", input.dataFields().getFirst().displayName());
     assertEquals(List.of("Sales Pivot 2026", "Ops Pivot"), selection.names());
     assertEquals(List.of(), tableSourceInput.rowLabels());

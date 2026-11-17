@@ -1,0 +1,29 @@
+--- org/apache/poi/ss/formula/functions/CalendarFieldFunction.java
++++ org/apache/poi/ss/formula/functions/CalendarFieldFunction.java
+@@ -53,7 +53,7 @@
+         } catch (EvaluationException e) {
+             return e.getErrorEval();
+         }
+-        if (val < 0 || val >= DateUtil.MAX_EXCEL_DATE_SERIAL + 1) {
++        if (val < 0 || val >= org.apache.poi.ss.usermodel.DateSystemContext.maximumSerial() + 1) {
+             return ErrorEval.NUM_ERROR;
+         }
+         return new NumberEval(getCalField(val));
+@@ -62,7 +62,7 @@
+     private int getCalField(double serialDate) {
+        // For some reason, a date of 0 in Excel gets shown
+        //  as the non-existent 1900-01-00
+-        if ((int) serialDate == 0) {
++        if (!org.apache.poi.ss.usermodel.DateSystemContext.is1904() && (int) serialDate == 0) {
+             switch (_dateFieldId) {
+                 case Calendar.YEAR -> { return 1900; }
+                 case Calendar.MONTH -> { return 1; }
+@@ -74,7 +74,7 @@
+         // TODO Figure out if we're in 1900 or 1904
+         // EXCEL functions round up nearly a half second (probably to prevent floating point
+         // rounding issues); use UTC here to prevent daylight saving issues for HOUR
+-        Calendar c = DateUtil.getJavaCalendarUTC(serialDate + 0.4995 / DateUtil.SECONDS_PER_DAY, false);
++        Calendar c = DateUtil.getJavaCalendarUTC(serialDate + 0.4995 / DateUtil.SECONDS_PER_DAY, org.apache.poi.ss.usermodel.DateSystemContext.is1904());
+         int result = c.get(_dateFieldId);
+ 
+         // Month is a special case due to C semantics

@@ -39,14 +39,17 @@ final class HelpSynopsis {
                 List.of(
                     "Create a request: gridgrind recipe show BUDGET --response budget-request.json",
                     "Create fail-closed authority: gridgrind template grant --response grant.json",
-                    "Edit the grant to authorize the request's exact resources, targets and publication.",
+                    "Edit the grant to authorize the request's exact resources, targets and"
+                        + " publication.",
                     "Diagnose: gridgrind doctor --request budget-request.json --grant grant.json")),
             new HelpSurfaceReport.WorkflowEntry(
                 "Execute",
                 List.of(
-                    "Run: gridgrind run --request budget-request.json --grant grant.json --response response.json",
+                    "Run: gridgrind run --request budget-request.json --grant grant.json --response"
+                        + " response.json",
                     "Materialize asset-backed recipes into a new workspace before execution.",
-                    "Inspect the structured result, warnings, assertions and publication outcome."))));
+                    "Inspect the structured result, warnings, assertions and publication"
+                        + " outcome."))));
   }
 
   static HelpSurfaceReport.CliSection execution() {
@@ -54,10 +57,13 @@ final class HelpSynopsis {
         "Execution",
         List.of(
             "Without --response, the command payload is the sole stdout content. With --response,"
-                + " that payload is written to a new file; existing response files are not replaced.",
+                + " that payload is written to a new file; existing response files are not"
+                + " replaced.",
             "A response-file write failure with writable stdout recovers the already-rendered"
                 + " payload there unchanged and adds one compact transport notice on stderr."
-                + " GridGrind never moves a primary payload to stderr.",
+                + " GridGrind never moves a primary payload to stderr. Standalone stderr may also"
+                + " contain bounded NATIVE_DIAGNOSTIC metadata frames; see docs/CLI.md for framing"
+                + " and logging settings.",
             "Use --format structured for JSON help, version and license reports. Use --pretty"
                 + " to indent JSON output.",
             "GridGrind executes ordered steps in sequence, then saves the workbook (unless"
@@ -72,10 +78,9 @@ final class HelpSynopsis {
     return new HelpSurfaceReport.CliDefinitionSection(
         "Limits",
         dev.erst.gridgrind.core.limits.Limit.all().stream()
-            .map(
-                limit ->
-                    new HelpSurfaceReport.DefinitionEntry(
-                        limit.id() + " " + limit.title(), limit.value()))
+            .map(limit ->
+                new HelpSurfaceReport.DefinitionEntry(
+                    limit.id() + " " + limit.title(), limit.value()))
             .toList());
   }
 }

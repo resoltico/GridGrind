@@ -6,7 +6,6 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
@@ -259,33 +258,33 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
           .getOrCreateSheet("TableDataC")
           .cells()
           .setRange(
-              "F1:I5",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("F1:I5"),
               List.of(
                   List.of(
-                      new CellValue.Text("Region"),
-                      new CellValue.Text("Stage"),
-                      new CellValue.Text("Owner"),
-                      new CellValue.Text("Amount")),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Region"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Stage"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Amount")),
                   List.of(
-                      new CellValue.Text("North"),
-                      new CellValue.Text("Plan"),
-                      new CellValue.Text("Ada"),
-                      new CellValue.NumberValue(10)),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Plan"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(10)),
                   List.of(
-                      new CellValue.Text("North"),
-                      new CellValue.Text("Do"),
-                      new CellValue.Text("Ada"),
-                      new CellValue.NumberValue(15)),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("North"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Do"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(15)),
                   List.of(
-                      new CellValue.Text("South"),
-                      new CellValue.Text("Plan"),
-                      new CellValue.Text("Lin"),
-                      new CellValue.NumberValue(7)),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("South"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Plan"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(7)),
                   List.of(
-                      new CellValue.Text("South"),
-                      new CellValue.Text("Do"),
-                      new CellValue.Text("Lin"),
-                      new CellValue.NumberValue(12))));
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("South"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Do"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(12))));
       new TableAdapter()
           .setTable(
               workbook,

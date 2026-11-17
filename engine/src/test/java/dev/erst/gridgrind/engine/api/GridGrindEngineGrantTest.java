@@ -35,6 +35,7 @@ class GridGrindEngineGrantTest {
   void executesWhenThePublicInputCarriesAMatchingHostGrant() {
     ExecutionGrant grant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of("ENSURE_SHEET"),
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -61,6 +62,7 @@ class GridGrindEngineGrantTest {
   void hostGrantRejectsMalformedAuthorityAndDeduplicatesExplicitValues() {
     ExecutionGrant grant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(
                 new ExecutionGrant.ReadAuthority.File(root.resolve("input.xlsx")),
                 new ExecutionGrant.ReadAuthority.File(root.resolve("input.xlsx"))),
@@ -80,6 +82,7 @@ class GridGrindEngineGrantTest {
         IllegalArgumentException.class,
         () ->
             new ExecutionGrant(
+                16L * 1024 * 1024,
                 List.of(),
                 List.of("ensure-sheet"),
                 new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),

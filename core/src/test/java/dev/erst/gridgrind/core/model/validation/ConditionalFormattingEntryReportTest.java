@@ -30,13 +30,12 @@ class ConditionalFormattingEntryReportTest {
                     List.of("FORMULA_RULE@Ops!A1:A3"))));
 
     assertEquals(3, report.checkedConditionalFormattingBlockCount());
-    assertDoesNotThrow(
-        () ->
-            new ConditionalFormattingEntryReport(
-                List.of(new RangeLabel(" ")),
-                List.of(
-                    new ConditionalFormattingRuleReport.UnsupportedRule(
-                        1, false, "FORMULA", "Missing formula text"))));
+    assertDoesNotThrow(() ->
+        new ConditionalFormattingEntryReport(
+            List.of(new RangeLabel(" ")),
+            List.of(
+                new ConditionalFormattingRuleReport.UnsupportedRule(
+                    1, false, "FORMULA", "Missing formula text"))));
     assertThrows(
         IllegalArgumentException.class,
         () ->

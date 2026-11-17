@@ -3,9 +3,11 @@ package dev.erst.gridgrind.fuzz;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.semantics.ExecutionConventions;
 import dev.erst.gridgrind.engine.backend.xssf.SheetNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import dev.erst.gridgrind.engine.runtime.NativeInvocationContext;
 import dev.erst.gridgrind.fuzz.support.FuzzWorkbookIo;
 import dev.erst.gridgrind.fuzz.support.GridGrindFuzzData;
 import dev.erst.gridgrind.fuzz.support.OperationSequenceModel;
@@ -22,7 +24,8 @@ class RoundTripRegressionTest {
     var commands =
         OperationSequenceModel.nextWorkbookCommands(
             GridGrindFuzzData.replay(input("named_range_shift_overwrite_invalid.bin")));
-    try (var workbook = XssfWorkbooks.create()) {
+    try (var nativeContext = NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD);
+        var workbook = XssfWorkbooks.create()) {
       var failure =
           assertThrows(
               SheetNotFoundException.class,
@@ -37,7 +40,8 @@ class RoundTripRegressionTest {
         OperationSequenceModel.nextWorkbookCommands(
             GridGrindFuzzData.replay(
                 input("partial_collapsed_column_ungroup_roundtrip_success.bin")));
-    try (var workbook = XssfWorkbooks.create()) {
+    try (var nativeContext = NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD);
+        var workbook = XssfWorkbooks.create()) {
       new WorkbookExecutionEngine().apply(workbook, commands);
       Path output = root.resolve("grouping.xlsx");
       FuzzWorkbookIo.saveWorkbook(workbook, output);

@@ -128,20 +128,38 @@ class ExcelChartValueObjectTest {
         new ChartReport.Axis(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
-            ExcelChartAxisCrosses.AUTO_ZERO,
+            new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.AUTO_ZERO),
             true);
     ChartReport.Axis valueAxis =
         new ChartReport.Axis(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
-            ExcelChartAxisCrosses.MIN,
+            new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.MIN),
             false);
     ChartReport.Series lineSeries =
         new ChartReport.Series(
-            new ChartReport.Title.Formula("Charts!$B$1", "Plan"),
-            new ChartReport.DataSource.StringReference("Charts!$A$2:$A$4", List.of("Jan", "Feb")),
+            new ChartReport.Title.Formula(
+                Optional.of("Charts!$B$1"),
+                new ChartReport.StringCache.Stored(
+                    Optional.of(1L),
+                    List.of(new ChartReport.StringPoint(Optional.of(0L), Optional.of("Plan"))))),
+            new ChartReport.DataSource.StringReference(
+                Optional.of("Charts!$A$2:$A$4"),
+                new ChartReport.StringCache.Stored(
+                    Optional.of(2L),
+                    List.of(
+                        new ChartReport.StringPoint(Optional.of(0L), Optional.of("Jan")),
+                        new ChartReport.StringPoint(Optional.of(1L), Optional.of("Feb"))))),
             new ChartReport.DataSource.NumericReference(
-                "Charts!$B$2:$B$4", Optional.of("0.0"), List.of("10", "18")),
+                Optional.of("Charts!$B$2:$B$4"),
+                new ChartReport.NumericCache.Stored(
+                    Optional.of(2L),
+                    Optional.of("0.0"),
+                    List.of(
+                        new ChartReport.NumericPoint(
+                            Optional.of(0L), Optional.of("10"), Optional.empty()),
+                        new ChartReport.NumericPoint(
+                            Optional.of(1L), Optional.of("18"), Optional.empty())))),
             Optional.of(true),
             Optional.of(ExcelChartMarkerStyle.CIRCLE),
             Optional.of((short) 8),
@@ -187,13 +205,8 @@ class ExcelChartValueObjectTest {
     assertEquals(2, chartsResult.charts().size());
 
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new ChartReport.DataSource.NumericReference("B2:B4", Optional.of(" "), List.of("1")));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ChartReport.DataSource.NumericLiteral(Optional.of(" "), List.of("1")));
-    assertThrows(
-        NullPointerException.class, () -> new ChartReport.Title.Formula("Charts!$B$1", null));
+        NullPointerException.class,
+        () -> new ChartReport.Title.Formula(Optional.of("Charts!$B$1"), null));
   }
 
   @Test
@@ -316,9 +329,25 @@ class ExcelChartValueObjectTest {
         new ChartReport.Series(
             new ChartReport.Title.Text("Plan"),
             new ChartReport.DataSource.StringReference(
-                "Charts!$A$2:$A$4", List.of("Jan", "Feb", "Mar")),
+                Optional.of("Charts!$A$2:$A$4"),
+                new ChartReport.StringCache.Stored(
+                    Optional.of(3L),
+                    List.of(
+                        new ChartReport.StringPoint(Optional.of(0L), Optional.of("Jan")),
+                        new ChartReport.StringPoint(Optional.of(1L), Optional.of("Feb")),
+                        new ChartReport.StringPoint(Optional.of(2L), Optional.of("Mar"))))),
             new ChartReport.DataSource.NumericReference(
-                "Charts!$B$2:$B$4", Optional.of("0.0"), List.of("10", "18", "15")),
+                Optional.of("Charts!$B$2:$B$4"),
+                new ChartReport.NumericCache.Stored(
+                    Optional.of(3L),
+                    Optional.of("0.0"),
+                    List.of(
+                        new ChartReport.NumericPoint(
+                            Optional.of(0L), Optional.of("10"), Optional.empty()),
+                        new ChartReport.NumericPoint(
+                            Optional.of(1L), Optional.of("18"), Optional.empty()),
+                        new ChartReport.NumericPoint(
+                            Optional.of(2L), Optional.of("15"), Optional.empty())))),
             Optional.of(true),
             Optional.of(ExcelChartMarkerStyle.STAR),
             Optional.of((short) 11),
@@ -328,29 +357,29 @@ class ExcelChartValueObjectTest {
             new ChartReport.Axis(
                 ExcelChartAxisKind.CATEGORY,
                 ExcelChartAxisPosition.BOTTOM,
-                ExcelChartAxisCrosses.AUTO_ZERO,
+                new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.AUTO_ZERO),
                 true),
             new ChartReport.Axis(
                 ExcelChartAxisKind.VALUE,
                 ExcelChartAxisPosition.LEFT,
-                ExcelChartAxisCrosses.MIN,
+                new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.MIN),
                 false));
     List<ChartReport.Axis> snapshotSurfaceAxes =
         List.of(
             new ChartReport.Axis(
                 ExcelChartAxisKind.CATEGORY,
                 ExcelChartAxisPosition.BOTTOM,
-                ExcelChartAxisCrosses.AUTO_ZERO,
+                new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.AUTO_ZERO),
                 true),
             new ChartReport.Axis(
                 ExcelChartAxisKind.VALUE,
                 ExcelChartAxisPosition.LEFT,
-                ExcelChartAxisCrosses.AUTO_ZERO,
+                new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.AUTO_ZERO),
                 true),
             new ChartReport.Axis(
                 ExcelChartAxisKind.SERIES,
                 ExcelChartAxisPosition.RIGHT,
-                ExcelChartAxisCrosses.MAX,
+                new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.MAX),
                 false));
     List<ChartReport.Plot> snapshotPlots =
         List.of(
@@ -403,12 +432,12 @@ class ExcelChartValueObjectTest {
                     new ChartReport.Axis(
                         ExcelChartAxisKind.VALUE,
                         ExcelChartAxisPosition.BOTTOM,
-                        ExcelChartAxisCrosses.MIN,
+                        new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.MIN),
                         true),
                     new ChartReport.Axis(
                         ExcelChartAxisKind.VALUE,
                         ExcelChartAxisPosition.LEFT,
-                        ExcelChartAxisCrosses.AUTO_ZERO,
+                        new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.AUTO_ZERO),
                         true)),
                 List.of(snapshotSeries)),
             new ChartReport.Surface(true, true, snapshotSurfaceAxes, List.of(snapshotSeries)),

@@ -67,8 +67,10 @@ public sealed interface CompositeAssertion extends Assertion
       Iterable<Assertion> assertions, String compositeType) {
     var iterator = assertions.iterator();
     if (!iterator.hasNext()) {
-      throw new IllegalArgumentException(
-          compositeType + " requires nested assertions with compatible target families");
+      throw new dev.erst.gridgrind.core.problem.ValueInvariantException(
+          new dev.erst.gridgrind.core.problem.MessageInvariant(
+              compositeType + " requires nested assertions with compatible target families",
+              java.util.Optional.of("assertions")));
     }
     Class<? extends Selector>[] intersection =
         Assertion.allowedTargetTypes(iterator.next()).clone();
@@ -76,8 +78,10 @@ public sealed interface CompositeAssertion extends Assertion
       intersection = intersect(intersection, Assertion.allowedTargetTypes(iterator.next()));
     }
     if (intersection.length == 0) {
-      throw new IllegalArgumentException(
-          compositeType + " requires nested assertions with compatible target families");
+      throw new dev.erst.gridgrind.core.problem.ValueInvariantException(
+          new dev.erst.gridgrind.core.problem.MessageInvariant(
+              compositeType + " requires nested assertions with compatible target families",
+              java.util.Optional.of("assertions")));
     }
     return intersection;
   }

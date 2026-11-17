@@ -25,8 +25,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.engine.comments.CommentAdapter;
-import dev.erst.gridgrind.engine.poi.CellBounds;
 import dev.erst.gridgrind.engine.poi.SheetStructure;
 import dev.erst.gridgrind.engine.print.PrintAdapter;
 import dev.erst.gridgrind.engine.styles.ColorAdapter;
@@ -79,9 +79,9 @@ public final class LayoutAdapter {
         rowLayouts(xssfSheet()));
   }
 
-  public LayoutAdapter mergeCells(String range) {
-    CellBounds excelRange = CellBounds.parse(range);
-    requireMergeableRange(range, excelRange);
+  public LayoutAdapter mergeCells(RangeRef range) {
+    RangeRef excelRange = Objects.requireNonNull(range, "range must not be null");
+    requireMergeableRange(excelRange);
     if (SheetStructure.findMergedRegionIndex(sheet, excelRange) >= 0) {
       return this;
     }
@@ -90,8 +90,8 @@ public final class LayoutAdapter {
     return this;
   }
 
-  public LayoutAdapter unmergeCells(String range) {
-    CellBounds excelRange = CellBounds.parse(range);
+  public LayoutAdapter unmergeCells(RangeRef range) {
+    RangeRef excelRange = Objects.requireNonNull(range, "range must not be null");
     int mergedRegionIndex = SheetStructure.findMergedRegionIndex(sheet, excelRange);
     if (mergedRegionIndex < 0) {
       throw new IllegalArgumentException("No merged region matches range: " + range);
@@ -152,9 +152,10 @@ public final class LayoutAdapter {
     return (XSSFSheet) sheet;
   }
 
-  private static void requireMergeableRange(String range, CellBounds excelRange) {
+  private static void requireMergeableRange(RangeRef excelRange) {
     if (excelRange.rowCount() == 1 && excelRange.columnCount() == 1) {
-      throw new IllegalArgumentException("range must span at least two cells: " + range);
+      throw new IllegalArgumentException(
+          "range must span at least two cells: " + excelRange.value());
     }
   }
 
@@ -259,7 +260,7 @@ public final class LayoutAdapter {
     clearIgnoredErrors(sheet);
     for (IgnoredErrorSpec ignoredError : ignoredErrors) {
       sheet.addIgnoredErrors(
-          SheetStructure.toCellRangeAddress(CellBounds.parse(ignoredError.range().value())),
+          SheetStructure.toCellRangeAddress(ignoredError.range()),
           ignoredError.errorTypes().stream()
               .map(LayoutAdapter::toPoiIgnoredError)
               .toArray(IgnoredErrorType[]::new));
@@ -281,19 +282,17 @@ public final class LayoutAdapter {
       entry.getValue().stream()
           .sorted(Comparator.comparing(CellRangeAddress::formatAsString))
           .map(CellRangeAddress::formatAsString)
-          .forEach(
-              range ->
-                  ignoredErrorsByRange
-                      .computeIfAbsent(
-                          range, ignoredError -> EnumSet.noneOf(ExcelIgnoredErrorType.class))
-                      .add(errorType));
+          .forEach(range ->
+              ignoredErrorsByRange
+                  .computeIfAbsent(
+                      range, ignoredError -> EnumSet.noneOf(ExcelIgnoredErrorType.class))
+                  .add(errorType));
     }
     return ignoredErrorsByRange.entrySet().stream()
-        .map(
-            entry ->
-                new IgnoredErrorReport(
-                    new dev.erst.gridgrind.core.vocabulary.RangeLabel(entry.getKey()),
-                    List.copyOf(entry.getValue())))
+        .map(entry ->
+            new IgnoredErrorReport(
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel(entry.getKey()),
+                List.copyOf(entry.getValue())))
         .toList();
   }
 
@@ -575,13 +574,12 @@ public final class LayoutAdapter {
   public static Map<Integer, CTCol> shiftedForInsert(
       Map<Integer, CTCol> explicitColumns, int columnIndex, int columnCount) {
     Map<Integer, CTCol> shifted = new LinkedHashMap<>();
-    explicitColumns.forEach(
-        (existingColumnIndex, definition) ->
-            shifted.put(
-                existingColumnIndex >= columnIndex
-                    ? existingColumnIndex + columnCount
-                    : existingColumnIndex,
-                definition));
+    explicitColumns.forEach((existingColumnIndex, definition) ->
+        shifted.put(
+            existingColumnIndex >= columnIndex
+                ? existingColumnIndex + columnCount
+                : existingColumnIndex,
+            definition));
     return Map.copyOf(shifted);
   }
 
@@ -589,16 +587,15 @@ public final class LayoutAdapter {
   public static Map<Integer, CTCol> shiftedForDelete(
       Map<Integer, CTCol> explicitColumns, ExcelColumnSpan columns) {
     Map<Integer, CTCol> shifted = new LinkedHashMap<>();
-    explicitColumns.forEach(
-        (existingColumnIndex, definition) -> {
-          if (existingColumnIndex < columns.firstColumnIndex()) {
-            shifted.put(existingColumnIndex, definition);
-            return;
-          }
-          if (existingColumnIndex > columns.lastColumnIndex()) {
-            shifted.put(existingColumnIndex - columns.count(), definition);
-          }
-        });
+    explicitColumns.forEach((existingColumnIndex, definition) -> {
+      if (existingColumnIndex < columns.firstColumnIndex()) {
+        shifted.put(existingColumnIndex, definition);
+        return;
+      }
+      if (existingColumnIndex > columns.lastColumnIndex()) {
+        shifted.put(existingColumnIndex - columns.count(), definition);
+      }
+    });
     return Map.copyOf(shifted);
   }
 
@@ -610,25 +607,23 @@ public final class LayoutAdapter {
     int overwrittenFirstColumn = Math.min(destinationFirstColumn, destinationLastColumn);
     int overwrittenLastColumn = Math.max(destinationFirstColumn, destinationLastColumn);
     Map<Integer, CTCol> shifted = new LinkedHashMap<>();
-    explicitColumns.forEach(
-        (existingColumnIndex, definition) -> {
-          boolean inSource =
-              existingColumnIndex >= columns.firstColumnIndex()
-                  && existingColumnIndex <= columns.lastColumnIndex();
-          boolean overwrittenDestination =
-              existingColumnIndex >= overwrittenFirstColumn
-                  && existingColumnIndex <= overwrittenLastColumn;
-          if (!inSource && !overwrittenDestination) {
-            shifted.put(existingColumnIndex, definition);
-          }
-        });
-    explicitColumns.forEach(
-        (existingColumnIndex, definition) -> {
-          if (existingColumnIndex >= columns.firstColumnIndex()
-              && existingColumnIndex <= columns.lastColumnIndex()) {
-            shifted.put(existingColumnIndex + delta, definition);
-          }
-        });
+    explicitColumns.forEach((existingColumnIndex, definition) -> {
+      boolean inSource =
+          existingColumnIndex >= columns.firstColumnIndex()
+              && existingColumnIndex <= columns.lastColumnIndex();
+      boolean overwrittenDestination =
+          existingColumnIndex >= overwrittenFirstColumn
+              && existingColumnIndex <= overwrittenLastColumn;
+      if (!inSource && !overwrittenDestination) {
+        shifted.put(existingColumnIndex, definition);
+      }
+    });
+    explicitColumns.forEach((existingColumnIndex, definition) -> {
+      if (existingColumnIndex >= columns.firstColumnIndex()
+          && existingColumnIndex <= columns.lastColumnIndex()) {
+        shifted.put(existingColumnIndex + delta, definition);
+      }
+    });
     return Map.copyOf(shifted);
   }
 
@@ -637,13 +632,12 @@ public final class LayoutAdapter {
     CTCols cols = CTCols.Factory.newInstance();
     explicitColumns.entrySet().stream()
         .sorted(Map.Entry.comparingByKey())
-        .forEach(
-            entry -> {
-              CTCol definition = copyOf(entry.getValue());
-              definition.setMin(entry.getKey() + 1L);
-              definition.setMax(entry.getKey() + 1L);
-              cols.addNewCol().set(definition);
-            });
+        .forEach(entry -> {
+          CTCol definition = copyOf(entry.getValue());
+          definition.setMin(entry.getKey() + 1L);
+          definition.setMax(entry.getKey() + 1L);
+          cols.addNewCol().set(definition);
+        });
     sheet.getCTWorksheet().setColsArray(new CTCols[] {cols});
   }
 

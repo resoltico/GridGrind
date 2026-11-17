@@ -16,12 +16,10 @@ public final class ExcelSheetLayoutLimits {
   /** Validates one authored column width expressed in Excel character units. */
   public static void requireColumnWidthCharacters(double widthCharacters, String fieldName) {
     columnWidthViolation(widthCharacters)
-        .ifPresent(
-            violation -> {
-              throw new IllegalArgumentException(
-                  ExcelSheetLayoutViolationMessages.columnWidth(
-                      fieldName, violation, widthCharacters));
-            });
+        .ifPresent(violation -> {
+          throw new IllegalArgumentException(
+              ExcelSheetLayoutViolationMessages.columnWidth(fieldName, violation, widthCharacters));
+        });
   }
 
   /** Validates one authored default sheet column width expressed in whole Excel characters. */
@@ -42,21 +40,19 @@ public final class ExcelSheetLayoutLimits {
   /** Validates one authored row height expressed in Excel point units. */
   public static void requireRowHeightPoints(double heightPoints, String fieldName) {
     rowHeightViolation(heightPoints)
-        .ifPresent(
-            violation -> {
-              throw new IllegalArgumentException(
-                  ExcelSheetLayoutViolationMessages.rowHeight(fieldName, violation, heightPoints));
-            });
+        .ifPresent(violation -> {
+          throw new IllegalArgumentException(
+              ExcelSheetLayoutViolationMessages.rowHeight(fieldName, violation, heightPoints));
+        });
   }
 
   /** Validates one authored worksheet zoom percentage. */
   public static void requireZoomPercent(int zoomPercent, String fieldName) {
     zoomViolation(zoomPercent)
-        .ifPresent(
-            violation -> {
-              throw new IllegalArgumentException(
-                  ExcelSheetLayoutViolationMessages.zoom(fieldName, zoomPercent));
-            });
+        .ifPresent(violation -> {
+          throw new IllegalArgumentException(
+              ExcelSheetLayoutViolationMessages.zoom(fieldName, zoomPercent));
+        });
   }
 
   /** Returns the first authored column-width violation, if any. */

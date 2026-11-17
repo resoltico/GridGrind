@@ -39,66 +39,60 @@ import org.junit.jupiter.api.Test;
 class WorkbookInvariantM3CoverageTest {
   @Test
   void acceptsSparseAndDenseWindowShapes() {
-    assertDoesNotThrow(
-        () ->
-            WorkbookInvariantAnalysisLayoutChecks.requireWindowShape(
-                new WindowReport.Sparse(
-                    new SheetLabel("Budget"),
-                    new CellAddress("A1"),
-                    new WindowDimensionsReport(2, 2),
-                    List.of(textCell("A1", "Ada")))));
-    assertDoesNotThrow(
-        () ->
-            WorkbookInvariantAnalysisLayoutChecks.requireWindowShape(
-                new WindowReport.Dense(
-                    new SheetLabel("Budget"),
-                    new CellAddress("A1"),
-                    new WindowDimensionsReport(1, 2),
-                    List.of(
-                        new WindowRowReport(0, List.of(blankCell("A1"), textCell("B1", "Ada")))))));
+    assertDoesNotThrow(() ->
+        WorkbookInvariantAnalysisLayoutChecks.requireWindowShape(
+            new WindowReport.Sparse(
+                new SheetLabel("Budget"),
+                new CellAddress("A1"),
+                new WindowDimensionsReport(2, 2),
+                List.of(textCell("A1", "Ada")))));
+    assertDoesNotThrow(() ->
+        WorkbookInvariantAnalysisLayoutChecks.requireWindowShape(
+            new WindowReport.Dense(
+                new SheetLabel("Budget"),
+                new CellAddress("A1"),
+                new WindowDimensionsReport(1, 2),
+                List.of(new WindowRowReport(0, List.of(blankCell("A1"), textCell("B1", "Ada")))))));
   }
 
   @Test
   void acceptsProjectionAwareCellReportsAndFormulaEvaluations() {
-    assertDoesNotThrow(
-        () ->
-            WorkbookInvariantCellContentChecks.requireCellReportShape(
-                new CellReport.TextReport(
-                    new CellAddress("A1"),
-                    Optional.of("Ada"),
-                    Optional.of(style()),
-                    Optional.of(new HyperlinkTarget.Url("https://example.com/report")),
-                    Optional.of(new CommentReport("Review", "GridGrind", true)),
-                    java.util.Optional.of(
-                        new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
-                    Optional.of(List.of(run("Ada"))))));
-    assertDoesNotThrow(
-        () ->
-            WorkbookInvariantCellContentChecks.requireCellReportShape(
-                new CellReport.NumberReport(
-                    new CellAddress("A2"),
-                    Optional.of("7/1/2026"),
-                    Optional.of(style()),
-                    Optional.empty(),
-                    Optional.empty(),
-                    java.util.Optional.of(
-                        new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(46160.0d)),
-                    Optional.of(
-                        CellTemporalReport.temporal(CellTemporalKind.DATE, "2026-07-01")))));
-    assertDoesNotThrow(
-        () ->
-            WorkbookInvariantCellContentChecks.requireCellReportShape(
-                new CellReport.FormulaReport(
-                    new CellAddress("A3"),
-                    Optional.of("Ada"),
-                    Optional.of(style()),
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.of("CONCAT(\"A\",\"da\")"),
-                    java.util.Optional.of(
-                        new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
-                    Optional.of(List.of(run("Ada"))),
-                    java.util.Optional.empty())));
+    assertDoesNotThrow(() ->
+        WorkbookInvariantCellContentChecks.requireCellReportShape(
+            new CellReport.TextReport(
+                new CellAddress("A1"),
+                Optional.of("Ada"),
+                Optional.of(style()),
+                Optional.of(new HyperlinkTarget.Url("https://example.com/report")),
+                Optional.of(new CommentReport("Review", "GridGrind", true)),
+                java.util.Optional.of(
+                    new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
+                Optional.of(List.of(run("Ada"))))));
+    assertDoesNotThrow(() ->
+        WorkbookInvariantCellContentChecks.requireCellReportShape(
+            new CellReport.NumberReport(
+                new CellAddress("A2"),
+                Optional.of("7/1/2026"),
+                Optional.of(style()),
+                Optional.empty(),
+                Optional.empty(),
+                java.util.Optional.of(
+                    new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(46160.0d)),
+                Optional.of(
+                    new CellTemporalReport.Interpreted(CellTemporalKind.DATE, "2026-07-01")))));
+    assertDoesNotThrow(() ->
+        WorkbookInvariantCellContentChecks.requireCellReportShape(
+            new CellReport.FormulaReport(
+                new CellAddress("A3"),
+                Optional.of("Ada"),
+                Optional.of(style()),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of("CONCAT(\"A\",\"da\")"),
+                java.util.Optional.of(
+                    new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
+                Optional.of(List.of(run("Ada"))),
+                java.util.Optional.empty())));
   }
 
   @Test

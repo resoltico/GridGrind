@@ -106,6 +106,7 @@ public sealed interface CellRowSpec
   record DateValues(List<LocalDate> cells) implements CellRowSpec {
     public DateValues {
       cells = copyScalars(cells, "cells");
+      cells.forEach(TemporalSemantics::requireDateShape);
     }
 
     @Override
@@ -118,6 +119,7 @@ public sealed interface CellRowSpec
   record DateTimeValues(List<LocalDateTime> cells) implements CellRowSpec {
     public DateTimeValues {
       cells = copyScalars(cells, "cells");
+      cells.forEach(TemporalSemantics::requireDateTimeShape);
     }
 
     @Override

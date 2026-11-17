@@ -20,7 +20,6 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
@@ -233,7 +232,7 @@ class ExcelDrawingControllerTest {
                   .filter(snapshot -> "OpsSignature".equals(snapshot.name()))
                   .findFirst()
                   .orElseThrow());
-      assertEquals(DrawingGeometryFixtures.report(movedAnchor), movedSignature.anchor());
+      assertEquals(DrawingGeometryFixtures.signatureReport(movedAnchor), movedSignature.anchor());
 
       workbook
           .persistence()
@@ -262,7 +261,7 @@ class ExcelDrawingControllerTest {
                   .filter(snapshot -> "OpsSignature".equals(snapshot.name()))
                   .findFirst()
                   .orElseThrow());
-      assertEquals(DrawingGeometryFixtures.report(movedAnchor), signatureLine.anchor());
+      assertEquals(DrawingGeometryFixtures.signatureReport(movedAnchor), signatureLine.anchor());
       assertEquals("Finance", signatureLine.setup().orElseThrow().suggestedSigner2().orElseThrow());
       assertEquals(
           "ada@example.com",
@@ -291,13 +290,41 @@ class ExcelDrawingControllerTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.cells().setCell("B1", new CellValue.NumberValue(1d));
-      sheet.cells().setCell("A2", new CellValue.Text("Jan"));
-      sheet.cells().setCell("A3", new CellValue.Text("Feb"));
-      sheet.cells().setCell("A4", new CellValue.Text("Mar"));
-      sheet.cells().setCell("B2", new CellValue.NumberValue(10d));
-      sheet.cells().setCell("B3", new CellValue.NumberValue(12d));
-      sheet.cells().setCell("B4", new CellValue.NumberValue(14d));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(1d));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Jan"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Feb"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Mar"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(10d));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(12d));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(14d));
       sheet
           .drawings()
           .setChart(
@@ -340,14 +367,14 @@ class ExcelDrawingControllerTest {
       ChartReport chart = reopened.sheet("Ops").drawings().charts().getFirst();
       ChartReport.Title.Formula title =
           assertInstanceOf(ChartReport.Title.Formula.class, chart.title());
-      assertEquals("Ops!$B$1", title.formula());
-      assertEquals("1.0", title.cachedText());
+      assertEquals(Optional.of("Ops!$B$1"), title.formula());
+      assertEquals("1.0", ChartCacheAssertions.singleStringValue(title.cache()));
 
       DrawingObjectReport.Chart drawingChart =
           assertInstanceOf(
               DrawingObjectReport.Chart.class,
               reopened.sheet("Ops").drawings().drawingObjects().getFirst());
-      assertEquals("1.0", drawingChart.title());
+      assertEquals(title, drawingChart.title());
     }
   }
 
@@ -358,8 +385,16 @@ class ExcelDrawingControllerTest {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Chart");
       seedChartData(sheet);
-      sheet.cells().setCell("D1", new CellValue.NumberValue(1d));
-      sheet.cells().setCell("E1", new CellValue.NumberValue(2d));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("D1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(1d));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(2d));
       sheet
           .drawings()
           .setChart(
@@ -452,8 +487,8 @@ class ExcelDrawingControllerTest {
       ChartReport chart = reopened.sheet("Chart").drawings().charts().getFirst();
       ChartReport.Title.Formula title =
           assertInstanceOf(ChartReport.Title.Formula.class, chart.title());
-      assertEquals("Chart!$E$1", title.formula());
-      assertEquals("2.0", title.cachedText());
+      assertEquals(Optional.of("Chart!$E$1"), title.formula());
+      assertEquals("2.0", ChartCacheAssertions.singleStringValue(title.cache()));
     }
   }
 
@@ -532,14 +567,13 @@ class ExcelDrawingControllerTest {
       assertEquals(
           List.of("BAR", "LINE"),
           comboChart.plots().stream()
-              .map(
-                  plot ->
-                      switch (plot) {
-                        case ChartReport.Bar _ -> "BAR";
-                        case ChartReport.Line _ -> "LINE";
-                        case ChartReport.Unsupported unsupported -> unsupported.plotTypeToken();
-                        default -> throw new AssertionError("Unexpected plot type: " + plot);
-                      })
+              .map(plot ->
+                  switch (plot) {
+                    case ChartReport.Bar _ -> "BAR";
+                    case ChartReport.Line _ -> "LINE";
+                    case ChartReport.Unsupported unsupported -> unsupported.plotTypeToken();
+                    default -> throw new AssertionError("Unexpected plot type: " + plot);
+                  })
               .toList());
       ChartReport.Bar barPlot =
           assertInstanceOf(ChartReport.Bar.class, comboChart.plots().getFirst());
@@ -560,12 +594,26 @@ class ExcelDrawingControllerTest {
   void commentOperationsPreserveRealDrawingObjects() throws IOException {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet commentOnly = workbook.getOrCreateSheet("Comments");
-      commentOnly.comments().setComment("A1", new ResolvedComment("Review", "GridGrind", false));
+      commentOnly
+          .comments()
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedComment("Review", "GridGrind", false));
 
-      assertTrue(commentOnly.cells().snapshotCell("A1").comment().isPresent());
+      assertTrue(
+          commentOnly
+              .cells()
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"))
+              .comment()
+              .isPresent());
 
-      commentOnly.comments().clearComment("A1");
-      assertFalse(commentOnly.cells().snapshotCell("A1").comment().isPresent());
+      commentOnly.comments().clearComment(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
+      assertFalse(
+          commentOnly
+              .cells()
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"))
+              .comment()
+              .isPresent());
 
       XssfSheet withDrawing = workbook.getOrCreateSheet("Ops");
       withDrawing
@@ -579,10 +627,14 @@ class ExcelDrawingControllerTest {
                   Optional.of("Queue preview")));
       List<DrawingObjectReport> before = withDrawing.drawings().drawingObjects();
 
-      withDrawing.comments().setComment("A1", new ResolvedComment("Review", "GridGrind", false));
+      withDrawing
+          .comments()
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedComment("Review", "GridGrind", false));
       assertEquals(before, withDrawing.drawings().drawingObjects());
 
-      withDrawing.comments().clearComment("A1");
+      withDrawing.comments().clearComment(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       assertEquals(before, withDrawing.drawings().drawingObjects());
     }
   }
@@ -607,7 +659,10 @@ class ExcelDrawingControllerTest {
 
     try (XssfWorkbook workbook =
         XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      workbook.sheet("Ops").comments().clearComment("A1");
+      workbook
+          .sheet("Ops")
+          .comments()
+          .clearComment(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       workbook
           .persistence()
           .save(
@@ -1024,14 +1079,13 @@ class ExcelDrawingControllerTest {
       assertEquals(
           List.of("BAR", "LINE"),
           comboChart.plots().stream()
-              .map(
-                  plot ->
-                      switch (plot) {
-                        case ChartReport.Bar _ -> "BAR";
-                        case ChartReport.Line _ -> "LINE";
-                        case ChartReport.Unsupported unsupported -> unsupported.plotTypeToken();
-                        default -> throw new AssertionError("Unexpected plot type: " + plot);
-                      })
+              .map(plot ->
+                  switch (plot) {
+                    case ChartReport.Bar _ -> "BAR";
+                    case ChartReport.Line _ -> "LINE";
+                    case ChartReport.Unsupported unsupported -> unsupported.plotTypeToken();
+                    default -> throw new AssertionError("Unexpected plot type: " + plot);
+                  })
               .toList());
 
       DrawingObjectReport.Chart drawingChart =
@@ -1062,7 +1116,11 @@ class ExcelDrawingControllerTest {
       assertInstanceOf(
           ChartReport.Bar.class, ExcelChartTestSupport.singlePlot(replaced, ChartReport.Bar.class));
 
-      sheet.cells().setCell("F1", new CellValue.Text("Touch"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("F1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Touch"));
       workbook
           .persistence()
           .save(
@@ -1165,18 +1223,66 @@ class ExcelDrawingControllerTest {
   }
 
   private static void seedChartData(XssfSheet sheet) {
-    sheet.cells().setCell("A1", new CellValue.Text("Month"));
-    sheet.cells().setCell("B1", new CellValue.Text("Plan"));
-    sheet.cells().setCell("C1", new CellValue.Text("Actual"));
-    sheet.cells().setCell("A2", new CellValue.Text("Jan"));
-    sheet.cells().setCell("B2", new CellValue.NumberValue(10d));
-    sheet.cells().setCell("C2", new CellValue.NumberValue(12d));
-    sheet.cells().setCell("A3", new CellValue.Text("Feb"));
-    sheet.cells().setCell("B3", new CellValue.NumberValue(18d));
-    sheet.cells().setCell("C3", new CellValue.NumberValue(16d));
-    sheet.cells().setCell("A4", new CellValue.Text("Mar"));
-    sheet.cells().setCell("B4", new CellValue.NumberValue(15d));
-    sheet.cells().setCell("C4", new CellValue.NumberValue(21d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Month"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Plan"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Actual"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Jan"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(10d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C2"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(12d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Feb"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(18d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C3"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(16d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Mar"));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(15d));
+    sheet
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("C4"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(21d));
   }
 
   private static CTShape firstSignatureShape(XSSFVMLDrawing vmlDrawing) {
@@ -1249,22 +1355,22 @@ class ExcelDrawingControllerTest {
     assertEquals(2, bar.axes().size());
     assertEquals(2, bar.series().size());
     assertEquals(
-        "A2:A4",
+        Optional.of("A2:A4"),
         assertInstanceOf(
                 ChartReport.DataSource.StringReference.class, bar.series().getFirst().categories())
             .formula());
     ChartReport.Series namedRangeSeries = bar.series().get(1);
     ChartReport.Title.Formula namedRangeSeriesTitle =
         assertInstanceOf(ChartReport.Title.Formula.class, namedRangeSeries.title());
-    assertTrue(namedRangeSeriesTitle.formula().endsWith("$C$1"));
-    assertEquals("Actual", namedRangeSeriesTitle.cachedText());
+    assertTrue(namedRangeSeriesTitle.formula().orElseThrow().endsWith("$C$1"));
+    assertEquals("Actual", ChartCacheAssertions.singleStringValue(namedRangeSeriesTitle.cache()));
     assertEquals(
-        "ChartCategories",
+        Optional.of("ChartCategories"),
         assertInstanceOf(
                 ChartReport.DataSource.StringReference.class, namedRangeSeries.categories())
             .formula());
     assertEquals(
-        "ChartActual",
+        Optional.of("ChartActual"),
         assertInstanceOf(ChartReport.DataSource.NumericReference.class, namedRangeSeries.values())
             .formula());
   }
@@ -1275,7 +1381,7 @@ class ExcelDrawingControllerTest {
             DrawingObjectReport.Chart.class, sheet.drawings().drawingObjects().getFirst());
     assertTrue(drawingChart.supported());
     assertEquals(List.of("BAR"), drawingChart.plotTypeTokens());
-    assertEquals("Roadmap", drawingChart.title());
+    assertEquals(new ChartReport.Title.Text("Roadmap"), drawingChart.title());
   }
 
   private static void assertUpdatedChartSnapshot(
@@ -1291,12 +1397,12 @@ class ExcelDrawingControllerTest {
     assertEquals(ExcelChartBarDirection.BAR, bar.barDirection());
     assertEquals(1, bar.series().size());
     assertEquals(
-        "ChartCategories",
+        Optional.of("ChartCategories"),
         assertInstanceOf(
                 ChartReport.DataSource.StringReference.class, bar.series().getFirst().categories())
             .formula());
     assertEquals(
-        "ChartActual",
+        Optional.of("ChartActual"),
         assertInstanceOf(
                 ChartReport.DataSource.NumericReference.class, bar.series().getFirst().values())
             .formula());

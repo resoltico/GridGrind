@@ -41,6 +41,10 @@
       },
       "evidence" : {
         "admission" : {
+          "executionStrategy" : {
+            "backend" : "FULL_XSSF",
+            "fullWorkbookMaterializationRequired" : true
+          },
           "materializedInputs" : [ {
             "byteSize" : 8704,
             "path" : "<workspace>/recipe/package-security-assets/gridgrind-package-security.xlsx",

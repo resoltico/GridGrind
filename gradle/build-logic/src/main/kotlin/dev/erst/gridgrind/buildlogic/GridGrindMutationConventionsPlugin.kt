@@ -12,6 +12,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.JavaToolchainService
 import java.math.BigDecimal
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.getByType
 
 /** Shared advisory PIT reporting for explicitly scoped product modules. */
@@ -19,6 +20,11 @@ class GridGrindMutationConventionsPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.pluginManager.apply(PitestPlugin::class.java)
         val versions = project.extensions.getByType<VersionCatalogsExtension>().named("libs")
+        project.dependencies.constraints {
+            for (library in listOf("commons-text", "commons-lang3", "asm", "asm-commons", "asm-tree", "asm-analysis", "asm-util")) {
+                add("pitest", versions.findLibrary(library).get().get())
+            }
+        }
         val javaVersion = project.providers.gradleProperty("gridgrindJavaVersion").map(String::toInt)
         val toolchains = project.extensions.getByType<JavaToolchainService>()
         val sourceSets = project.extensions.getByType<SourceSetContainer>()
@@ -30,7 +36,7 @@ class GridGrindMutationConventionsPlugin : Plugin<Project> {
             Runtime.getRuntime().availableProcessors(),
             project.gradle.startParameter.maxWorkerCount,
         )
-        project.tasks.register("cleanPitestReport", Delete::class.java) { task ->
+        project.tasks.register<Delete>("cleanPitestReport") { val task = this
             task.delete(reportDirectory)
         }
 
@@ -67,14 +73,14 @@ class GridGrindMutationConventionsPlugin : Plugin<Project> {
             jvmArgs.set(listOf("-Xmx512m", "--enable-native-access=ALL-UNNAMED", scratchArgument))
             mainProcessJvmArgs.set(listOf("-Xmx512m", scratchArgument))
             jvmPath.set(
-                toolchains.launcherFor { spec ->
+                toolchains.launcherFor { val spec = this
                     spec.languageVersion.set(javaVersion.map(JavaLanguageVersion::of))
                 }.map { launcher -> launcher.executablePath },
             )
         }
 
         val pitestTask = project.tasks.named(PitestPlugin.PITEST_TASK_NAME)
-        pitestTask.configure { task ->
+        pitestTask.configure { val task = this
             // Do not delete declared outputs in a prerequisite: that defeats Gradle reuse.
             task.doFirst {
                 for (directory in listOf(reportDirectory.get().asFile, scratchDirectory.get().asFile)) {

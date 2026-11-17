@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Typed evidence established while executing one workbook plan. */
 public record WorkbookExecutionEvidence(
@@ -29,16 +30,37 @@ public record WorkbookExecutionEvidence(
   }
 
   /** Effects and immutable input identities admitted for the executed plan. */
-  public record Admission(List<Operation> operations, List<MaterializedInput> materializedInputs) {
+  public record Admission(
+      List<Operation> operations,
+      List<MaterializedInput> materializedInputs,
+      Optional<ExecutionStrategy> executionStrategy) {
     public Admission {
+      Objects.requireNonNull(executionStrategy, "executionStrategy must not be null");
       operations = copyValues(operations, "operations");
       materializedInputs = copyValues(materializedInputs, "materializedInputs");
     }
 
     /** Returns explicit evidence for a request that did not reach materialized input binding. */
     public static Admission empty() {
-      return new Admission(List.of(), List.of());
+      return new Admission(List.of(), List.of(), Optional.empty());
     }
+  }
+
+  /** Selected backend and its full-workbook materialization requirements after admission. */
+  public record ExecutionStrategy(Backend backend, boolean fullWorkbookMaterializationRequired) {
+    public ExecutionStrategy {
+      Objects.requireNonNull(backend, "backend must not be null");
+      if (backend == Backend.FULL_XSSF && !fullWorkbookMaterializationRequired) {
+        throw new IllegalArgumentException("FULL_XSSF requires full workbook materialization");
+      }
+    }
+  }
+
+  /** The concrete execution backend selected for an admitted request. */
+  public enum Backend {
+    FULL_XSSF,
+    EVENT_READ,
+    STREAMING_WRITE
   }
 
   /** One admitted concrete operation's canonical effects and footprint. */

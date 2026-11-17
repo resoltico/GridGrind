@@ -38,9 +38,8 @@ class GridGrindCliRecipeRegistryTest {
             .isPresent());
     assertTrue(
         RecipeRegistry.recipeFor("DASHBOARD")
-            .filter(
-                recipe ->
-                    recipe.type() == dev.erst.gridgrind.core.discovery.RecipeType.TASK_STARTER)
+            .filter(recipe ->
+                recipe.type() == dev.erst.gridgrind.core.discovery.RecipeType.TASK_STARTER)
             .isPresent());
     assertEquals(
         RecipeAdvisory.SELF_CONTAINED,

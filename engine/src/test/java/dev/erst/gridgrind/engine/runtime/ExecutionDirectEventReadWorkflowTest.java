@@ -43,27 +43,21 @@ class ExecutionDirectEventReadWorkflowTest {
     ExecutionDirectEventReadWorkflow workflow =
         new ExecutionDirectEventReadWorkflow(
             stepSupport(rawBindings),
-            (policy, workbookPath, workbookLocation) -> {
+            (authoredPolicy, policy, workbookPath, workbookLocation, assertions) -> {
               throw new IOException("terminal host acceptance storage unavailable");
             },
-            responseSupport(),
-            rawBindings.tempFileFactory());
+            responseSupport());
 
-    try (RequestPathAccess access =
-        new RequestPathAccess(
-            rawBindings.workingDirectory(),
-            rawBindings.tempFileFactory(),
-            rawBindings.executionGrant())) {
+    try (var prepared = RequestPreflight.verify(request, rawBindings).requirePreparedRequest()) {
       WorkbookResult.Failure failure =
           assertInstanceOf(
               WorkbookResult.Failure.class,
               workflow.execute(
                   new ExecutionDirectEventReadWorkflow.Call(
                       ProtocolVersion.CURRENT,
-                      MutationResolution.preparePlan(request),
+                      prepared,
                       List.of(),
-                      ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
-                      rawBindings.withRequestPathAccess(access))));
+                      ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root))));
 
       assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     }

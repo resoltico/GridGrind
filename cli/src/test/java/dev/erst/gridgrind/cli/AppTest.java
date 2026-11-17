@@ -57,7 +57,7 @@ class AppTest {
                 },
             observedExitCode::set);
 
-    app.run(new String[] {"run", "--request", "input.json"});
+    app.run("run", "--request", "input.json");
 
     assertEquals("run,--request,input.json", observedArgs.get());
     assertEquals(-1, observedExitCode.get());
@@ -155,6 +155,7 @@ class AppTest {
         grant,
         dev.erst.gridgrind.cli.render.GridGrindCliJson.writeBytes(
             new ExecutionGrant(
+                16L * 1024 * 1024,
                 List.of(),
                 List.of(),
                 new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),

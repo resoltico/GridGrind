@@ -412,10 +412,9 @@ class StructuralLayoutProtocolTypesTest {
     assertThrows(
         NullPointerException.class,
         () -> new IgnoredErrorReport(null, java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
-    assertDoesNotThrow(
-        () ->
-            new IgnoredErrorReport(
-                new RangeLabel(" "), java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
+    assertDoesNotThrow(() ->
+        new IgnoredErrorReport(
+            new RangeLabel(" "), java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
     assertThrows(
         NullPointerException.class, () -> new IgnoredErrorReport(new RangeLabel("A1"), null));
     assertThrows(

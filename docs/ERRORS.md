@@ -17,6 +17,14 @@ Category: REQUEST. Recovery: CHANGE_REQUEST.
 
 Send syntactically valid JSON.
 
+## INVALID_AUTHORITY
+
+Invalid authority document
+
+Category: REQUEST. Recovery: CHANGE_REQUEST.
+
+Correct the identified authority document or field and retry. No authority was accepted.
+
 ## INVALID_ENCODING
 
 Invalid request encoding
@@ -152,6 +160,22 @@ Workbook not found
 Category: RESOURCE. Recovery: CHANGE_REQUEST.
 
 Create the workbook first or provide an existing workbook path.
+
+## INVALID_WORKBOOK_CONTENT
+
+Invalid workbook content
+
+Category: RESOURCE. Recovery: CHANGE_REQUEST.
+
+Repair the identified workbook content or provide a supported source.
+
+## UNSUPPORTED_WORKBOOK_CONTENT
+
+Unsupported workbook content
+
+Category: RESOURCE. Recovery: CHANGE_REQUEST.
+
+Use content supported by the requested operation, or choose an operation that preserves this content.
 
 ## INPUT_SOURCE_NOT_FOUND
 

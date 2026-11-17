@@ -1,0 +1,14 @@
+--- org/apache/poi/ss/formula/OperationEvaluatorFactory.java
++++ org/apache/poi/ss/formula/OperationEvaluatorFactory.java
+@@ -98,6 +98,11 @@
+      */
+     public static ValueEval evaluate(OperationPtg ptg, ValueEval[] args,
+             OperationEvaluationContext ec) {
++        boolean epoch = ec.getWorkbook() instanceof org.apache.poi.ss.usermodel.Date1904Support support && support.isDate1904();
++        return org.apache.poi.ss.usermodel.DateSystemContext.call(epoch, () -> evaluateWithContext(ptg, args, ec));
++    }
++    private static ValueEval evaluateWithContext(OperationPtg ptg, ValueEval[] args,
++            OperationEvaluationContext ec) {
+         if(ptg == null) {
+             throw new IllegalArgumentException("ptg must not be null");
+         }

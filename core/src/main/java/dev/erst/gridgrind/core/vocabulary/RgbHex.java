@@ -7,7 +7,9 @@ public record RgbHex(String value) implements WireString {
   public RgbHex {
     value = TextValidation.requireNonBlank(value, "rgb");
     if (!value.matches(ProtocolConstraintValues.RGB_HEX_PATTERN)) {
-      throw new IllegalArgumentException("rgb must match #RRGGBB");
+      throw new dev.erst.gridgrind.core.problem.ValueInvariantException(
+          new dev.erst.gridgrind.core.problem.MessageInvariant(
+              "rgb must match #RRGGBB", java.util.Optional.of("rgb")));
     }
     value = value.toUpperCase(Locale.ROOT);
   }

@@ -10,8 +10,16 @@ import org.junit.jupiter.api.Test;
 /** Checks stable catalog identity and machine-readable problem references. */
 class LimitTest {
   @Test
-  void everyDocumentedIdentityHasOneCompleteEntry() {
-    assertEquals(41, Limit.all().size());
+  void everyDocumentedIdentityHasOneCompleteEntry() throws IllegalAccessException {
+    int declared = 0;
+    for (var field : Limit.class.getFields()) {
+      if (field.getType() == Limit.class
+          && java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+        assertTrue(Limit.all().contains((Limit) field.get(null)), field.getName());
+        declared++;
+      }
+    }
+    assertEquals(declared, Limit.all().size());
     var ids = new HashSet<String>();
     for (Limit limit : Limit.all()) {
       assertTrue(ids.add(limit.id()), limit.id());

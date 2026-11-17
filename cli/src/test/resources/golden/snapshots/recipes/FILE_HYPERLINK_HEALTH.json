@@ -706,6 +706,10 @@
       },
       "evidence" : {
         "admission" : {
+          "executionStrategy" : {
+            "backend" : "FULL_XSSF",
+            "fullWorkbookMaterializationRequired" : true
+          },
           "materializedInputs" : [ {
             "byteSize" : 40,
             "path" : "<workspace>/recipe/file-hyperlink-assets/request-label.txt",

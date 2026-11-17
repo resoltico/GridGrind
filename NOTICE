@@ -1,23 +1,16 @@
 GridGrind
 Copyright (c) 2026 Ervins Strauhmanis
 
-This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at https://mozilla.org/MPL/2.0/.
+Original GridGrind-owned source, tests, tooling and accompanying documentation
+are licensed under GNU Affero General Public License version 3 only
+(AGPL-3.0-only), unless separate terms are identified for a file.
+The unmodified license text is in LICENSE. PROJECT-NOTICE.md describes the
+project licensing scope, source delivery and contribution terms;
+LICENSE-COMMERCIAL.md describes the status of separate commercial licensing.
 
-This notice applies to GridGrind-owned files throughout this repository,
-including source code, build scripts, tests, examples, and documentation.
-Third-party files and components identified in NOTICE or carrying their
-own license notices retain their respective licenses.
-
-Source Code Form is available at https://github.com/resoltico/GridGrind.
-For an official release, use the matching v<version> tag and its source
-archive at https://github.com/resoltico/GridGrind/releases. Redistributors
-of modified executables must also make the corresponding modified Source
-Code Form available and inform recipients how to obtain it under MPL 2.0
-Section 3.2.
-
-The complete Mozilla Public License, version 2.0 is in LICENSE.
+Third-party files and components identified below or carrying their own
+license notices retain their respective licenses. This notice does not
+relicense them or grant exceptions to their terms.
 
 This notice describes third-party software and artifacts distributed with
 GridGrind and identifies whether they belong to the executable JAR, source
@@ -179,7 +172,7 @@ Apache Commons IO 2.22.0
 Copyright 2002-2026 The Apache Software Foundation
 https://commons.apache.org/proper/commons-io/
 
-Apache Commons Lang 3.21.0
+Apache Commons Lang 3.22.0
 Copyright 2001-2026 The Apache Software Foundation
 https://commons.apache.org/proper/commons-lang/
 
@@ -198,11 +191,11 @@ Copyright 2010-2012 CS Systèmes d'Information
 Other Apache License 2.0 Components
 ================================================================================
 
-Jackson Databind 3.2.4, Jackson Core 3.2.4, and Jackson Annotations 2.22
+Jackson Databind 3.3.0, Jackson Core 3.3.0, and Jackson Annotations 2.23
 Copyright 2007- Tatu Saloranta, tatu.saloranta@iki.fi
 https://github.com/FasterXML/jackson
 
-Jackson Core also contains shaded FastDoubleParser and Schubfach code under
+Jackson Core also contains shaded FastDoubleParser, jsoniter-scala and xjb code under
 the separate terms reproduced in the next section.
 
 SparseBitSet 1.3
@@ -687,7 +680,7 @@ Jackson Core Shaded Code
 ================================================================================
 
 Jackson Core bundles a shaded copy of FastDoubleParser and a copy of the
-Schubfach number-writing code. The upstream Jackson Core JAR retains the three
+jsoniter-scala number-writing code implementing xjb. The upstream Jackson Core JAR retains the
 corresponding license files under META-INF; the GridGrind fat JAR retains those
 files unchanged and reproduces their material terms here so `gridgrind license` exposes
 the complete legal surface.
@@ -804,11 +797,12 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 
-Schubfach
-Copyright 2018-2020 Raffaello Giulietti
-https://github.com/c4f7fcce9cb06515/Schubfach
+jsoniter-scala
+https://github.com/plokhotnyuk/jsoniter-scala
 
-Licensed under the MIT License:
+MIT License
+
+Copyright (c) 2017-2026 Andriy Plokhotnyuk, and respective contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -817,8 +811,8 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -828,8 +822,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+xjb: Fast Float to String Algorithm
+Copyright 2026 xjb714 and contributors
+https://github.com/xjb714/xjb
+
+Licensed under the Apache License, Version 2.0, reproduced in LICENSE-APACHE-2.0.
+The upstream xjb-LICENSE is retained in the GridGrind JAR under META-INF.
+
 ================================================================================
-Bouncy Castle (bcpkix-jdk18on 1.86, bcprov-jdk18on 1.86, bcutil-jdk18on 1.86)
+Bouncy Castle (bcpkix-jdk18on 1.87, bcprov-jdk18on 1.87, bcutil-jdk18on 1.87)
 ================================================================================
 
 Copyright (c) 2000-2026 The Legion of the Bouncy Castle Inc.
@@ -973,18 +974,17 @@ in LICENSE-APACHE-2.0.
 Container-Only Software
 ================================================================================
 
-The runtime container adds an Amazon Corretto build of OpenJDK and Debian
+The runtime container includes an Eclipse Temurin build of OpenJDK and Ubuntu
 operating-system/font packages that are not part of the executable GridGrind
 JAR. Their licenses are not represented by a single GridGrind license
 expression. The image retains vendor legal files under JAVA_HOME and package
 copyright files under /usr/share/doc. GridGrind-specific legal files are
 copied to /usr/share/doc/gridgrind.
 
-The corresponding release's Dockerfile and release/container-runtime.properties
-identify the exact Debian base, Corretto binaries, public vendor source commit
-and SHA-256 inputs. The runtime is linked from all vendor modules, retaining
-the module inventory while omitting duplicated development payloads. The build
-and contributor toolchains have separate distribution scope.
+The Dockerfile and release/container-runtime.properties identify the exact
+Temurin JDK/Ubuntu image, full vendor binary release, source/build identities,
+package snapshot and SHA-256 inputs. Build, contributor and application targets
+share that JDK image. Contributor-only tools do not enter the application target.
 
 Releases built with this source-delivery workflow supply
 gridgrind-container-sources-<version>.tar.gz, a source
@@ -996,24 +996,28 @@ The same source files are also offered in the same container registry as the
 runtime, under ghcr.io/resoltico/gridgrind:<version>-sources. This is a data-only
 image; use docker create/cp to retrieve /sources rather than running it.
 
-The source archive contains the complete matching Corretto source/build tree
-and every source part named by the authenticated Debian .dsc records for the
-installed packages. The manifest records both architecture configurations,
-JRE commit identity, binary-package/source-version mapping and source hashes.
-The archive also supplies the GridGrind Dockerfile and runtime build/install
-inputs; the matching GridGrind source tag supplies its application source. This is delivered source material, not a new written source offer.
-The release workflow also attaches image provenance and an SBOM.
+The source archive contains the complete matching Temurin native source tree,
+matching vendor build scripts and per-architecture build configuration/metadata,
+and every source part named by authenticated Ubuntu .dsc records for installed
+packages. The manifest binds both platform images to full JDK release/source/build
+identities, binary-package/source-version mappings and source hashes. The archive
+also supplies the GridGrind Dockerfile and runtime build/install inputs. The separate
+gridgrind-<version>-sources.tar.gz archive supplies the exact frozen owned application,
+helper, repair, build and installation source for that release. It is prepared before
+tagging and retained with the release delivery inventory. Source tags and automatic
+repository archives are convenience references, not substitutes for this retained archive.
+These are delivered source materials, not a new written source offer. The release workflow attaches image
+provenance and an SBOM.
 
 Upstream source and legal materials:
 
-https://github.com/corretto/corretto-27
-https://sources.debian.org/
-https://snapshot.debian.org/
+https://github.com/adoptium/jdk27u
+https://github.com/adoptium/temurin-build
+https://snapshot.ubuntu.com/
 
-Gradle build and fuzz tools, including JQF and the Azul build JDK, are resolved
-separately and are not bundled in the product JAR, launcher archives or final
-runtime image. They retain their upstream licenses; this notice does not
-relicense them as GridGrind software.
+Gradle build and fuzz tools, including JQF, are resolved separately and are not
+bundled in the product JAR, launcher archives or final runtime image. They retain
+their upstream licenses; this notice does not relicense them as GridGrind software.
 
 ================================================================================
 Cryptography and Export Notice

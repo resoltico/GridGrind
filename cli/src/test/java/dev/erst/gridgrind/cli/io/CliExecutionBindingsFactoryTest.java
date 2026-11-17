@@ -77,7 +77,6 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
       assertTrue(Files.isDirectory(managedTempRoot.root()));
     } finally {
       CliExecutionBindingsFactory.deleteTreeIfExists(managedTempRoot.root());
-      managedTempRoot.createdParent().ifPresent(CliExecutionBindingsFactory::deleteTreeIfExists);
     }
   }
 
@@ -105,7 +104,7 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void managedRequestInputsCleanupRemovesACreatedExplicitParentWhenItWasEmpty() throws IOException {
+  void managedRequestInputsCleanupRetainsTheHostSelectedExplicitParent() throws IOException {
     Path requestPath = Files.createTempFile("gridgrind-cli-bindings-parent-", ".json");
     Path grantPath = writeNoOpGrant();
     Path explicitParent = Path.of("tmp", "gridgrind-cli-created-parent");
@@ -121,7 +120,7 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
       assertTrue(Files.isDirectory(bindings.inputs().tempRoot()));
     }
 
-    assertTrue(Files.notExists(explicitParent.toAbsolutePath().normalize()));
+    assertTrue(Files.isDirectory(explicitParent.toAbsolutePath().normalize()));
     Files.deleteIfExists(grantPath);
   }
 
@@ -137,12 +136,9 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void deletePathSwallowsIoFailuresForNonEmptyDirectories() throws Exception {
+  void ownedTreeDeletionRemovesEveryChild() throws Exception {
     Path nonEmptyDirectory = Files.createTempDirectory("gridgrind-cli-non-empty-dir-");
     Files.writeString(nonEmptyDirectory.resolve("child.txt"), "content");
-
-    assertDoesNotThrow(() -> CliExecutionBindingsFactory.deletePath(nonEmptyDirectory));
-    assertTrue(Files.exists(nonEmptyDirectory));
 
     CliExecutionBindingsFactory.deleteTreeIfExists(nonEmptyDirectory);
     assertFalse(Files.exists(nonEmptyDirectory));
@@ -194,7 +190,9 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
             Optional.empty(),
             standardInputRequest(),
             new ByteArrayInputStream(standardInput))) {
-      assertArrayEquals(standardInput, bindings.inputs().standardInputBytes().orElseThrow());
+      assertArrayEquals(
+          standardInput,
+          bindings.inputs().standardInputSource().orElseThrow().open().readAllBytes());
       assertTrue(bindings.inputs().secretResolver().isEmpty());
       ExecutionGrant deniedGrant = (ExecutionGrant) bindings.inputs().executionGrant();
       assertTrue(deniedGrant.operationIds().isEmpty());
@@ -219,7 +217,9 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
             Optional.of(provider),
             standardInputRequest(),
             new ByteArrayInputStream(standardInput))) {
-      assertArrayEquals(standardInput, bindings.inputs().standardInputBytes().orElseThrow());
+      assertArrayEquals(
+          standardInput,
+          bindings.inputs().standardInputSource().orElseThrow().open().readAllBytes());
       assertArrayEquals(
           "confidential".toCharArray(),
           bindings
@@ -239,9 +239,9 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
     Path scratchParent = workspace.resolve("scratch");
 
     try {
-      java.nio.file.NoSuchFileException exception =
+      CliAuthorityIOException exception =
           assertThrows(
-              java.nio.file.NoSuchFileException.class,
+              CliAuthorityIOException.class,
               () ->
                   CliExecutionBindingsFactory.create(
                       Optional.empty(),
@@ -252,7 +252,12 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
                       standardInputRequest(),
                       InputStream.nullInputStream()));
 
-      assertEquals(missingGrant.toString(), exception.getFile());
+      assertEquals(missingGrant, exception.authorityPath());
+      assertEquals(
+          missingGrant.toString(),
+          org.junit.jupiter.api.Assertions.assertInstanceOf(
+                  java.nio.file.NoSuchFileException.class, exception.getCause())
+              .getFile());
       assertTrue(Files.notExists(scratchParent));
     } finally {
       CliExecutionBindingsFactory.deleteTreeIfExists(workspace);
@@ -290,6 +295,7 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
     Path grantPath = Files.createTempFile("gridgrind-cli-grant-", ".json");
     ExecutionGrant grant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of(),
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),

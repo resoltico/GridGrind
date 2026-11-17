@@ -27,7 +27,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.engine.autofilter.AutofilterAdapter;
-import dev.erst.gridgrind.engine.charts.ChartAdapter;
 import dev.erst.gridgrind.engine.comments.CommentAdapter;
 import dev.erst.gridgrind.engine.drawing.DrawingAdapter;
 import dev.erst.gridgrind.engine.pivots.PivotAdapter;
@@ -44,7 +43,6 @@ import org.apache.poi.poifs.crypt.CipherAlgorithm;
 import org.apache.poi.poifs.crypt.EncryptionMode;
 import org.apache.poi.poifs.crypt.HashAlgorithm;
 import org.apache.poi.ss.usermodel.CreationHelper;
-import org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory;
 import org.apache.poi.xssf.model.CommentsTable;
 import org.apache.poi.xssf.usermodel.XSSFPivotCacheDefinition;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -240,34 +238,6 @@ class ResidualUtilityCoverageTest extends ExcelPivotTableCoverageTestSupport {
       invalidPrintArea.setLocalSheetId(sheetIndex);
       invalidPrintArea.setStringValue("Broken");
       assertEquals(Optional.empty(), PrintAdapter.storedPrintAreaFormula(printSheet));
-      var chartSheet = workbook.createSheet("Charts");
-      assertEquals(
-          List.of("cached-a", "cached-b"),
-          ChartAdapter.resolvedOrCachedReferenceValues(
-              chartSheet,
-              "[broken",
-              XDDFDataSourcesFactory.fromArray(new String[] {"cached-a", "cached-b"})));
-      assertEquals(
-          List.of("cached-null"),
-          ChartAdapter.resolvedOrCachedReferenceValues(
-              chartSheet,
-              null,
-              XDDFDataSourcesFactory.fromArray(new String[] {"cached-null"}),
-              null));
-      assertEquals(
-          List.of("cached-blank"),
-          ChartAdapter.resolvedOrCachedReferenceValues(
-              chartSheet,
-              " ",
-              XDDFDataSourcesFactory.fromArray(new String[] {"cached-blank"}),
-              null));
-      assertEquals(
-          List.of("cached-no-context"),
-          ChartAdapter.resolvedOrCachedReferenceValues(
-              null,
-              "Sheet1!$A$1:$A$2",
-              XDDFDataSourcesFactory.fromArray(new String[] {"cached-no-context"}),
-              null));
     }
   }
 

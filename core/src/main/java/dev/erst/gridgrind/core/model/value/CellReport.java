@@ -41,7 +41,8 @@ public sealed interface CellReport {
   @Variant(
       id = "BLANK",
       summary =
-          "Factual blank cell report. Only address and type are always present; VALUE projects the blank scalar, and FORMAT, STYLE, HYPERLINK, and COMMENT project their metadata.")
+          "Factual blank cell report. Only address and type are always present; VALUE projects the"
+              + " blank scalar, and FORMAT, STYLE, HYPERLINK, and COMMENT project their metadata.")
   record BlankReport(
       CellAddress address,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
@@ -65,7 +66,8 @@ public sealed interface CellReport {
   @Variant(
       id = "TEXT",
       summary =
-          "Factual text cell report. VALUE projects value, RICH_TEXT_RUNS projects runs, and the remaining fields are facet-gated.")
+          "Factual text cell report. VALUE projects value, RICH_TEXT_RUNS projects runs, and the"
+              + " remaining fields are facet-gated.")
   record TextReport(
       CellAddress address,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
@@ -100,7 +102,9 @@ public sealed interface CellReport {
   @Variant(
       id = "NUMBER",
       summary =
-          "Factual numeric cell report. VALUE projects value; TEMPORAL adds date, time, or date-time semantics when a numeric Excel value is format-derived rather than a plain number.")
+          "Factual numeric cell report. VALUE projects the original number; TEMPORAL independently"
+              + " reports whether its format has a supported civil interpretation or an explicit"
+              + " unrepresentability reason.")
   record NumberReport(
       CellAddress address,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
@@ -128,7 +132,8 @@ public sealed interface CellReport {
   @Variant(
       id = "BOOLEAN",
       summary =
-          "Factual boolean cell report. VALUE projects value and the remaining fields are facet-gated.")
+          "Factual boolean cell report. VALUE projects value and the remaining fields are"
+              + " facet-gated.")
   record BooleanReport(
       CellAddress address,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
@@ -153,7 +158,8 @@ public sealed interface CellReport {
   @Variant(
       id = "ERROR",
       summary =
-          "Factual error cell report. VALUE projects value and the remaining fields are facet-gated.")
+          "Factual error cell report. VALUE projects value and the remaining fields are"
+              + " facet-gated.")
   record ErrorReport(
       CellAddress address,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
@@ -177,7 +183,8 @@ public sealed interface CellReport {
   @Variant(
       id = "FORMULA",
       summary =
-          "Factual formula cell report with separate projected scalar value. FORMULA projects formula text, VALUE projects value, and the remaining fields are facet-gated.")
+          "Factual formula cell report with separate projected scalar value. FORMULA projects"
+              + " formula text, VALUE projects value, and the remaining fields are facet-gated.")
   record FormulaReport(
       CellAddress address,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
@@ -210,8 +217,11 @@ public sealed interface CellReport {
           throw new IllegalArgumentException("runs text must concatenate to the value");
         }
       }
-      if (temporal.isPresent() && !(value.orElse(null) instanceof CellValue.NumberValue)) {
-        throw new IllegalArgumentException("temporal requires a numeric value to be present");
+      if (temporal.isPresent()
+          && value.isPresent()
+          && !(value.orElseThrow() instanceof CellValue.NumberValue)) {
+        throw new IllegalArgumentException(
+            "A projected temporal interpretation cannot accompany a nonnumeric value");
       }
     }
   }

@@ -93,7 +93,8 @@ public sealed interface ExecutionProgressEvent
   @Variant(
       id = "FAILED",
       summary =
-          "Compact JSONL lifecycle event emitted when one execution phase fails with one classified problem code.")
+          "Compact JSONL lifecycle event emitted when one execution phase fails with one classified"
+              + " problem code.")
   record Failed(
       String timestamp,
       Category category,
@@ -148,12 +149,11 @@ public sealed interface ExecutionProgressEvent
 
   private static Optional<Integer> normalizeStepIndex(Optional<Integer> value) {
     Optional<Integer> normalized = Objects.requireNonNullElseGet(value, Optional::empty);
-    normalized.ifPresent(
-        index -> {
-          if (index < 0) {
-            throw new IllegalArgumentException("stepIndex must be >= 0");
-          }
-        });
+    normalized.ifPresent(index -> {
+      if (index < 0) {
+        throw new IllegalArgumentException("stepIndex must be >= 0");
+      }
+    });
     return normalized;
   }
 

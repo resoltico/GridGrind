@@ -51,8 +51,8 @@ Drawing anchor with one start marker plus explicit size.
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
 | from | REQUIRED | {"type":"PLAIN_TYPE_GROUP","group":"drawingMarkerReportType"} |  |
-| widthEmu | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER"} |  |
-| heightEmu | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER"} |  |
+| widthEmu | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER","constraints":[{"type":"NUMBER_RANGE","minimum":0.0,"maximum":2.72730423169E13}]} |  |
+| heightEmu | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER","constraints":[{"type":"NUMBER_RANGE","minimum":0.0,"maximum":2.72730423169E13}]} |  |
 | behavior | REQUIRED | {"type":"SCALAR","scalarType":"STRING"} |  |
 
 ```json
@@ -72,7 +72,12 @@ Drawing anchor with one start marker plus explicit size.
     "requirement" : "REQUIRED",
     "shape" : {
       "type" : "SCALAR",
-      "scalarType" : "NUMBER"
+      "scalarType" : "NUMBER",
+      "constraints" : [ {
+        "type" : "NUMBER_RANGE",
+        "minimum" : 0.0,
+        "maximum" : 2.72730423169E13
+      } ]
     },
     "enumValues" : [ ]
   }, {
@@ -80,7 +85,12 @@ Drawing anchor with one start marker plus explicit size.
     "requirement" : "REQUIRED",
     "shape" : {
       "type" : "SCALAR",
-      "scalarType" : "NUMBER"
+      "scalarType" : "NUMBER",
+      "constraints" : [ {
+        "type" : "NUMBER_RANGE",
+        "minimum" : 0.0,
+        "maximum" : 2.72730423169E13
+      } ]
     },
     "enumValues" : [ ]
   }, {
@@ -98,34 +108,34 @@ Drawing anchor with one start marker plus explicit size.
 
 ## ABSOLUTE
 
-Drawing anchor with absolute EMU coordinates and size.
+Drawing anchor with stored absolute coordinates and size.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
-| xEmu | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER"} |  |
-| yEmu | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER"} |  |
-| widthEmu | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER"} |  |
-| heightEmu | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER"} |  |
+| x | REQUIRED | {"type":"NESTED_TYPE_GROUP","group":"drawingCoordinateReportTypes"} |  |
+| y | REQUIRED | {"type":"NESTED_TYPE_GROUP","group":"drawingCoordinateReportTypes"} |  |
+| widthEmu | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER","constraints":[{"type":"NUMBER_RANGE","minimum":0.0,"maximum":2.72730423169E13}]} |  |
+| heightEmu | REQUIRED | {"type":"SCALAR","scalarType":"NUMBER","constraints":[{"type":"NUMBER_RANGE","minimum":0.0,"maximum":2.72730423169E13}]} |  |
 | behavior | REQUIRED | {"type":"SCALAR","scalarType":"STRING"} |  |
 
 ```json
 {
   "id" : "ABSOLUTE",
-  "summary" : "Drawing anchor with absolute EMU coordinates and size.",
+  "summary" : "Drawing anchor with stored absolute coordinates and size.",
   "fields" : [ {
-    "name" : "xEmu",
+    "name" : "x",
     "requirement" : "REQUIRED",
     "shape" : {
-      "type" : "SCALAR",
-      "scalarType" : "NUMBER"
+      "type" : "NESTED_TYPE_GROUP",
+      "group" : "drawingCoordinateReportTypes"
     },
     "enumValues" : [ ]
   }, {
-    "name" : "yEmu",
+    "name" : "y",
     "requirement" : "REQUIRED",
     "shape" : {
-      "type" : "SCALAR",
-      "scalarType" : "NUMBER"
+      "type" : "NESTED_TYPE_GROUP",
+      "group" : "drawingCoordinateReportTypes"
     },
     "enumValues" : [ ]
   }, {
@@ -133,7 +143,12 @@ Drawing anchor with absolute EMU coordinates and size.
     "requirement" : "REQUIRED",
     "shape" : {
       "type" : "SCALAR",
-      "scalarType" : "NUMBER"
+      "scalarType" : "NUMBER",
+      "constraints" : [ {
+        "type" : "NUMBER_RANGE",
+        "minimum" : 0.0,
+        "maximum" : 2.72730423169E13
+      } ]
     },
     "enumValues" : [ ]
   }, {
@@ -141,7 +156,12 @@ Drawing anchor with absolute EMU coordinates and size.
     "requirement" : "REQUIRED",
     "shape" : {
       "type" : "SCALAR",
-      "scalarType" : "NUMBER"
+      "scalarType" : "NUMBER",
+      "constraints" : [ {
+        "type" : "NUMBER_RANGE",
+        "minimum" : 0.0,
+        "maximum" : 2.72730423169E13
+      } ]
     },
     "enumValues" : [ ]
   }, {

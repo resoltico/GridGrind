@@ -1,9 +1,7 @@
 package dev.erst.gridgrind.cli.command;
 
-import dev.erst.gridgrind.cli.render.ProtocolCatalogFieldMetadataKey;
 import dev.erst.gridgrind.cli.render.ProtocolCatalogGroupIndex;
 import dev.erst.gridgrind.cli.render.ProtocolCatalogIndexReport;
-import dev.erst.gridgrind.cli.render.ProtocolCatalogLookupNamespace;
 import dev.erst.gridgrind.cli.render.ProtocolCatalogSearchHit;
 import dev.erst.gridgrind.cli.render.ProtocolCatalogSearchReport;
 import dev.erst.gridgrind.core.catalog.Catalog;
@@ -39,13 +37,12 @@ final class CliCatalogCommandSupport {
 
   static String unknownOperationMessage(String operationId) {
     return CliSuggestionSupport.protocolCatalogSearchCommandForLookupId(operationId)
-        .map(
-            command ->
-                "Unknown lookup id: "
-                    + operationId
-                    + ". Run "
-                    + command
-                    + " or gridgrind catalog to discover valid lookup ids.")
+        .map(command ->
+            "Unknown lookup id: "
+                + operationId
+                + ". Run "
+                + command
+                + " or gridgrind catalog to discover valid lookup ids.")
         .orElse(
             "Unknown lookup id: "
                 + operationId
@@ -67,36 +64,8 @@ final class CliCatalogCommandSupport {
         catalog.plainTypes().stream()
             .map(group -> new ProtocolCatalogGroupIndex(group.group(), List.of(group.type().id())))
             .toList(),
-        List.of(
-            new ProtocolCatalogFieldMetadataKey(
-                "defaultValue", "Field omission resolves to this constant JSON value."),
-            new ProtocolCatalogFieldMetadataKey(
-                "defaultFrom", "Field omission copies the named sibling component's value."),
-            new ProtocolCatalogFieldMetadataKey(
-                "projectedByFacets",
-                "Field is present only when one of the listed read-projection facets is"
-                    + " requested."),
-            new ProtocolCatalogFieldMetadataKey(
-                "noteRefs",
-                "Entry references stable note ids published once in the scoped lookup payload or"
-                    + " full catalog."),
-            new ProtocolCatalogFieldMetadataKey(
-                "enumValueDocs",
-                "Field publishes per-enum-value summaries aligned with enumValues so agents can"
-                    + " choose the right token directly.")),
-        List.of(
-            new ProtocolCatalogLookupNamespace(
-                "<topLevelGroup>:<id>",
-                "Resolve one top-level protocol type such as mutationActionTypes:SET_CELL."),
-            new ProtocolCatalogLookupNamespace(
-                "nestedTypes:<group>",
-                "Resolve one nested tagged-union group such as nestedTypes:cellValueSpecTypes."),
-            new ProtocolCatalogLookupNamespace(
-                "plainTypes:<group>",
-                "Resolve one plain record group such as plainTypes:sheetSummaryReport."),
-            new ProtocolCatalogLookupNamespace(
-                "<id>",
-                "Resolve one unqualified top-level type id only when it is globally unique.")),
+        GridGrindProtocolCatalog.fieldMetadataKeys(),
+        GridGrindProtocolCatalog.lookupNamespaces(),
         catalog.limits());
   }
 

@@ -19,10 +19,9 @@ final class FormulaRequestProblemSupport {
       Optional<Integer> jsonColumn,
       @Nullable Throwable cause) {
     return inputFailure(failure)
-        .map(
-            input ->
-                new FormulaRequestException(
-                    codeFor(input), input.publicMessage(), jsonPath, jsonLine, jsonColumn, cause));
+        .map(input ->
+            new FormulaRequestException(
+                codeFor(input), input.publicMessage(), jsonPath, jsonLine, jsonColumn, cause));
   }
 
   private static Optional<FormulaInputException> inputFailure(Throwable failure) {

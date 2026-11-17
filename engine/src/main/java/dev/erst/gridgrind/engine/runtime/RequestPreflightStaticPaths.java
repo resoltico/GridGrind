@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Validates request-owned path containment without binding, opening, or creating filesystem state.
+ * Validates request-owned path containment using no-follow directory metadata, without reading
+ * content or creating entries.
  */
 final class RequestPreflightStaticPaths {
   private RequestPreflightStaticPaths() {}
@@ -35,7 +36,8 @@ final class RequestPreflightStaticPaths {
           bindings,
           new ProblemContext.OpenWorkbook(
               ExecutionRequestPaths.requestShape(request),
-              ExecutionRequestPaths.workbookReference(request, bindings.workingDirectory())),
+              ExecutionRequestPaths.workbookReference(request, bindings.workingDirectory()),
+              java.util.Optional.empty()),
           problems);
     }
   }
@@ -86,7 +88,7 @@ final class RequestPreflightStaticPaths {
       ProblemContext context,
       List<GridGrindProblemDetail.Problem> problems) {
     try {
-      ExecutionRequestPaths.normalizePath(path, bindings.workingDirectory());
+      bindings.requestPathAccess().pathIdentity().resolve(path);
     } catch (Exception exception) {
       problems.add(GridGrindProblems.fromException(exception, context));
     }

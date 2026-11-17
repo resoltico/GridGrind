@@ -65,7 +65,7 @@
       },
       "execution" : {
         "label" : "Execution",
-        "lines" : [ "Without --response, the command payload is the sole stdout content. With --response, that payload is written to a new file; existing response files are not replaced.", "A response-file write failure with writable stdout recovers the already-rendered payload there unchanged and adds one compact transport notice on stderr. GridGrind never moves a primary payload to stderr.", "Use --format structured for JSON help, version and license reports. Use --pretty to indent JSON output.", "GridGrind executes ordered steps in sequence, then saves the workbook (unless persistence is NONE); if any step fails, no workbook is written.", "source.type=NEW starts with zero sheets; ENSURE_SHEET creates the first sheet.", "execution is optional; omit it for FULL_XSSF / SUMMARY / DO_NOT_CALCULATE, or supply only the nested execution.mode, execution.journal, and execution.calculation fields that need non-default behavior." ]
+        "lines" : [ "Without --response, the command payload is the sole stdout content. With --response, that payload is written to a new file; existing response files are not replaced.", "A response-file write failure with writable stdout recovers the already-rendered payload there unchanged and adds one compact transport notice on stderr. GridGrind never moves a primary payload to stderr. Standalone stderr may also contain bounded NATIVE_DIAGNOSTIC metadata frames; see docs/CLI.md for framing and logging settings.", "Use --format structured for JSON help, version and license reports. Use --pretty to indent JSON output.", "GridGrind executes ordered steps in sequence, then saves the workbook (unless persistence is NONE); if any step fails, no workbook is written.", "source.type=NEW starts with zero sheets; ENSURE_SHEET creates the first sheet.", "execution is optional; omit it for FULL_XSSF / SUMMARY / DO_NOT_CALCULATE, or supply only the nested execution.mode, execution.journal, and execution.calculation fields that need non-default behavior." ]
       },
       "fileWorkflow" : {
         "entries" : [ {
@@ -268,6 +268,42 @@
         }, {
           "label" : "LIM-040 Explicit Data-Validation List Formula Length",
           "value" : "255 characters in the stored explicit-list formula"
+        }, {
+          "label" : "LIM-041 Input Snapshot Bytes",
+          "value" : "ExecutionGrant.maxInputSnapshotBytes (0..9223372036854775807 bytes)"
+        }, {
+          "label" : "LIM-042 Authored Media Payload Bytes",
+          "value" : "33554432"
+        }, {
+          "label" : "LIM-043 Authored Media Use Bytes",
+          "value" : "67108864"
+        }, {
+          "label" : "LIM-044 Media Inspection Bytes",
+          "value" : "268435456"
+        }, {
+          "label" : "LIM-045 Media Raster Pixels",
+          "value" : "16777216"
+        }, {
+          "label" : "LIM-046 Media Expanded Coding Bytes",
+          "value" : "134217728"
+        }, {
+          "label" : "LIM-047 Media Structural Records",
+          "value" : "65536"
+        }, {
+          "label" : "LIM-048 Media Container Depth",
+          "value" : "8"
+        }, {
+          "label" : "LIM-049 EPS Syntax Tokens",
+          "value" : "1000000"
+        }, {
+          "label" : "LIM-050 EPS Syntax Depth",
+          "value" : "256"
+        }, {
+          "label" : "LIM-051 Civil Date Domain",
+          "value" : "1900: 1900-01-01..9999-12-31; 1904: 1904-01-01..9999-12-31"
+        }, {
+          "label" : "LIM-052 Date-Time Precision",
+          "value" : "millisecond"
         } ],
         "label" : "Limits"
       },

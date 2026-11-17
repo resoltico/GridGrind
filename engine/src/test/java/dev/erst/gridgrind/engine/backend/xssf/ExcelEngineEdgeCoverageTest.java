@@ -2,10 +2,12 @@ package dev.erst.gridgrind.engine.backend.xssf;
 
 import static dev.erst.gridgrind.engine.backend.xssf.ExcelSignatureLineSnapshotTestSupport.drawingSignatureLine;
 import static dev.erst.gridgrind.engine.backend.xssf.ExcelSignatureLineSnapshotTestSupport.signatureLineSnapshot;
+import static dev.erst.gridgrind.engine.media.MediaFixtures.validPng;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -25,11 +27,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.source.BinaryContent;
-import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
-import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
-import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
@@ -57,33 +55,31 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> ExcelSheetLayoutLimits.requireDefaultColumnWidth(0, "defaultColumnWidth"));
-    assertDoesNotThrow(
-        () ->
-            ExcelSheetLayoutLimits.requireDefaultColumnWidth(
-                Limit.MAX_DEFAULT_COLUMN_WIDTH, "defaultColumnWidth"));
+    assertDoesNotThrow(() ->
+        ExcelSheetLayoutLimits.requireDefaultColumnWidth(
+            Limit.MAX_DEFAULT_COLUMN_WIDTH, "defaultColumnWidth"));
   }
 
   @Test
   void signatureLineValueObjectsRejectInvalidInputsAcrossAllSurfaces() {
     DrawingAnchorSpec.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
 
-    assertDoesNotThrow(
-        () ->
-            signatureLineSnapshot(
-                "Signature",
-                anchor,
-                "setup",
-                true,
-                "instructions",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                5L,
-                "hash",
-                400,
-                150));
+    assertDoesNotThrow(() ->
+        signatureLineSnapshot(
+            "Signature",
+            anchor,
+            "setup",
+            true,
+            "instructions",
+            "Ada",
+            "Finance",
+            "ada@example.com",
+            ExcelPictureFormat.PNG,
+            "image/png",
+            5L,
+            "hash",
+            400,
+            150));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -358,23 +354,22 @@ class ExcelEngineEdgeCoverageTest {
                 -1));
 
     DrawingObjectReport.SignatureLine drawingSignature =
-        assertDoesNotThrow(
-            () ->
-                drawingSignatureLine(
-                    "Signature",
-                    anchor,
-                    "setup",
-                    true,
-                    "instructions",
-                    "Ada",
-                    "Finance",
-                    "ada@example.com",
-                    ExcelPictureFormat.PNG,
-                    "image/png",
-                    5L,
-                    "hash",
-                    400,
-                    150));
+        assertDoesNotThrow(() ->
+            drawingSignatureLine(
+                "Signature",
+                anchor,
+                "setup",
+                true,
+                "instructions",
+                "Ada",
+                "Finance",
+                "ada@example.com",
+                ExcelPictureFormat.PNG,
+                "image/png",
+                5L,
+                "hash",
+                400,
+                150));
     assertEquals("setup", drawingSignature.setup().orElseThrow().setupId().orElseThrow());
     assertEquals(ExcelPictureFormat.PNG, drawingSignature.preview().orElseThrow().format());
     assertThrows(
@@ -434,20 +429,19 @@ class ExcelEngineEdgeCoverageTest {
             .orElseThrow()
             .byteSize());
 
-    assertDoesNotThrow(
-        () ->
-            new ResolvedSignatureLine(
-                "Signature",
-                anchor,
-                false,
-                Optional.of("instructions"),
-                Optional.of("Ada"),
-                Optional.of("Finance"),
-                Optional.of("ada@example.com"),
-                Optional.empty(),
-                Optional.of("invalid"),
-                Optional.of(ExcelPictureFormat.PNG),
-                Optional.of(new BinaryContent(new byte[] {1}))));
+    assertDoesNotThrow(() ->
+        new ResolvedSignatureLine(
+            "Signature",
+            anchor,
+            false,
+            Optional.of("instructions"),
+            Optional.of("Ada"),
+            Optional.of("Finance"),
+            Optional.of("ada@example.com"),
+            Optional.empty(),
+            Optional.of("invalid"),
+            Optional.of(ExcelPictureFormat.PNG),
+            Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -557,14 +551,9 @@ class ExcelEngineEdgeCoverageTest {
 
   @Test
   void customXmlAndChartValueObjectsRejectInvalidInputs() {
-    assertDoesNotThrow(
-        () ->
-            new CustomXmlDataBindingReport(
-                Optional.of("binding"),
-                Optional.of(true),
-                Optional.of(7L),
-                Optional.of("file"),
-                0L));
+    assertDoesNotThrow(() ->
+        new CustomXmlDataBindingReport(
+            Optional.of("binding"), Optional.of(true), Optional.of(7L), Optional.of("file"), 0L));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -596,9 +585,8 @@ class ExcelEngineEdgeCoverageTest {
 
     assertDoesNotThrow(
         () -> new CustomXmlMappingLocator(java.util.Optional.of(1L), java.util.Optional.empty()));
-    assertDoesNotThrow(
-        () ->
-            new CustomXmlMappingLocator(java.util.Optional.empty(), java.util.Optional.of("Map")));
+    assertDoesNotThrow(() ->
+        new CustomXmlMappingLocator(java.util.Optional.empty(), java.util.Optional.of("Map")));
     assertThrows(
         IllegalArgumentException.class,
         () -> new CustomXmlMappingLocator(java.util.Optional.empty(), java.util.Optional.empty()));
@@ -622,28 +610,27 @@ class ExcelEngineEdgeCoverageTest {
             "Table1",
             new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B2"),
             "/root");
-    assertDoesNotThrow(
-        () ->
-            customXmlMappingSnapshot(
-                1L,
-                "Map",
-                "Root",
-                "Schema",
-                settings(true, false, true, false, true),
-                schema(
-                    Optional.of("urn:test"),
-                    Optional.of("XSD"),
-                    Optional.of("schema.xsd"),
-                    Optional.of("<schema/>")),
-                Optional.of(
-                    new CustomXmlDataBindingReport(
-                        Optional.of("binding"),
-                        Optional.of(true),
-                        Optional.of(7L),
-                        Optional.of("file"),
-                        0L)),
-                List.of(linkedCell),
-                List.of(linkedTable)));
+    assertDoesNotThrow(() ->
+        customXmlMappingSnapshot(
+            1L,
+            "Map",
+            "Root",
+            "Schema",
+            settings(true, false, true, false, true),
+            schema(
+                Optional.of("urn:test"),
+                Optional.of("XSD"),
+                Optional.of("schema.xsd"),
+                Optional.of("<schema/>")),
+            Optional.of(
+                new CustomXmlDataBindingReport(
+                    Optional.of("binding"),
+                    Optional.of(true),
+                    Optional.of(7L),
+                    Optional.of("file"),
+                    0L)),
+            List.of(linkedCell),
+            List.of(linkedTable)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -781,8 +768,17 @@ class ExcelEngineEdgeCoverageTest {
         () ->
             new ChartReport.Series(
                 new ChartReport.Title.None(),
-                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                new ChartReport.DataSource.NumericLiteral(Optional.of("0.0"), List.of("1")),
+                new ChartReport.DataSource.StringLiteral(
+                    new ChartReport.StringCache.Stored(
+                        Optional.of(1L),
+                        List.of(new ChartReport.StringPoint(Optional.of(0L), Optional.of("Jan"))))),
+                new ChartReport.DataSource.NumericLiteral(
+                    new ChartReport.NumericCache.Stored(
+                        Optional.of(1L),
+                        Optional.of("0.0"),
+                        List.of(
+                            new ChartReport.NumericPoint(
+                                Optional.of(0L), Optional.of("1"), Optional.empty())))),
                 Optional.empty(),
                 Optional.of(ExcelChartMarkerStyle.CIRCLE),
                 Optional.of((short) 1),
@@ -792,8 +788,17 @@ class ExcelEngineEdgeCoverageTest {
         () ->
             new ChartReport.Series(
                 new ChartReport.Title.None(),
-                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                new ChartReport.DataSource.NumericLiteral(Optional.of("0.0"), List.of("1")),
+                new ChartReport.DataSource.StringLiteral(
+                    new ChartReport.StringCache.Stored(
+                        Optional.of(1L),
+                        List.of(new ChartReport.StringPoint(Optional.of(0L), Optional.of("Jan"))))),
+                new ChartReport.DataSource.NumericLiteral(
+                    new ChartReport.NumericCache.Stored(
+                        Optional.of(1L),
+                        Optional.of("0.0"),
+                        List.of(
+                            new ChartReport.NumericPoint(
+                                Optional.of(0L), Optional.of("1"), Optional.empty())))),
                 Optional.empty(),
                 Optional.of(ExcelChartMarkerStyle.CIRCLE),
                 Optional.of((short) 10),
@@ -801,40 +806,23 @@ class ExcelEngineEdgeCoverageTest {
     ChartReport.Series compactSeries =
         new ChartReport.Series(
             new ChartReport.Title.None(),
-            new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-            new ChartReport.DataSource.NumericLiteral(Optional.of("0.0"), List.of("1")),
+            new ChartReport.DataSource.StringLiteral(
+                new ChartReport.StringCache.Stored(
+                    Optional.of(1L),
+                    List.of(new ChartReport.StringPoint(Optional.of(0L), Optional.of("Jan"))))),
+            new ChartReport.DataSource.NumericLiteral(
+                new ChartReport.NumericCache.Stored(
+                    Optional.of(1L),
+                    Optional.of("0.0"),
+                    List.of(
+                        new ChartReport.NumericPoint(
+                            Optional.of(0L), Optional.of("1"), Optional.empty())))),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty());
     assertEquals(Optional.empty(), compactSeries.smooth());
 
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ChartReport(
-                " ",
-                DrawingGeometryFixtures.report(ExcelChartTestSupport.anchor(1, 1, 4, 6)),
-                new ChartReport.Title.None(),
-                new ChartReport.Legend.Hidden(),
-                ExcelChartDisplayBlanksAs.GAP,
-                true,
-                List.of(
-                    new ChartReport.Line(
-                        false,
-                        ExcelChartGrouping.STANDARD,
-                        List.of(
-                            new ChartReport.Axis(
-                                ExcelChartAxisKind.CATEGORY,
-                                ExcelChartAxisPosition.BOTTOM,
-                                ExcelChartAxisCrosses.AUTO_ZERO,
-                                true),
-                            new ChartReport.Axis(
-                                ExcelChartAxisKind.VALUE,
-                                ExcelChartAxisPosition.LEFT,
-                                ExcelChartAxisCrosses.MIN,
-                                true)),
-                        List.of(compactSeries)))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -907,7 +895,7 @@ class ExcelEngineEdgeCoverageTest {
                     Optional.empty(),
                     Optional.of("invalid"),
                     Optional.of(ExcelPictureFormat.PNG),
-                    Optional.of(new BinaryContent(new byte[] {1}))));
+                    Optional.of(new BinaryContent(validPng()))));
         forceSignatureLineName(wrappedWorkbook.sheet("Ops").xssfSheet(), "Dup");
         XSSFDrawing drawing = wrappedWorkbook.sheet("Ops").xssfSheet().createDrawingPatriarch();
         XSSFSimpleShape duplicateShape =
@@ -947,7 +935,7 @@ class ExcelEngineEdgeCoverageTest {
 
   private static void forceSignatureLineName(XSSFSheet sheet, String name) throws IOException {
     XSSFVMLDrawing vmlDrawing = sheet.getVMLDrawing(false);
-    assertTrue(vmlDrawing != null, "expected test signature line VML drawing");
+    assertNotNull(vmlDrawing, "expected test signature line VML drawing");
     List<CTShape> signatureShapes = signatureShapes(vmlDrawing);
     assertFalse(signatureShapes.isEmpty(), "expected at least one signature shape");
     CTShape shape = signatureShapes.getFirst();

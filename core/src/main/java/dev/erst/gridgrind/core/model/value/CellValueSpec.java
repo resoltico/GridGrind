@@ -2,7 +2,6 @@ package dev.erst.gridgrind.core.model.value;
 
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
-import dev.erst.gridgrind.core.model.formula.FormulaInputSecurity;
 import dev.erst.gridgrind.core.model.formula.FormulaTextValidation;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.source.OoxmlTextValidation;
@@ -37,7 +36,8 @@ public sealed interface CellValueSpec
   @Variant(
       id = "TEXT",
       summary =
-          "Write one string cell value from an inline, file-backed, or standard-input text source. Blank resolved text is rejected; use BLANK for empty cells.")
+          "Write one string cell value from an inline, file-backed, or standard-input text source."
+              + " Blank resolved text is rejected; use BLANK for empty cells.")
   record Text(TextSourceSpec value) implements CellValueSpec {
     public Text {
       value = Validation.requireNonBlankTextSource(value, "value");
@@ -48,7 +48,9 @@ public sealed interface CellValueSpec
   @Variant(
       id = "RICH_TEXT",
       summary =
-          "Write a structured string cell value with an ordered rich-text run list. Run text concatenates to the stored plain string value and each run may override font attributes independently.")
+          "Write a structured string cell value with an ordered rich-text run list. Run text"
+              + " concatenates to the stored plain string value and each run may override font"
+              + " attributes independently.")
   record RichText(List<RichTextRunSpec> runs) implements CellValueSpec {
     public RichText {
       Validation.required(runs, "runs");
@@ -64,7 +66,7 @@ public sealed interface CellValueSpec
 
   /** Numeric cell input stored as a double. */
   @Variant(id = "NUMBER", summary = "Write one numeric cell value.")
-  record NumberValue(double value) implements CellValueSpec {
+  record NumberValue(double value) implements CellValueSpec, ResolvedCellWrite {
     public NumberValue {
       Validation.requireFinite(value, "value");
     }
@@ -78,8 +80,10 @@ public sealed interface CellValueSpec
   @Variant(
       id = "ERROR",
       summary =
-          "Write one exact stored Excel error literal such as #REF!, #DIV/0!, or #N/A. Evaluation-only states such as #CIRCULAR_REF! are reported on readback but cannot be authored as stored cell values.")
-  record ErrorValue(String value) implements CellValueSpec {
+          "Write one exact stored Excel error literal such as #REF!, #DIV/0!, or #N/A."
+              + " Evaluation-only states such as #CIRCULAR_REF! are reported on readback but cannot"
+              + " be authored as stored cell values.")
+  record ErrorValue(String value) implements CellValueSpec, ResolvedCellWrite {
     public ErrorValue {
       value = CellErrorLiteralValidation.requireStoredErrorLiteral(value, "value");
     }
@@ -89,7 +93,9 @@ public sealed interface CellValueSpec
   @Variant(
       id = "FORMULA",
       summary =
-          "Write one Excel formula from an inline, file-backed, or standard-input text source. Formula text is the OOXML <f> body: it must not begin with = and is parsed by Apache POI.")
+          "Write one Excel formula from an inline, file-backed, or standard-input text source."
+              + " Formula text is the OOXML <f> body: it must not begin with = and is parsed by"
+              + " Apache POI.")
   record Formula(TextSourceSpec value) implements CellValueSpec {
     public Formula {
       value = Validation.normalizeFormulaSource(value, "value");
@@ -100,7 +106,10 @@ public sealed interface CellValueSpec
   @Variant(
       id = "RAW_FORMULA",
       summary =
-          "Write opaque OOXML <f> character data from one text source without POI formula parsing. It must be nonempty, must not begin with =, and rejects XML 1.0-invalid characters as INVALID_FORMULA_TEXT; XML-looking formula string literals are preserved.")
+          "Write opaque OOXML <f> character data from one text source without POI formula parsing."
+              + " It must be nonempty, must not begin with =, and rejects XML 1.0-invalid"
+              + " characters as INVALID_FORMULA_TEXT; XML-looking formula string literals are"
+              + " preserved.")
   record RawFormula(TextSourceSpec value) implements CellValueSpec {
     public RawFormula {
       value = Validation.normalizeRawFormulaSource(value, "value");
@@ -111,10 +120,12 @@ public sealed interface CellValueSpec
   @Variant(
       id = "DATE",
       summary =
-          "Write an ISO-8601 date value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE.")
+          "Write a timezone-free Gregorian date within the receiving workbook calendar, through"
+              + " 9999-12-31. Stored as a numeric serial; TEMPORAL may interpret it as DATE.")
   record Date(LocalDate value) implements CellValueSpec, ResolvedCellWrite {
     public Date {
       Validation.required(value, "value");
+      TemporalSemantics.requireDateShape(value);
     }
   }
 
@@ -125,10 +136,13 @@ public sealed interface CellValueSpec
   @Variant(
       id = "DATE_TIME",
       summary =
-          "Write an ISO-8601 date-time value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE_TIME.")
+          "Write a timezone-free Gregorian date-time within the receiving workbook calendar at"
+              + " millisecond precision. Finer precision refuses; numeric readback may expose an"
+              + " INTERPRETED DATE_TIME facet.")
   record DateTime(LocalDateTime value) implements CellValueSpec, ResolvedCellWrite {
     public DateTime {
       Validation.required(value, "value");
+      TemporalSemantics.requireDateTimeShape(value);
     }
   }
 
@@ -168,9 +182,7 @@ public sealed interface CellValueSpec
     }
 
     static String normalizeInlineFormula(String value, String fieldName) {
-      String normalized = FormulaTextValidation.requireNormalFormulaBody(value, fieldName);
-      FormulaInputSecurity.rejectDde(normalized);
-      return normalized;
+      return FormulaTextValidation.requireNormalFormulaBody(value, fieldName);
     }
 
     static TextSourceSpec normalizeFormulaSource(TextSourceSpec source, String fieldName) {

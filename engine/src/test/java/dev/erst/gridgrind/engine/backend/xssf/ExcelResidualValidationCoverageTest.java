@@ -193,8 +193,17 @@ class ExcelResidualValidationCoverageTest {
         () ->
             new ChartReport.Series(
                 new ChartReport.Title.Text("Sales"),
-                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10.0")),
+                new ChartReport.DataSource.StringLiteral(
+                    new ChartReport.StringCache.Stored(
+                        Optional.of(1L),
+                        List.of(new ChartReport.StringPoint(Optional.of(0L), Optional.of("Jan"))))),
+                new ChartReport.DataSource.NumericLiteral(
+                    new ChartReport.NumericCache.Stored(
+                        Optional.of(1L),
+                        Optional.empty(),
+                        List.of(
+                            new ChartReport.NumericPoint(
+                                Optional.of(0L), Optional.of("10.0"), Optional.empty())))),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.of((short) 1),
@@ -204,8 +213,17 @@ class ExcelResidualValidationCoverageTest {
         () ->
             new ChartReport.Series(
                 null,
-                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10.0")),
+                new ChartReport.DataSource.StringLiteral(
+                    new ChartReport.StringCache.Stored(
+                        Optional.of(1L),
+                        List.of(new ChartReport.StringPoint(Optional.of(0L), Optional.of("Jan"))))),
+                new ChartReport.DataSource.NumericLiteral(
+                    new ChartReport.NumericCache.Stored(
+                        Optional.of(1L),
+                        Optional.empty(),
+                        List.of(
+                            new ChartReport.NumericPoint(
+                                Optional.of(0L), Optional.of("10.0"), Optional.empty())))),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -215,8 +233,17 @@ class ExcelResidualValidationCoverageTest {
         () ->
             new ChartReport.Series(
                 new ChartReport.Title.Text("Sales"),
-                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10.0")),
+                new ChartReport.DataSource.StringLiteral(
+                    new ChartReport.StringCache.Stored(
+                        Optional.of(1L),
+                        List.of(new ChartReport.StringPoint(Optional.of(0L), Optional.of("Jan"))))),
+                new ChartReport.DataSource.NumericLiteral(
+                    new ChartReport.NumericCache.Stored(
+                        Optional.of(1L),
+                        Optional.empty(),
+                        List.of(
+                            new ChartReport.NumericPoint(
+                                Optional.of(0L), Optional.of("10.0"), Optional.empty())))),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -226,8 +253,17 @@ class ExcelResidualValidationCoverageTest {
         () ->
             new ChartReport.Series(
                 new ChartReport.Title.Text("Sales"),
-                new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10.0")),
+                new ChartReport.DataSource.StringLiteral(
+                    new ChartReport.StringCache.Stored(
+                        Optional.of(1L),
+                        List.of(new ChartReport.StringPoint(Optional.of(0L), Optional.of("Jan"))))),
+                new ChartReport.DataSource.NumericLiteral(
+                    new ChartReport.NumericCache.Stored(
+                        Optional.of(1L),
+                        Optional.empty(),
+                        List.of(
+                            new ChartReport.NumericPoint(
+                                Optional.of(0L), Optional.of("10.0"), Optional.empty())))),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.of((short) 73),

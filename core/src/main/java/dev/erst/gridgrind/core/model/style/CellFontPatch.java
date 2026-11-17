@@ -9,7 +9,8 @@ import java.util.Optional;
 @CatalogType(
     id = "CellFontPatch",
     summary =
-        "Font patch for cell styling; at least one field must be set. Colors can use RGB, theme, indexed, and tint semantics.",
+        "Font patch for cell styling; at least one field must be set. Colors can use RGB, theme,"
+            + " indexed, and tint semantics.",
     displayOrder = 45)
 public record CellFontPatch(
     Optional<Boolean> bold,
@@ -27,10 +28,9 @@ public record CellFontPatch(
     Objects.requireNonNull(fontColor, "fontColor must not be null");
     Objects.requireNonNull(underline, "underline must not be null");
     Objects.requireNonNull(strikeout, "strikeout must not be null");
-    fontName.ifPresent(
-        value -> {
-          TextValidation.requireNonBlank(value, "fontName");
-        });
+    fontName.ifPresent(value -> {
+      TextValidation.requireNonBlank(value, "fontName");
+    });
     if (bold.isEmpty()
         && italic.isEmpty()
         && fontName.isEmpty()

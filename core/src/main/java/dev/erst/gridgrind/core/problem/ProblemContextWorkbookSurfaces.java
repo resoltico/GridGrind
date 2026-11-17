@@ -170,7 +170,9 @@ public interface ProblemContextWorkbookSurfaces {
           ProblemLocation.Range,
           ProblemLocation.NamedRange,
           ProblemLocation.SheetNamedRange,
-          ProblemLocation.FormulaCell {
+          ProblemLocation.FormulaCell,
+          ProblemLocation.NativeContent,
+          ProblemLocation.MappedXmlField {
     /** Returns the explicit unknown workbook-location variant. */
     static ProblemLocation unknown() {
       return new ProblemLocation.Unknown();
@@ -236,6 +238,8 @@ public interface ProblemContextWorkbookSurfaces {
         case NamedRange _ -> Optional.empty();
         case SheetNamedRange namedRange -> Optional.of(namedRange.sheetName());
         case FormulaCell formulaCell -> Optional.of(formulaCell.sheetName());
+        case NativeContent nativeContent -> nativeContent.content().sheetName();
+        case MappedXmlField mapped -> mapped.sheetName();
         case ProblemLocation.Unknown _ -> Optional.empty();
       };
     }
@@ -279,6 +283,27 @@ public interface ProblemContextWorkbookSurfaces {
     /** The failure could not be localized to one workbook target. */
     @Variant(id = "UNKNOWN", summary = "The failure could not be localized to one workbook target.")
     record Unknown() implements ProblemLocation {}
+
+    /** The failure was localized to known native package or parser coordinates. */
+    @Variant(id = "NATIVE_CONTENT", summary = "Known native package or parser coordinates.")
+    record NativeContent(WorkbookContentLocation content) implements ProblemLocation {
+      public NativeContent {
+        java.util.Objects.requireNonNull(content, "content must not be null");
+      }
+    }
+
+    /** The authored XML field and mapping occurrence that supplied an unsupported value. */
+    @Variant(id = "MAPPED_XML_FIELD", summary = "An authored XML field and mapping occurrence.")
+    record MappedXmlField(Optional<SheetLabel> sheetName, String xpath, int mappingRowIndex)
+        implements ProblemLocation {
+      public MappedXmlField {
+        java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
+        xpath = requireNonBlank(xpath, "xpath");
+        if (mappingRowIndex < 0) {
+          throw new IllegalArgumentException("mappingRowIndex must not be negative");
+        }
+      }
+    }
 
     /** The failure was localized to one whole sheet. */
     @Variant(id = "SHEET", summary = "The failure was localized to one whole sheet.")

@@ -95,12 +95,12 @@ public final class SheetDrawings {
 
   /** Reads drawing-object facts on the bound sheet. */
   public List<DrawingObjectReport> drawingObjects() {
-    return drawingController.drawingObjects(xssfSheet(), formulaRuntime);
+    return drawingController.drawingObjects(xssfSheet());
   }
 
   /** Reads chart facts on the bound sheet. */
   public List<ChartReport> charts() {
-    return drawingController.charts(xssfSheet(), formulaRuntime);
+    return drawingController.charts(xssfSheet());
   }
 
   /** Reads the selected drawing object payload. */

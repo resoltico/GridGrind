@@ -106,14 +106,26 @@
           "behavior" : "MOVE_AND_RESIZE",
           "from" : {
             "columnIndex" : 5,
-            "dx" : 0,
-            "dy" : 0,
+            "dx" : {
+              "type" : "PIXELS",
+              "value" : 0
+            },
+            "dy" : {
+              "type" : "PIXELS",
+              "value" : 0
+            },
             "rowIndex" : 1
           },
           "to" : {
             "columnIndex" : 8,
-            "dx" : 0,
-            "dy" : 0,
+            "dx" : {
+              "type" : "PIXELS",
+              "value" : 0
+            },
+            "dy" : {
+              "type" : "PIXELS",
+              "value" : 0
+            },
             "rowIndex" : 6
           },
           "type" : "TWO_CELL"
@@ -189,6 +201,10 @@
     },
     "evidence" : {
       "admission" : {
+        "executionStrategy" : {
+          "backend" : "FULL_XSSF",
+          "fullWorkbookMaterializationRequired" : true
+        },
         "materializedInputs" : [ ],
         "operations" : [ {
           "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS", "WORKBOOK_STRUCTURE", "SHEET_STRUCTURE", "ROWS", "COLUMNS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "WORKBOOK_METADATA", "WORKBOOK_SECURITY" ],
@@ -234,14 +250,26 @@
           "behavior" : "MOVE_AND_RESIZE",
           "from" : {
             "columnIndex" : 1,
-            "dx" : 0,
-            "dy" : 0,
+            "dx" : {
+              "type" : "PIXELS",
+              "value" : 0
+            },
+            "dy" : {
+              "type" : "PIXELS",
+              "value" : 0
+            },
             "rowIndex" : 1
           },
           "to" : {
             "columnIndex" : 4,
-            "dx" : 0,
-            "dy" : 0,
+            "dx" : {
+              "type" : "PIXELS",
+              "value" : 0
+            },
+            "dy" : {
+              "type" : "PIXELS",
+              "value" : 0
+            },
             "rowIndex" : 6
           },
           "type" : "TWO_CELL"
@@ -274,14 +302,26 @@
           "behavior" : "MOVE_AND_RESIZE",
           "from" : {
             "columnIndex" : 5,
-            "dx" : 0,
-            "dy" : 0,
+            "dx" : {
+              "type" : "PIXELS",
+              "value" : 0
+            },
+            "dy" : {
+              "type" : "PIXELS",
+              "value" : 0
+            },
             "rowIndex" : 1
           },
           "to" : {
             "columnIndex" : 8,
-            "dx" : 0,
-            "dy" : 0,
+            "dx" : {
+              "type" : "PIXELS",
+              "value" : 0
+            },
+            "dy" : {
+              "type" : "PIXELS",
+              "value" : 0
+            },
             "rowIndex" : 6
           },
           "type" : "TWO_CELL"

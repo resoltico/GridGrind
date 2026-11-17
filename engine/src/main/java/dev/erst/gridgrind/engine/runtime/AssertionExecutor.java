@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellAssertion;
 import dev.erst.gridgrind.core.plan.CompositeAssertion;
 import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.PreparedAssertionStep;
 import dev.erst.gridgrind.core.plan.PresenceAssertion;
 import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.WorkbookFactAssertion;
@@ -35,22 +36,23 @@ final class AssertionExecutor {
   }
 
   AssertionResult execute(
-      AssertionStep step, XssfWorkbook workbook, WorkbookLocation workbookLocation)
+      PreparedAssertionStep prepared, XssfWorkbook workbook, WorkbookLocation workbookLocation)
       throws AssertionFailedException {
-    return switch (executeCollecting(step, workbook, workbookLocation)) {
+    return switch (executeCollecting(prepared, workbook, workbookLocation)) {
       case AssertionStepExecution.Passed passed -> passed.result();
       case AssertionStepExecution.Failed failed -> throw failed.failure();
     };
   }
 
   AssertionStepExecution executeCollecting(
-      AssertionStep step, XssfWorkbook workbook, WorkbookLocation workbookLocation) {
-    Objects.requireNonNull(step, "step must not be null");
+      PreparedAssertionStep prepared, XssfWorkbook workbook, WorkbookLocation workbookLocation) {
+    Objects.requireNonNull(prepared, "prepared must not be null");
+    AssertionStep step = prepared.authoredStep();
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
 
     AssertionEvaluation evaluation =
-        evaluate(step.stepId(), step.target(), step.assertion(), workbook, workbookLocation);
+        evaluate(step.stepId(), prepared.target(), step.assertion(), workbook, workbookLocation);
     if (!evaluation.passed()) {
       AssertionFailure failure =
           new AssertionFailure(

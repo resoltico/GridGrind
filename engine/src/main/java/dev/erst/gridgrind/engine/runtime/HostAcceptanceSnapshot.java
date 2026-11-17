@@ -25,10 +25,9 @@ record HostAcceptanceSnapshot(
         .filter(candidate -> candidate.requirement().equals(requirement))
         .findFirst()
         .map(OpaquePartPreservation::sourceArtifact)
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "host opaque-part preservation was not captured before mutation"));
+        .orElseThrow(() ->
+            new IllegalStateException(
+                "host opaque-part preservation was not captured before mutation"));
   }
 
   List<InspectionResult> baselineFor(
@@ -38,10 +37,9 @@ record HostAcceptanceSnapshot(
         .filter(candidate -> candidate.requirement().equals(requirement))
         .findFirst()
         .map(SemanticPreservation::baseline)
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "host semantic-preservation requirement was not captured before mutation"));
+        .orElseThrow(() ->
+            new IllegalStateException(
+                "host semantic-preservation requirement was not captured before mutation"));
   }
 
   record SemanticPreservation(

@@ -91,9 +91,8 @@ class GridGrindProtocolContractSupportCoverageTest {
   void requestCatalogOptionalityComesFromRecordComponents() {
     assertCatalogOptionality(WorkbookPlan.class, GridGrindProtocolCatalog.catalog().requestType());
     requestDescriptors()
-        .forEach(
-            descriptor ->
-                assertCatalogOptionality(descriptor.recordType(), descriptor.catalogEntry()));
+        .forEach(descriptor ->
+            assertCatalogOptionality(descriptor.recordType(), descriptor.catalogEntry()));
   }
 
   private static void assertCatalogOptionality(
@@ -111,41 +110,36 @@ class GridGrindProtocolContractSupportCoverageTest {
     assertEquals(expected, actual, () -> "Catalog optionality drifted for " + recordType.getName());
     GridGrindProtocolContractSupport.requestPrimitiveFields().stream()
         .filter(field -> field.recordType().equals(recordType))
-        .forEach(
-            primitive ->
-                assertEquals(
-                    primitive.defaultBoolean(),
-                    catalogEntry
-                        .field(primitive.fieldName())
-                        .orElseThrow()
-                        .defaultValue()
-                        .filter(Boolean.class::isInstance)
-                        .map(Boolean.class::cast),
-                    () ->
-                        "Catalog primitive default drifted for "
-                            + recordType.getName()
-                            + "."
-                            + primitive.fieldName()));
+        .forEach(primitive ->
+            assertEquals(
+                primitive.defaultBoolean(),
+                catalogEntry
+                    .field(primitive.fieldName())
+                    .orElseThrow()
+                    .defaultValue()
+                    .filter(Boolean.class::isInstance)
+                    .map(Boolean.class::cast),
+                () ->
+                    "Catalog primitive default drifted for "
+                        + recordType.getName()
+                        + "."
+                        + primitive.fieldName()));
   }
 
   private static Stream<RequestCatalogDescriptor> requestDescriptors() {
     return Stream.concat(
         CatalogTypes.ALL_TYPES.stream()
-            .map(
-                descriptor ->
-                    new RequestCatalogDescriptor(descriptor.recordType(), descriptor.typeEntry())),
+            .map(descriptor ->
+                new RequestCatalogDescriptor(descriptor.recordType(), descriptor.typeEntry())),
         Stream.concat(
             CatalogTypes.NESTED_TYPE_GROUPS.stream()
                 .flatMap(group -> group.typeDescriptors().stream())
-                .map(
-                    descriptor ->
-                        new RequestCatalogDescriptor(
-                            descriptor.recordType(), descriptor.typeEntry())),
+                .map(descriptor ->
+                    new RequestCatalogDescriptor(descriptor.recordType(), descriptor.typeEntry())),
             CatalogTypes.PLAIN_TYPE_DESCRIPTORS.stream()
-                .map(
-                    descriptor ->
-                        new RequestCatalogDescriptor(
-                            descriptor.recordType(), descriptor.typeEntry()))));
+                .map(descriptor ->
+                    new RequestCatalogDescriptor(
+                        descriptor.recordType(), descriptor.typeEntry()))));
   }
 
   private record RequestCatalogDescriptor(

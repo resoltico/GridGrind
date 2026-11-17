@@ -80,7 +80,7 @@ public final class XssfWorkbooks {
         workbookPath, formulaEnvironment, openOptions, tempFileFactory);
   }
 
-  /** Maximum size of a single decompressed ZIP entry in an xlsx package. */
+  // Apply the core-owned ZIP decompression limits before opening native packages.
   static {
     ZipSecureFile.setMinInflateRatio(Limit.MIN_ZIP_INFLATE_RATIO); // 1:100 max decompression ratio
     ZipSecureFile.setMaxEntrySize(Limit.MAX_ZIP_ENTRY_SIZE);
@@ -104,12 +104,12 @@ public final class XssfWorkbooks {
     try (InputStream inputStream = Files.newInputStream(absolutePath)) {
       try {
         return openMaterializedWorkbook(
-            new XSSFWorkbook(inputStream),
+            loadNativeWorkbook(inputStream),
             sourcePath,
             loadedPackageSecurity,
             sourceEncryptionPassword);
       } catch (NotOfficeXmlFileException exception) {
-        throw new IllegalArgumentException("Only .xlsx workbooks are supported", exception);
+        throw new WorkbookNotOpenableException(sourcePath.orElse(absolutePath), exception);
       }
     }
   }
@@ -133,14 +133,25 @@ public final class XssfWorkbooks {
     try (InputStream inputStream = Files.newInputStream(absolutePath)) {
       try {
         return openMaterializedWorkbook(
-            new XSSFWorkbook(inputStream),
+            loadNativeWorkbook(inputStream),
             formulaEnvironment,
             sourcePath,
             loadedPackageSecurity,
             sourceEncryptionPassword);
       } catch (NotOfficeXmlFileException exception) {
-        throw new IllegalArgumentException("Only .xlsx workbooks are supported", exception);
+        throw new WorkbookNotOpenableException(sourcePath.orElse(absolutePath), exception);
       }
+    }
+  }
+
+  /** Restricts source-XML classification to native parsing, not formula/runtime initialization. */
+  private static XSSFWorkbook loadNativeWorkbook(InputStream inputStream) throws IOException {
+    try {
+      return new XSSFWorkbook(inputStream);
+    } catch (NotOfficeXmlFileException failure) {
+      throw failure;
+    } catch (RuntimeException failure) {
+      throw WorkbookSourceXmlRefusals.translate(failure);
     }
   }
 

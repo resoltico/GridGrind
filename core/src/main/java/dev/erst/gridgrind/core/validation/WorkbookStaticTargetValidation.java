@@ -18,11 +18,9 @@ final class WorkbookStaticTargetValidation {
     for (WorkbookStaticStep step : steps) {
       step.value()
           .flatMap(WorkbookStaticTargetValidation::targetViolation)
-          .ifPresent(
-              message ->
-                  violations.add(
-                      new WorkbookStaticViolation(
-                          "steps[" + step.index() + "].target.type", message)));
+          .ifPresent(message ->
+              violations.add(
+                  new WorkbookStaticViolation("steps[" + step.index() + "].target.type", message)));
     }
     return List.copyOf(violations);
   }

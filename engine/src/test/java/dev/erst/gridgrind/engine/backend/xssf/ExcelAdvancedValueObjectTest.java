@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
@@ -421,7 +422,12 @@ class ExcelAdvancedValueObjectTest {
     DrawingObjectReport.Shape groupSnapshot =
         new DrawingObjectReport.Shape(
             "OpsGroup",
-            new DrawingAnchorReport.Absolute(1L, 2L, 10L, 20L, null),
+            new DrawingAnchorReport.Absolute(
+                new DrawingCoordinateReport.Emu(1L),
+                new DrawingCoordinateReport.Emu(2L),
+                10L,
+                20L,
+                null),
             ExcelDrawingShapeKind.GROUP,
             Optional.empty(),
             Optional.empty(),
@@ -449,7 +455,11 @@ class ExcelAdvancedValueObjectTest {
     assertEquals(2, groupSnapshot.childCount());
     assertEquals("Payload", payload.label().orElseThrow());
     assertThrows(IllegalArgumentException.class, () -> new BinaryContent(new byte[0]));
-    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(-1, 0, 0, 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingMarkerReport(
+                -1, 0, new DrawingCoordinateReport.Emu(0), new DrawingCoordinateReport.Emu(0)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -457,18 +467,16 @@ class ExcelAdvancedValueObjectTest {
                 new DrawingMarkerSpec(2, 2, 0, 0),
                 new DrawingMarkerSpec(1, 2, 0, 0),
                 dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
-    assertDoesNotThrow(
-        () ->
-            new DrawingAnchorSpec.TwoCell(
-                new DrawingMarkerSpec(2, 1, 0, 3),
-                new DrawingMarkerSpec(2, 3, 0, 4),
-                dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
-    assertDoesNotThrow(
-        () ->
-            new DrawingAnchorSpec.TwoCell(
-                new DrawingMarkerSpec(1, 2, 3, 0),
-                new DrawingMarkerSpec(3, 2, 4, 0),
-                dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
+    assertDoesNotThrow(() ->
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(2, 1, 0, 3),
+            new DrawingMarkerSpec(2, 3, 0, 4),
+            dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
+    assertDoesNotThrow(() ->
+        new DrawingAnchorSpec.TwoCell(
+            new DrawingMarkerSpec(1, 2, 3, 0),
+            new DrawingMarkerSpec(3, 2, 4, 0),
+            dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
     assertThrows(
         IllegalArgumentException.class,
         () -> new ResolvedShape.SimpleShape("OpsShape", twoCell, " ", Optional.empty()));

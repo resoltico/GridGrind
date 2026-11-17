@@ -30,77 +30,87 @@ class SheetPresenceAssertionCoverageTest {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
 
-      assertDoesNotThrow(
-          () ->
-              executor.execute(
-                  new AssertionStep(
-                      new StepId("s1"),
-                      new SheetSelector.ByName(new SheetName("Budget")),
-                      new PresenceAssertion.SheetPresent()),
-                  workbook,
-                  location));
+      assertDoesNotThrow(() ->
+          executor.execute(
+              (dev.erst.gridgrind.core.plan.PreparedAssertionStep)
+                  dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+                      new AssertionStep(
+                          new StepId("s1"),
+                          new SheetSelector.ByName(new SheetName("Budget")),
+                          new PresenceAssertion.SheetPresent())),
+              workbook,
+              location));
 
       assertThrows(
           AssertionFailedException.class,
           () ->
               executor.execute(
-                  new AssertionStep(
-                      new StepId("s2"),
-                      new SheetSelector.ByName(new SheetName("Missing")),
-                      new PresenceAssertion.SheetPresent()),
+                  (dev.erst.gridgrind.core.plan.PreparedAssertionStep)
+                      dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+                          new AssertionStep(
+                              new StepId("s2"),
+                              new SheetSelector.ByName(new SheetName("Missing")),
+                              new PresenceAssertion.SheetPresent())),
                   workbook,
                   location));
 
-      assertDoesNotThrow(
-          () ->
-              executor.execute(
-                  new AssertionStep(
-                      new StepId("s3"),
-                      new SheetSelector.ByName(new SheetName("Missing")),
-                      new PresenceAssertion.SheetAbsent()),
-                  workbook,
-                  location));
+      assertDoesNotThrow(() ->
+          executor.execute(
+              (dev.erst.gridgrind.core.plan.PreparedAssertionStep)
+                  dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+                      new AssertionStep(
+                          new StepId("s3"),
+                          new SheetSelector.ByName(new SheetName("Missing")),
+                          new PresenceAssertion.SheetAbsent())),
+              workbook,
+              location));
 
       assertThrows(
           AssertionFailedException.class,
           () ->
               executor.execute(
-                  new AssertionStep(
-                      new StepId("s4"),
-                      new SheetSelector.ByName(new SheetName("Budget")),
-                      new PresenceAssertion.SheetAbsent()),
+                  (dev.erst.gridgrind.core.plan.PreparedAssertionStep)
+                      dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+                          new AssertionStep(
+                              new StepId("s4"),
+                              new SheetSelector.ByName(new SheetName("Budget")),
+                              new PresenceAssertion.SheetAbsent())),
                   workbook,
                   location));
 
-      assertDoesNotThrow(
-          () ->
-              executor.execute(
-                  new AssertionStep(
-                      new StepId("s5"),
-                      new SheetSelector.All(),
-                      new PresenceAssertion.SheetPresent()),
-                  workbook,
-                  location));
+      assertDoesNotThrow(() ->
+          executor.execute(
+              (dev.erst.gridgrind.core.plan.PreparedAssertionStep)
+                  dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+                      new AssertionStep(
+                          new StepId("s5"),
+                          new SheetSelector.All(),
+                          new PresenceAssertion.SheetPresent())),
+              workbook,
+              location));
 
-      assertDoesNotThrow(
-          () ->
-              executor.execute(
-                  new AssertionStep(
-                      new StepId("s6"),
-                      new SheetSelector.ByNames(List.of(new SheetName("Budget"))),
-                      new PresenceAssertion.SheetPresent()),
-                  workbook,
-                  location));
+      assertDoesNotThrow(() ->
+          executor.execute(
+              (dev.erst.gridgrind.core.plan.PreparedAssertionStep)
+                  dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+                      new AssertionStep(
+                          new StepId("s6"),
+                          new SheetSelector.ByNames(List.of(new SheetName("Budget"))),
+                          new PresenceAssertion.SheetPresent())),
+              workbook,
+              location));
 
       workbook.getOrCreateSheet("Sales");
       assertThrows(
           AssertionFailedException.class,
           () ->
               executor.execute(
-                  new AssertionStep(
-                      new StepId("s7"),
-                      new SheetSelector.All(),
-                      new PresenceAssertion.SheetAbsent()),
+                  (dev.erst.gridgrind.core.plan.PreparedAssertionStep)
+                      dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+                          new AssertionStep(
+                              new StepId("s7"),
+                              new SheetSelector.All(),
+                              new PresenceAssertion.SheetAbsent())),
                   workbook,
                   location));
     }
@@ -116,15 +126,16 @@ class SheetPresenceAssertionCoverageTest {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
 
-      assertDoesNotThrow(
-          () ->
-              executor.execute(
-                  new AssertionStep(
-                      new StepId("nr1"),
-                      new NamedRangeSelector.ByName(new DefinedName("MissingRange")),
-                      new PresenceAssertion.NamedRangeAbsent()),
-                  workbook,
-                  location));
+      assertDoesNotThrow(() ->
+          executor.execute(
+              (dev.erst.gridgrind.core.plan.PreparedAssertionStep)
+                  dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+                      new AssertionStep(
+                          new StepId("nr1"),
+                          new NamedRangeSelector.ByName(new DefinedName("MissingRange")),
+                          new PresenceAssertion.NamedRangeAbsent())),
+              workbook,
+              location));
     }
   }
 }

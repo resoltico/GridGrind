@@ -14,6 +14,10 @@
     },
     "evidence" : {
       "admission" : {
+        "executionStrategy" : {
+          "backend" : "FULL_XSSF",
+          "fullWorkbookMaterializationRequired" : true
+        },
         "materializedInputs" : [ {
           "byteSize" : 17,
           "path" : "<workspace>/recipe/source-backed-input-assets/title.txt",

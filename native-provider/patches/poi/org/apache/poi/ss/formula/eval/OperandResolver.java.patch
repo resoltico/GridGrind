@@ -1,0 +1,11 @@
+--- org/apache/poi/ss/formula/eval/OperandResolver.java
++++ org/apache/poi/ss/formula/eval/OperandResolver.java
+@@ -338,7 +338,7 @@
+     public static Double parseDateTime(String pText) {
+ 
+         try {
+-            return DateUtil.parseDateTime(pText);
++            return DateUtil.parseDateTime(pText, org.apache.poi.ss.usermodel.DateSystemContext.is1904());
+         } catch (DateTimeException e) {
+             return null;
+         }

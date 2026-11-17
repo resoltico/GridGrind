@@ -185,6 +185,8 @@
           "type" : "array"
         },
         "gapDepth" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "grouping" : {
@@ -223,6 +225,8 @@
           "type" : "string"
         },
         "gapWidth" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "grouping" : {
@@ -230,6 +234,8 @@
           "type" : "string"
         },
         "overlap" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "series" : {
@@ -264,9 +270,13 @@
           "type" : "string"
         },
         "gapDepth" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "gapWidth" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "grouping" : {
@@ -299,9 +309,13 @@
       "description" : "Authored doughnut-chart plot. varyColors, firstSliceAngle, and holeSize are optional.",
       "properties" : {
         "firstSliceAngle" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "holeSize" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "series" : {
@@ -363,6 +377,8 @@
           "type" : "array"
         },
         "gapDepth" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "grouping" : {
@@ -391,6 +407,8 @@
       "description" : "Authored pie-chart plot. varyColors and firstSliceAngle are optional.",
       "properties" : {
         "firstSliceAngle" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "series" : {
@@ -629,6 +647,8 @@
           "type" : "array"
         },
         "gapDepth" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "grouping" : {
@@ -656,8 +676,7 @@
       "description" : "Exact chart-axis report.",
       "properties" : {
         "crosses" : {
-          "enum" : [ "AUTO_ZERO", "MAX", "MIN" ],
-          "type" : "string"
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing"
         },
         "kind" : {
           "enum" : [ "CATEGORY", "DATE", "SERIES", "VALUE" ],
@@ -672,6 +691,55 @@
         }
       },
       "required" : [ "kind", "position", "crosses", "visible" ],
+      "type" : "object"
+    },
+    "dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing" : {
+      "oneOf" : [ {
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing$Missing"
+      }, {
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing$Mode"
+      }, {
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing$Value"
+      } ]
+    },
+    "dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing$Missing" : {
+      "additionalProperties" : false,
+      "description" : "No axis crossing declaration is stored.",
+      "properties" : {
+        "type" : {
+          "const" : "MISSING"
+        }
+      },
+      "required" : [ "type" ],
+      "type" : "object"
+    },
+    "dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing$Mode" : {
+      "additionalProperties" : false,
+      "description" : "Stored axis crossing mode.",
+      "properties" : {
+        "mode" : {
+          "enum" : [ "AUTO_ZERO", "MAX", "MIN" ],
+          "type" : "string"
+        },
+        "type" : {
+          "const" : "MODE"
+        }
+      },
+      "required" : [ "mode", "type" ],
+      "type" : "object"
+    },
+    "dev.erst.gridgrind.core.model.chart.ChartReport$AxisCrossing$Value" : {
+      "additionalProperties" : false,
+      "description" : "Stored numeric axis crossing with its exact native attribute text.",
+      "properties" : {
+        "type" : {
+          "const" : "VALUE"
+        },
+        "valueText" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ "valueText", "type" ],
       "type" : "object"
     },
     "dev.erst.gridgrind.core.model.chart.ChartReport$Bar" : {
@@ -689,6 +757,8 @@
           "type" : "string"
         },
         "gapWidth" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "grouping" : {
@@ -696,6 +766,8 @@
           "type" : "string"
         },
         "overlap" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "series" : {
@@ -729,9 +801,13 @@
           "type" : "string"
         },
         "gapDepth" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "gapWidth" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "grouping" : {
@@ -760,6 +836,8 @@
     },
     "dev.erst.gridgrind.core.model.chart.ChartReport$DataSource" : {
       "oneOf" : [ {
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$Missing"
+      }, {
         "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$NumericLiteral"
       }, {
         "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$NumericReference"
@@ -767,40 +845,41 @@
         "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$StringLiteral"
       }, {
         "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$StringReference"
+      }, {
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$Unsupported"
       } ]
+    },
+    "dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$Missing" : {
+      "additionalProperties" : false,
+      "description" : "No chart data-source element is stored.",
+      "properties" : {
+        "type" : {
+          "const" : "MISSING"
+        }
+      },
+      "required" : [ "type" ],
+      "type" : "object"
     },
     "dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$NumericLiteral" : {
       "additionalProperties" : false,
-      "description" : "Literal numeric chart source stored directly in the chart part.",
+      "description" : "Stored literal numeric data, retaining raw value text, counts and formats.",
       "properties" : {
-        "formatCode" : {
-          "type" : "string"
+        "data" : {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$NumericCache$Stored"
         },
         "type" : {
           "const" : "NUMERIC_LITERAL"
-        },
-        "values" : {
-          "items" : {
-            "type" : "string"
-          },
-          "type" : "array"
         }
       },
-      "required" : [ "values", "type" ],
+      "required" : [ "data", "type" ],
       "type" : "object"
     },
     "dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$NumericReference" : {
       "additionalProperties" : false,
-      "description" : "Formula-backed numeric chart source plus cached values.",
+      "description" : "Stored numeric reference and numeric-cache facts; no values are substituted from live cells.",
       "properties" : {
-        "cachedValues" : {
-          "items" : {
-            "type" : "string"
-          },
-          "type" : "array"
-        },
-        "formatCode" : {
-          "type" : "string"
+        "cache" : {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$NumericCache"
         },
         "formula" : {
           "type" : "string"
@@ -809,35 +888,29 @@
           "const" : "NUMERIC_REFERENCE"
         }
       },
-      "required" : [ "formula", "cachedValues", "type" ],
+      "required" : [ "cache", "type" ],
       "type" : "object"
     },
     "dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$StringLiteral" : {
       "additionalProperties" : false,
-      "description" : "Literal string chart source stored directly in the chart part.",
+      "description" : "Stored literal string data, including declared count and physical point order.",
       "properties" : {
+        "data" : {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$StringCache$Stored"
+        },
         "type" : {
           "const" : "STRING_LITERAL"
-        },
-        "values" : {
-          "items" : {
-            "type" : "string"
-          },
-          "type" : "array"
         }
       },
-      "required" : [ "values", "type" ],
+      "required" : [ "data", "type" ],
       "type" : "object"
     },
     "dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$StringReference" : {
       "additionalProperties" : false,
-      "description" : "Formula-backed string chart source plus cached values.",
+      "description" : "Stored string reference and string-cache facts; formula absence/blankness is preserved.",
       "properties" : {
-        "cachedValues" : {
-          "items" : {
-            "type" : "string"
-          },
-          "type" : "array"
+        "cache" : {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$StringCache"
         },
         "formula" : {
           "type" : "string"
@@ -846,7 +919,24 @@
           "const" : "STRING_REFERENCE"
         }
       },
-      "required" : [ "formula", "cachedValues", "type" ],
+      "required" : [ "cache", "type" ],
+      "type" : "object"
+    },
+    "dev.erst.gridgrind.core.model.chart.ChartReport$DataSource$Unsupported" : {
+      "additionalProperties" : false,
+      "description" : "A stored chart data-source kind outside the typed observation contract; no substitute values are reported.",
+      "properties" : {
+        "detail" : {
+          "type" : "string"
+        },
+        "nativeType" : {
+          "type" : "string"
+        },
+        "type" : {
+          "const" : "UNSUPPORTED"
+        }
+      },
+      "required" : [ "nativeType", "detail", "type" ],
       "type" : "object"
     },
     "dev.erst.gridgrind.core.model.chart.ChartReport$Doughnut" : {
@@ -854,9 +944,13 @@
       "description" : "Exact doughnut-chart plot report.",
       "properties" : {
         "firstSliceAngle" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "holeSize" : {
+          "maximum" : 90.0,
+          "minimum" : 1.0,
           "type" : "integer"
         },
         "series" : {
@@ -895,7 +989,7 @@
     },
     "dev.erst.gridgrind.core.model.chart.ChartReport$Legend$Visible" : {
       "additionalProperties" : false,
-      "description" : "Visible legend at one persisted position.",
+      "description" : "Visible legend with its effective native position, including the default.",
       "properties" : {
         "position" : {
           "enum" : [ "BOTTOM", "LEFT", "RIGHT", "TOP", "TOP_RIGHT" ],
@@ -949,6 +1043,8 @@
           "type" : "array"
         },
         "gapDepth" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "grouping" : {
@@ -971,11 +1067,75 @@
       "required" : [ "varyColors", "grouping", "axes", "series", "type" ],
       "type" : "object"
     },
+    "dev.erst.gridgrind.core.model.chart.ChartReport$NumericCache" : {
+      "oneOf" : [ {
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$NumericCache$Missing"
+      }, {
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$NumericCache$Stored"
+      } ]
+    },
+    "dev.erst.gridgrind.core.model.chart.ChartReport$NumericCache$Missing" : {
+      "additionalProperties" : false,
+      "description" : "No numeric cache element is stored.",
+      "properties" : {
+        "type" : {
+          "const" : "MISSING"
+        }
+      },
+      "required" : [ "type" ],
+      "type" : "object"
+    },
+    "dev.erst.gridgrind.core.model.chart.ChartReport$NumericCache$Stored" : {
+      "additionalProperties" : false,
+      "description" : "Stored numeric cache. Count, formats and raw point text are never inferred from live cells.",
+      "properties" : {
+        "declaredCount" : {
+          "maximum" : 4294967295,
+          "minimum" : 0.0,
+          "type" : "integer"
+        },
+        "formatCode" : {
+          "type" : "string"
+        },
+        "points" : {
+          "items" : {
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$NumericPoint"
+          },
+          "type" : "array"
+        },
+        "type" : {
+          "const" : "STORED"
+        }
+      },
+      "required" : [ "points", "type" ],
+      "type" : "object"
+    },
+    "dev.erst.gridgrind.core.model.chart.ChartReport$NumericPoint" : {
+      "additionalProperties" : false,
+      "description" : "One stored numeric-cache point with raw value text and optional per-point format. Missing, blank, error and nonfinite-looking text remain distinct facts.",
+      "properties" : {
+        "formatCode" : {
+          "type" : "string"
+        },
+        "index" : {
+          "maximum" : 4294967295,
+          "minimum" : 0.0,
+          "type" : "integer"
+        },
+        "valueText" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ ],
+      "type" : "object"
+    },
     "dev.erst.gridgrind.core.model.chart.ChartReport$Pie" : {
       "additionalProperties" : false,
       "description" : "Exact pie-chart plot report.",
       "properties" : {
         "firstSliceAngle" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "series" : {
@@ -1113,9 +1273,13 @@
           "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$DataSource"
         },
         "explosion" : {
+          "maximum" : 9223372036854775807,
+          "minimum" : -9223372036854775808,
           "type" : "integer"
         },
         "markerSize" : {
+          "maximum" : 32767,
+          "minimum" : -32768,
           "type" : "integer"
         },
         "markerStyle" : {
@@ -1133,6 +1297,62 @@
         }
       },
       "required" : [ "title", "categories", "values" ],
+      "type" : "object"
+    },
+    "dev.erst.gridgrind.core.model.chart.ChartReport$StringCache" : {
+      "oneOf" : [ {
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$StringCache$Missing"
+      }, {
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$StringCache$Stored"
+      } ]
+    },
+    "dev.erst.gridgrind.core.model.chart.ChartReport$StringCache$Missing" : {
+      "additionalProperties" : false,
+      "description" : "No string cache element is stored.",
+      "properties" : {
+        "type" : {
+          "const" : "MISSING"
+        }
+      },
+      "required" : [ "type" ],
+      "type" : "object"
+    },
+    "dev.erst.gridgrind.core.model.chart.ChartReport$StringCache$Stored" : {
+      "additionalProperties" : false,
+      "description" : "Stored string cache with its optional declared count and physical point order.",
+      "properties" : {
+        "declaredCount" : {
+          "maximum" : 4294967295,
+          "minimum" : 0.0,
+          "type" : "integer"
+        },
+        "points" : {
+          "items" : {
+            "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$StringPoint"
+          },
+          "type" : "array"
+        },
+        "type" : {
+          "const" : "STORED"
+        }
+      },
+      "required" : [ "points", "type" ],
+      "type" : "object"
+    },
+    "dev.erst.gridgrind.core.model.chart.ChartReport$StringPoint" : {
+      "additionalProperties" : false,
+      "description" : "One stored string-cache point. Missing index/value declarations stay absent; list position does not infer the index.",
+      "properties" : {
+        "index" : {
+          "maximum" : 4294967295,
+          "minimum" : 0.0,
+          "type" : "integer"
+        },
+        "valueText" : {
+          "type" : "string"
+        }
+      },
+      "required" : [ ],
       "type" : "object"
     },
     "dev.erst.gridgrind.core.model.chart.ChartReport$Surface" : {
@@ -1204,10 +1424,10 @@
     },
     "dev.erst.gridgrind.core.model.chart.ChartReport$Title$Formula" : {
       "additionalProperties" : false,
-      "description" : "Formula-backed title with cached text.",
+      "description" : "Stored formula-backed title with its cache; never live-resolved text.",
       "properties" : {
-        "cachedText" : {
-          "type" : "string"
+        "cache" : {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartReport$StringCache"
         },
         "formula" : {
           "type" : "string"
@@ -1216,7 +1436,7 @@
           "const" : "FORMULA"
         }
       },
-      "required" : [ "formula", "cachedText", "type" ],
+      "required" : [ "cache", "type" ],
       "type" : "object"
     },
     "dev.erst.gridgrind.core.model.chart.ChartReport$Title$None" : {
@@ -1269,9 +1489,13 @@
           "$ref" : "#/$defs/dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec"
         },
         "explosion" : {
+          "maximum" : 9223372036854775807,
+          "minimum" : -9223372036854775808,
           "type" : "integer"
         },
         "markerSize" : {
+          "maximum" : 32767,
+          "minimum" : -32768,
           "type" : "integer"
         },
         "markerStyle" : {
@@ -1391,6 +1615,8 @@
       "description" : "One locator for an existing workbook custom-XML mapping. Supply mapId, name, or both; the locator must resolve to exactly one existing mapping.",
       "properties" : {
         "mapId" : {
+          "maximum" : 9223372036854775807,
+          "minimum" : -9223372036854775808,
           "type" : "integer"
         },
         "name" : {
@@ -1405,15 +1631,23 @@
       "description" : "Explicit comment-anchor bounds measured in zero-based column and row indexes.",
       "properties" : {
         "firstColumn" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "firstRow" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "lastColumn" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "lastRow" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         }
       },
@@ -1458,29 +1692,33 @@
     },
     "dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport$Absolute" : {
       "additionalProperties" : false,
-      "description" : "Drawing anchor with absolute EMU coordinates and size.",
+      "description" : "Drawing anchor with stored absolute coordinates and size.",
       "properties" : {
         "behavior" : {
           "enum" : [ "MOVE_AND_RESIZE", "MOVE_DONT_RESIZE", "DONT_MOVE_AND_RESIZE" ],
           "type" : "string"
         },
         "heightEmu" : {
+          "maximum" : 2.72730423169E+13,
+          "minimum" : 0.0,
           "type" : "integer"
         },
         "type" : {
           "const" : "ABSOLUTE"
         },
         "widthEmu" : {
+          "maximum" : 2.72730423169E+13,
+          "minimum" : 0.0,
           "type" : "integer"
         },
-        "xEmu" : {
-          "type" : "integer"
+        "x" : {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport"
         },
-        "yEmu" : {
-          "type" : "integer"
+        "y" : {
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport"
         }
       },
-      "required" : [ "xEmu", "yEmu", "widthEmu", "heightEmu", "behavior", "type" ],
+      "required" : [ "x", "y", "widthEmu", "heightEmu", "behavior", "type" ],
       "type" : "object"
     },
     "dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport$OneCell" : {
@@ -1495,12 +1733,16 @@
           "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport"
         },
         "heightEmu" : {
+          "maximum" : 2.72730423169E+13,
+          "minimum" : 0.0,
           "type" : "integer"
         },
         "type" : {
           "const" : "ONE_CELL"
         },
         "widthEmu" : {
+          "maximum" : 2.72730423169E+13,
+          "minimum" : 0.0,
           "type" : "integer"
         }
       },
@@ -1554,20 +1796,82 @@
       "required" : [ "from", "to", "behavior", "type" ],
       "type" : "object"
     },
+    "dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport" : {
+      "oneOf" : [ {
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport$Emu"
+      }, {
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport$Measured"
+      }, {
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport$Pixels"
+      } ]
+    },
+    "dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport$Emu" : {
+      "additionalProperties" : false,
+      "description" : "Stored integer DrawingML coordinate in English metric units.",
+      "properties" : {
+        "type" : {
+          "const" : "EMU"
+        },
+        "value" : {
+          "maximum" : 2.72730423169E+13,
+          "minimum" : -2.72730423296E+13,
+          "type" : "integer"
+        }
+      },
+      "required" : [ "value", "type" ],
+      "type" : "object"
+    },
+    "dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport$Measured" : {
+      "additionalProperties" : false,
+      "description" : "Stored DrawingML measurement with its exact native units and lexical form.",
+      "properties" : {
+        "type" : {
+          "const" : "MEASURED"
+        },
+        "valueText" : {
+          "allOf" : [ {
+            "pattern" : "^(?:-?[0-9]+(\\.[0-9]+)?(mm|cm|in|pt|pc|pi))(?![\\s\\S])"
+          } ],
+          "type" : "string"
+        }
+      },
+      "required" : [ "valueText", "type" ],
+      "type" : "object"
+    },
+    "dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport$Pixels" : {
+      "additionalProperties" : false,
+      "description" : "Stored nonnegative VML client-anchor offset in pixels.",
+      "properties" : {
+        "type" : {
+          "const" : "PIXELS"
+        },
+        "value" : {
+          "maximum" : 2147483647,
+          "minimum" : 0.0,
+          "type" : "integer"
+        }
+      },
+      "required" : [ "value", "type" ],
+      "type" : "object"
+    },
     "dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport" : {
       "additionalProperties" : false,
       "description" : "Exact cell-relative drawing marker report.",
       "properties" : {
         "columnIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : 0.0,
           "type" : "integer"
         },
         "dx" : {
-          "type" : "integer"
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport"
         },
         "dy" : {
-          "type" : "integer"
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport"
         },
         "rowIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : 0.0,
           "type" : "integer"
         }
       },
@@ -1579,15 +1883,23 @@
       "description" : "One zero-based drawing marker with explicit column, row, and in-cell offsets.",
       "properties" : {
         "columnIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "dx" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "dy" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "rowIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         }
       },
@@ -1922,9 +2234,13 @@
           "type" : "string"
         },
         "maximumArgumentCount" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "minimumArgumentCount" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "name" : {
@@ -2085,15 +2401,23 @@
       "description" : "Freeze the sheet at the provided split and visible-origin coordinates.",
       "properties" : {
         "leftmostColumn" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "splitColumn" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "splitRow" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "topRow" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "type" : {
@@ -2123,18 +2447,26 @@
           "type" : "string"
         },
         "leftmostColumn" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "topRow" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "type" : {
           "const" : "SPLIT"
         },
         "xSplitPosition" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "ySplitPosition" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         }
       },
@@ -2146,6 +2478,8 @@
       "description" : "Default row and column sizing authored as part of sheet-presentation state. Supply explicit defaultColumnWidth and defaultRowHeightPoints values. defaultColumnWidth must be > 0 and <= 255; defaultRowHeightPoints must be > 0 and <= 409.0.",
       "properties" : {
         "defaultColumnWidth" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "defaultRowHeightPoints" : {
@@ -2251,6 +2585,8 @@
           "type" : "string"
         },
         "sourceColumnIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "sourceColumnName" : {
@@ -2268,6 +2604,8 @@
       "description" : "Exact pivot field report bound to one source column.",
       "properties" : {
         "sourceColumnIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "sourceColumnName" : {
@@ -2681,12 +3019,16 @@
       "description" : "Sheet fits printed content into the provided page counts. A value of 0 on one axis keeps that axis unconstrained.",
       "properties" : {
         "heightPages" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "type" : {
           "const" : "FIT"
         },
         "widthPages" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         }
       },
@@ -2702,17 +3044,23 @@
         },
         "columnBreaks" : {
           "items" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "type" : "array"
         },
         "copies" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "draft" : {
           "type" : "boolean"
         },
         "firstPageNumber" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "horizontallyCentered" : {
@@ -2722,6 +3070,8 @@
           "$ref" : "#/$defs/dev.erst.gridgrind.core.model.print.PrintMarginsSpec"
         },
         "paperSize" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "printGridlines" : {
@@ -2729,6 +3079,8 @@
         },
         "rowBreaks" : {
           "items" : {
+            "maximum" : 2147483647,
+            "minimum" : -2147483648,
             "type" : "integer"
           },
           "type" : "array"
@@ -2755,9 +3107,13 @@
       "description" : "Sheet repeats the provided inclusive zero-based column band on every printed page.",
       "properties" : {
         "firstColumnIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "lastColumnIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "type" : {
@@ -2790,9 +3146,13 @@
       "description" : "Sheet repeats the provided inclusive zero-based row band on every printed page.",
       "properties" : {
         "firstRowIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "lastRowIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "type" : {
@@ -3150,9 +3510,13 @@
           "type" : "string"
         },
         "indentation" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "textRotation" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "verticalAlignment" : {
@@ -3175,9 +3539,13 @@
           "type" : "string"
         },
         "indentation" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "textRotation" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "verticalAlignment" : {
@@ -3301,6 +3669,8 @@
       "description" : "Read one indexed-palette workbook color plus optional tint metadata.",
       "properties" : {
         "indexed" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "tint" : {
@@ -3335,6 +3705,8 @@
       "description" : "Read one workbook theme-slot color plus optional tint metadata.",
       "properties" : {
         "theme" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "tint" : {
@@ -3809,6 +4181,8 @@
       "description" : "Write one indexed-palette color reference plus optional tint metadata.",
       "properties" : {
         "indexed" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "tint" : {
@@ -3846,6 +4220,8 @@
       "description" : "Write one workbook theme-slot color reference plus optional tint metadata.",
       "properties" : {
         "theme" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "tint" : {
@@ -3924,6 +4300,8 @@
           "type" : "number"
         },
         "twips" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         }
       },
@@ -3956,6 +4334,8 @@
       "description" : "Specify font height in exact twips (20 twips = 1 point). Write format: {\"type\":\"TWIPS\",\"twips\":260}. Read-back returns the same plain object shape as POINTS.",
       "properties" : {
         "twips" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "type" : {
@@ -3984,6 +4364,8 @@
       "description" : "One authored autofilter filter-column payload with an explicit column criterion.",
       "properties" : {
         "columnId" : {
+          "maximum" : 9223372036854775807,
+          "minimum" : -9223372036854775808,
           "type" : "integer"
         },
         "criterion" : {
@@ -4088,6 +4470,8 @@
       "description" : "Retain rows matching one icon-set member.",
       "properties" : {
         "iconId" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "iconSet" : {
@@ -4114,6 +4498,8 @@
           "const" : "TOP10"
         },
         "value" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         }
       },
@@ -4199,6 +4585,8 @@
           "type" : "boolean"
         },
         "iconId" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "range" : {
@@ -4265,6 +4653,8 @@
           "type" : "string"
         },
         "id" : {
+          "maximum" : 9223372036854775807,
+          "minimum" : -9223372036854775808,
           "type" : "integer"
         },
         "name" : {
@@ -4292,6 +4682,8 @@
           "type" : "string"
         },
         "columnIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "totalsRowFunction" : {
@@ -4403,9 +4795,13 @@
           "type" : "array"
         },
         "headerRowCount" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "totalsRowCount" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         }
       },
@@ -4739,6 +5135,8 @@
           "type" : "boolean"
         },
         "rank" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "stopIfTrue" : {
@@ -5619,7 +6017,7 @@
     },
     "dev.erst.gridgrind.core.model.value.CellValueSpec$Date" : {
       "additionalProperties" : false,
-      "description" : "Write an ISO-8601 date value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE.",
+      "description" : "Write a timezone-free Gregorian date within the receiving workbook calendar, through 9999-12-31. Stored as a numeric serial; TEMPORAL may interpret it as DATE.",
       "properties" : {
         "type" : {
           "const" : "DATE"
@@ -5633,7 +6031,7 @@
     },
     "dev.erst.gridgrind.core.model.value.CellValueSpec$DateTime" : {
       "additionalProperties" : false,
-      "description" : "Write an ISO-8601 date-time value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE_TIME.",
+      "description" : "Write a timezone-free Gregorian date-time within the receiving workbook calendar at millisecond precision. Finer precision refuses; numeric readback may expose an INTERPRETED DATE_TIME facet.",
       "properties" : {
         "type" : {
           "const" : "DATE_TIME"
@@ -6145,7 +6543,7 @@
     },
     "dev.erst.gridgrind.core.plan.CellReadProjection" : {
       "additionalProperties" : false,
-      "description" : "Shared readback projection that selects which factual cell facets are included on cell-returning inspection surfaces. Facets default to VALUE when omitted by the enclosing query. The facets field publishes enumValueDocs so each facet token explains the response fields it unlocks. Catalog field descriptors publish facet-gated response fields through projectedByFacets so agents can derive the required facet directly from the machine contract. Date-like numeric cells still read back as type=NUMBER until TEMPORAL is requested.",
+      "description" : "Shared readback projection that selects which factual cell facets are included on cell-returning inspection surfaces. Facets default to VALUE when omitted by the enclosing query. The facets field publishes enumValueDocs so each facet token explains the response fields it unlocks. Catalog field descriptors publish facet-gated response fields through projectedByFacets so agents can derive the required facet directly from the machine contract. Date-like numeric cells retain type=NUMBER; TEMPORAL adds NOT_TEMPORAL, INTERPRETED or UNREPRESENTABLE without duplicating the VALUE fact.",
       "properties" : {
         "facets" : {
           "items" : {
@@ -6245,9 +6643,13 @@
       "description" : "Select one column insertion point plus column count on one sheet.",
       "properties" : {
         "beforeColumnIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "columnCount" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "sheetName" : {
@@ -6265,9 +6667,13 @@
       "description" : "Select one inclusive zero-based column span on one sheet.",
       "properties" : {
         "firstColumnIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "lastColumnIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "sheetName" : {
@@ -6478,7 +6884,7 @@
     },
     "dev.erst.gridgrind.core.plan.ExecutionModeSpec$EventRead" : {
       "additionalProperties" : false,
-      "description" : "GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only, with execution.calculation.strategy=DO_NOT_CALCULATE and markRecalculateOnOpen=false.",
+      "description" : "GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only, with execution.calculation.strategy=DO_NOT_CALCULATE and markRecalculateOnOpen=false. Host acceptance can require a full workbook view.",
       "properties" : {
         "type" : {
           "const" : "EVENT_READ"
@@ -6500,7 +6906,7 @@
     },
     "dev.erst.gridgrind.core.plan.ExecutionModeSpec$StreamingWrite" : {
       "additionalProperties" : false,
-      "description" : "source.type must be NEW; mutation actions limited to ENSURE_SHEET and APPEND_ROW; execution.calculation must keep strategy=DO_NOT_CALCULATE and may set markRecalculateOnOpen=true.",
+      "description" : "source.type must be NEW; mutation actions limited to ENSURE_SHEET and APPEND_ROW; execution.calculation must keep strategy=DO_NOT_CALCULATE and may set markRecalculateOnOpen=true. Mutation after an observation selects the full workbook backend. Terminal observations, host acceptance and persisted-artifact verification can require full workbook materialization.",
       "properties" : {
         "type" : {
           "const" : "STREAMING_WRITE"
@@ -7252,9 +7658,13 @@
       "description" : "Select one rectangular window anchored at one top-left cell.",
       "properties" : {
         "columnCount" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "rowCount" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "sheetName" : {
@@ -7275,9 +7685,13 @@
       "description" : "Select one row insertion point plus row count on one sheet.",
       "properties" : {
         "beforeRowIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "rowCount" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "sheetName" : {
@@ -7295,9 +7709,13 @@
       "description" : "Select one inclusive zero-based row span on one sheet.",
       "properties" : {
         "firstRowIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "lastRowIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "sheetName" : {
@@ -7797,6 +8215,8 @@
       "description" : "Select one zero-based data row by index in one selected table.",
       "properties" : {
         "rowIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "table" : {
@@ -8301,6 +8721,8 @@
       "description" : "Move a sheet to a zero-based workbook position.",
       "properties" : {
         "targetIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "type" : {
@@ -8484,6 +8906,8 @@
           "const" : "SET_SHEET_ZOOM"
         },
         "zoomPercent" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         }
       },
@@ -8509,6 +8933,8 @@
       "description" : "Move one inclusive zero-based column band by delta columns.",
       "properties" : {
         "delta" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "type" : {
@@ -8523,6 +8949,8 @@
       "description" : "Move one inclusive zero-based row band by delta rows.",
       "properties" : {
         "delta" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "type" : {
@@ -8740,12 +9168,18 @@
       "description" : "Exact sheet summary report including visibility, protection, and structural counts.",
       "properties" : {
         "lastColumnIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "lastRowIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "physicalRowCount" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "protection" : {
@@ -8927,6 +9361,8 @@
       "description" : "Place the copied sheet at the requested zero-based workbook position.",
       "properties" : {
         "targetIndex" : {
+          "maximum" : 2147483647,
+          "minimum" : -2147483648,
           "type" : "integer"
         },
         "type" : {

@@ -1,0 +1,117 @@
+--- org/apache/poi/xssf/extractor/XSSFImportFromXML.java
++++ org/apache/poi/xssf/extractor/XSSFImportFromXML.java
+@@ -69,11 +69,14 @@
+ public class XSSFImportFromXML {
+ 
+     private final XSSFMap _map;
++    private final java.util.function.ToDoubleFunction<DateInput> dateSerial;
++    public record DateInput(String lexicalValue, String xpath, int mappingRowIndex) {}
+ 
+     private static final Logger LOG = PoiLogManager.getLogger(XSSFImportFromXML.class);
+ 
+-    public XSSFImportFromXML(XSSFMap map) {
+-        _map = map;
++    public XSSFImportFromXML(XSSFMap map, java.util.function.ToDoubleFunction<DateInput> dateSerial) {
++        _map = java.util.Objects.requireNonNull(map);
++        this.dateSerial = java.util.Objects.requireNonNull(dateSerial);
+     }
+ 
+     /**
+@@ -100,6 +103,8 @@
+         // Assuming that the namespace prefix in the mapping xpath is the
+         // same as the one used in the document
+         xpath.setNamespaceContext(new DefaultNamespaceContext(doc));
++
++        validateDates(doc, xpath, singleXmlCells, tables);
+ 
+         for (XSSFSingleXmlCell singleXmlCell : singleXmlCells) {
+ 
+@@ -113,7 +118,7 @@
+                 XSSFCell cell = singleXmlCell.getReferencedCell();
+                 LOG.atDebug().log("Setting '{}' to cell {}-{} in sheet {}", textContent,
+                         box(cell.getColumnIndex()), box(cell.getRowIndex()), cell.getSheet().getSheetName());
+-                setCellValue(textContent, cell, xmlDataType);
++                setCellValue(textContent, cell, xmlDataType, xpathString, 0);
+             }
+         }
+ 
+@@ -159,13 +164,35 @@
+                     }
+                     LOG.atDebug().log("Setting '{}' to cell {}-{} in sheet {}", value,
+                             box(cell.getColumnIndex()), box(cell.getRowIndex()), table.getXSSFSheet().getSheetName());
+-                    setCellValue(value, cell, xmlColumnPr.getXmlDataType());
+-                }
+-            }
+-        }
+-    }
+-
+-
++                    setCellValue(value, cell, xmlColumnPr.getXmlDataType(), xmlColumnPr.getXPath(), i);
++                }
++            }
++        }
++    }
++
++
++
++    private void validateDates(Document doc, XPath xpath, List<XSSFSingleXmlCell> singleCells, List<XSSFTable> tables) throws XPathExpressionException {
++        for (XSSFSingleXmlCell linked : singleCells) {
++            if (!"date".equals(linked.getXmlDataType())) continue;
++            Node node = (Node) xpath.evaluate(linked.getXpath(), doc, XPathConstants.NODE);
++            if (node != null && !node.getTextContent().isEmpty()) dateSerial.applyAsDouble(new DateInput(node.getTextContent(), linked.getXpath(), 0));
++        }
++        for (XSSFTable table : tables) {
++            NodeList nodes = (NodeList) xpath.evaluate(table.getCommonXpath(), doc, XPathConstants.NODESET);
++            for (int row = 0; row < nodes.getLength(); row++) {
++                Node node = nodes.item(row).cloneNode(true);
++                for (XSSFTableColumn column : table.getColumns()) {
++                    XSSFXmlColumnPr linked = column.getXmlColumnPr();
++                    if (linked == null || !"date".equals(linked.getXmlDataType())) continue;
++                    String local = linked.getLocalXPath();
++                    local = local.substring(local.indexOf('/', 1) + 1);
++                    String value = (String) xpath.evaluate(local, node, XPathConstants.STRING);
++                    if (!value.isEmpty()) dateSerial.applyAsDouble(new DateInput(value, linked.getXPath(), row));
++                }
++            }
++        }
++    }
+ 
+     private enum DataType {
+         BOOLEAN("boolean"), //
+@@ -190,8 +217,12 @@
+         }
+     }
+ 
+-    private void setCellValue(String value, XSSFCell cell, String xmlDataType) {
++    private void setCellValue(String value, XSSFCell cell, String xmlDataType, String xpath, int rowIndex) {
+         DataType type = DataType.getDataType(xmlDataType);
++        if (type == DataType.DATE && !value.isEmpty()) {
++            cell.setCellValue(dateSerial.applyAsDouble(new DateInput(value, xpath, rowIndex)));
++            return;
++        }
+         try {
+             if (value.isEmpty() || type == null) {
+                 cell.setCellValue((String) null);
+@@ -207,20 +238,14 @@
+                     cell.setCellValue(Integer.parseInt(value));
+                     break;
+                 case DATE:
+-                    DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", LocaleUtil.getUserLocale());
+-                    Date date = sdf.parse(value);
+-                    cell.setCellValue(date);
+-                    if (!DateUtil.isValidExcelDate(cell.getNumericCellValue())) {
+-                        cell.setCellValue(value);
+-                    }
+-                    break;
++                    throw new IllegalStateException("Date conversion must precede scalar import");
+                 case STRING:
+                 default:
+                     cell.setCellValue(value.trim());
+                     break;
+                 }
+             }
+-        } catch (IllegalArgumentException | ParseException e) {
++        } catch (IllegalArgumentException e) {
+             throw new IllegalArgumentException(String.format(LocaleUtil.getUserLocale(), "Unable to format value '%s' as %s for cell %s", value,
+                     type, new CellReference(cell).formatAsString()));
+         }

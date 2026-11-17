@@ -61,7 +61,9 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -161,7 +163,9 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -267,7 +271,9 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -366,7 +372,9 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -458,7 +466,9 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -619,7 +629,9 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                 dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactIo.MaterializedWorkbook
                     ::close,
                 dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter
-                    ::markRecalculateOnOpen));
+                    ::markRecalculateOnOpen),
+            NativeInvocationContext.enterOwned(
+                dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD));
 
     WorkbookResult.Failure failure =
         failure(
@@ -690,7 +702,9 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),

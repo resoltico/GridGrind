@@ -41,7 +41,7 @@ final class RecipeCommand {
           stdout,
           stderr,
           output ->
-              GridGrindJsonOutput.writeCatalogLookupResult(
+              GridGrindJsonOutput.writeRecipeLookupResult(
                   output,
                   RecipeCatalogs.catalog().protocolVersion(),
                   RecipeCatalogs.lookupFor(command.lookupId()).orElseThrow(),

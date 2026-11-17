@@ -39,6 +39,7 @@ final class CliGrantFixtureSupport {
     grantPath.toFile().deleteOnExit();
     ExecutionGrant document =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(new ExecutionGrant.ReadAuthority.Stdin()),
             operationIds,
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -87,6 +88,7 @@ final class CliGrantFixtureSupport {
     grantPath.toFile().deleteOnExit();
     ExecutionGrant document =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             readablePaths.stream()
                 .map(path -> new ExecutionGrant.ReadAuthority.File(path))
                 .map(ExecutionGrant.ReadAuthority.class::cast)

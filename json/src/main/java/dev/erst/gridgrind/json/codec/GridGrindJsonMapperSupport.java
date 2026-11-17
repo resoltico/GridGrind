@@ -2,18 +2,19 @@ package dev.erst.gridgrind.json.codec;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.core.catalog.GridGrindRequestSurfaceContractText;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.Assertion;
 import dev.erst.gridgrind.core.plan.InspectionQuery;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.MutationAction;
 import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.core.vocabulary.WireScalar;
 import dev.erst.gridgrind.json.intake.WorkbookStepJsonDeserializer;
 import org.jspecify.annotations.Nullable;
-import tools.jackson.core.StreamReadConstraints;
 import tools.jackson.core.StreamReadFeature;
 import tools.jackson.core.StreamWriteFeature;
 import tools.jackson.core.json.JsonFactory;
@@ -26,7 +27,11 @@ import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.module.SimpleModule;
 import tools.jackson.databind.type.LogicalType;
 
-/** Owns JSON mapper construction and request-size policy for the protocol seam. */
+/**
+ * Owns codecs for value fragments, output documents and JSON trees. Complete request and authority
+ * documents must use {@link GridGrindJson#readRequest(byte[])} and {@link
+ * GridGrindJson#readGrant(byte[], java.nio.file.Path)}.
+ */
 @dev.erst.gridgrind.core.limits.EnforcesLimit({
   dev.erst.gridgrind.core.limits.Limit.ID_REQUEST_JSON_SIZE
 })
@@ -35,7 +40,28 @@ public final class GridGrindJsonMapperSupport {
   public static final JsonMapper WIRE_JSON_MAPPER = buildMapper(unlimitedJsonFactory(), false);
   public static final JsonMapper PRETTY_WIRE_JSON_MAPPER =
       buildMapper(unlimitedJsonFactory(), true);
-  public static final JsonMapper REQUEST_JSON_MAPPER = buildMapper(requestJsonFactory());
+  static final JsonMapper GRANT_JSON_MAPPER =
+      buildMapper(
+              new JsonFactoryBuilder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build(),
+              false,
+              true)
+          .rebuild()
+          .disable(tools.jackson.databind.MapperFeature.ALLOW_COERCION_OF_SCALARS)
+          .enable(tools.jackson.databind.cfg.EnumFeature.FAIL_ON_NUMBERS_FOR_ENUMS)
+          .withCoercionConfig(
+              LogicalType.Textual,
+              config ->
+                  config
+                      .setCoercion(CoercionInputShape.Integer, CoercionAction.Fail)
+                      .setCoercion(CoercionInputShape.Float, CoercionAction.Fail)
+                      .setCoercion(CoercionInputShape.Boolean, CoercionAction.Fail))
+          .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+          .enable(DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES)
+          .changeDefaultNullHandling(value ->
+              value
+                  .withValueNulls(com.fasterxml.jackson.annotation.Nulls.FAIL)
+                  .withContentNulls(com.fasterxml.jackson.annotation.Nulls.FAIL))
+          .build();
 
   private GridGrindJsonMapperSupport() {}
 
@@ -67,11 +93,16 @@ public final class GridGrindJsonMapperSupport {
   }
 
   private static JsonMapper buildMapper(JsonFactory jsonFactory, boolean prettyPrint) {
+    return buildMapper(jsonFactory, prettyPrint, false);
+  }
+
+  private static JsonMapper buildMapper(
+      JsonFactory jsonFactory, boolean prettyPrint, boolean grantBinding) {
     JsonMapper.Builder builder =
         JsonMapper.builder(jsonFactory)
             .annotationIntrospector(new CoreMetadataIntrospector())
             .enable(tools.jackson.databind.MapperFeature.INFER_RECORD_GETTERS_FROM_COMPONENTS_ONLY)
-            .addModule(coreCodecs())
+            .addModule(coreCodecs(grantBinding))
             .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
             .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
             .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
@@ -95,7 +126,7 @@ public final class GridGrindJsonMapperSupport {
     return builder.build();
   }
 
-  private static SimpleModule coreCodecs() {
+  private static SimpleModule coreCodecs(boolean grantBinding) {
     SimpleModule module =
         new SimpleModule()
             .setValueInstantiators(new RecordDefaultInstantiators())
@@ -105,6 +136,14 @@ public final class GridGrindJsonMapperSupport {
             .addSerializer(java.nio.file.Path.class, new GrantPathSerializer())
             .addSerializer(WireScalar.class, new WireScalarSerializer())
             .addSerializer(Selector.class, new SelectorJsonSerializer());
+    module.addDeserializer(
+        WorkbookPlan.class,
+        new DocumentReadGuard<>(WorkbookPlan.class, "GridGrindJson.readRequest(...)"));
+    if (!grantBinding) {
+      module.addDeserializer(
+          ExecutionGrant.class,
+          new DocumentReadGuard<>(ExecutionGrant.class, "GridGrindJson.readGrant(...)"));
+    }
     registerStepCodec(module, WorkbookStep.class);
     for (Class<?> type : WorkbookStep.class.getPermittedSubclasses()) {
       registerStepCodec(module, type.asSubclass(WorkbookStep.class));
@@ -119,12 +158,5 @@ public final class GridGrindJsonMapperSupport {
 
   private static JsonFactory unlimitedJsonFactory() {
     return new JsonFactoryBuilder().build();
-  }
-
-  private static JsonFactory requestJsonFactory() {
-    return new JsonFactoryBuilder()
-        .streamReadConstraints(
-            StreamReadConstraints.builder().maxDocumentLength(maxRequestDocumentBytes()).build())
-        .build();
   }
 }

@@ -1,16 +1,16 @@
-import dev.erst.gridgrind.core.vocabulary.SheetName;
-import dev.erst.gridgrind.core.vocabulary.RangeRef;
-import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.core.authoring.GridGrindPlan;
 import dev.erst.gridgrind.core.authoring.ExpectedValues;
+import dev.erst.gridgrind.core.authoring.GridGrindPlan;
 import dev.erst.gridgrind.core.authoring.Tables;
 import dev.erst.gridgrind.core.authoring.Targets;
 import dev.erst.gridgrind.core.authoring.Values;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.result.WorkbookResult;
-import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
-import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindProgressSink;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
 import java.io.IOException;
@@ -27,8 +27,8 @@ final class JavaAuthoringWorkflowExample {
   /**
    * Builds one selector-first workflow against a caller-owned workspace.
    *
-   * <p>The caller should place one UTF-8 file at
-   * {@code workspace/authored-inputs/item.txt} containing the row-key value.
+   * <p>The caller should place one UTF-8 file at {@code workspace/authored-inputs/item.txt}
+   * containing the row-key value.
    */
   public static GridGrindPlan build(Path workspace) {
     return GridGrindPlan.newWorkbook()
@@ -53,20 +53,17 @@ final class JavaAuthoringWorkflowExample {
                         Tables.noStyle())))
         .mutate(
             Targets.table(new TableName("BudgetTable"))
-                .rowByKey(
-                    "Item", Values.textFile(Path.of("authored-inputs", "item.txt")))
+                .rowByKey("Item", Values.textFile(Path.of("authored-inputs", "item.txt")))
                 .cell("Amount")
                 .set(Values.number(125.0)))
         .inspect(
             Targets.table(new TableName("BudgetTable"))
-                .rowByKey(
-                    "Item", Values.textFile(Path.of("authored-inputs", "item.txt")))
+                .rowByKey("Item", Values.textFile(Path.of("authored-inputs", "item.txt")))
                 .cell("Amount")
                 .read())
         .assertThat(
             Targets.table(new TableName("BudgetTable"))
-                .rowByKey(
-                    "Item", Values.textFile(Path.of("authored-inputs", "item.txt")))
+                .rowByKey("Item", Values.textFile(Path.of("authored-inputs", "item.txt")))
                 .cell("Amount")
                 .valueEquals(ExpectedValues.number(125.0)));
   }
@@ -87,20 +84,15 @@ final class JavaAuthoringWorkflowExample {
 
   private static ExecutionGrant executionGrant(Path workspace) {
     return new ExecutionGrant(
+        16L * 1024 * 1024,
         List.of(
             new ExecutionGrant.ReadAuthority.File(
                 workspace.resolve("authored-inputs").resolve("item.txt"))),
         List.of(
-            "ENSURE_SHEET",
-            "SET_RANGE",
-            "SET_TABLE",
-            "SET_CELL",
-            "GET_CELLS",
-            "EXPECT_CELL_VALUE"),
+            "ENSURE_SHEET", "SET_RANGE", "SET_TABLE", "SET_CELL", "GET_CELLS", "EXPECT_CELL_VALUE"),
         new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
         new ExecutionGrant.PublicationAuthority.SaveAs(
-            workspace.resolve("budget.xlsx"),
-            WorkbookPlan.WorkbookPersistence.IfExists.REPLACE),
+            workspace.resolve("budget.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REPLACE),
         List.of(),
         dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
   }

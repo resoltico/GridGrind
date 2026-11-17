@@ -38,12 +38,11 @@ public sealed interface ShapeSpec
       anchor = requireTwoCellAnchor(anchor);
       Objects.requireNonNull(text, "text must not be null");
       presetGeometryToken = requirePresetGeometryToken(presetGeometryToken);
-      text.ifPresent(
-          value -> {
-            if (value instanceof TextSourceSpec.Inline inline && inline.text().isBlank()) {
-              throw new IllegalArgumentException("text must not be blank");
-            }
-          });
+      text.ifPresent(value -> {
+        if (value instanceof TextSourceSpec.Inline inline && inline.text().isBlank()) {
+          throw new IllegalArgumentException("text must not be blank");
+        }
+      });
     }
 
     @Override

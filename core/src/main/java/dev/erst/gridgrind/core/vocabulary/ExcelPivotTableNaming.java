@@ -11,10 +11,9 @@ public final class ExcelPivotTableNaming {
   public static String validateName(String name) {
     Objects.requireNonNull(name, "name must not be null");
     violation(name)
-        .ifPresent(
-            violation -> {
-              throw new IllegalArgumentException(renderViolation(violation));
-            });
+        .ifPresent(violation -> {
+          throw new IllegalArgumentException(renderViolation(violation));
+        });
     return name;
   }
 

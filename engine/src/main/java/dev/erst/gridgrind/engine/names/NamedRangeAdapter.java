@@ -4,10 +4,10 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.engine.backend.xssf.NamedRangeNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.SheetCollectionAdapter;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
-import dev.erst.gridgrind.engine.poi.CellBounds;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -161,11 +161,10 @@ public final class NamedRangeAdapter {
         dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation.validateName(name);
     return workbook.xssfWorkbook().getAllNames().stream()
         .filter(candidate -> candidate.getNameName().equalsIgnoreCase(validatedName))
-        .filter(
-            candidate ->
-                scopeIndex < 0
-                    ? candidate.getSheetIndex() < 0
-                    : candidate.getSheetIndex() == scopeIndex)
+        .filter(candidate ->
+            scopeIndex < 0
+                ? candidate.getSheetIndex() < 0
+                : candidate.getSheetIndex() == scopeIndex)
         .findFirst()
         .orElse(null);
   }
@@ -217,7 +216,7 @@ public final class NamedRangeAdapter {
   public static String rangeFormula(
       dev.erst.gridgrind.core.vocabulary.SheetName sheetName,
       dev.erst.gridgrind.core.vocabulary.RangeRef range) {
-    CellBounds parsed = CellBounds.parse(range.value());
+    RangeRef parsed = range;
     String first =
         new CellReference(sheetName.value(), parsed.firstRow(), parsed.firstColumn(), true, true)
             .formatAsString();

@@ -32,24 +32,26 @@ import org.junit.jupiter.api.Test;
 /** Coverage for the narrow engine API seam exported to downstream transports. */
 class GridGrindEngineApiTest {
   @Test
-  void requestInputsNormalizeAndDefensivelyCopyBoundStandardInput() {
+  void requestInputsNormalizeAndDefensivelyCopyBoundStandardInput() throws java.io.IOException {
     byte[] original = new byte[] {1, 2, 3};
     Path workingDirectory = Path.of("tmp", "..", "tmp", "inputs");
     GridGrindRequestInputs inputs = inputs(workingDirectory, original);
 
     original[0] = 9;
-    byte[] firstRead = inputs.standardInputBytes().orElseThrow();
+    byte[] firstRead = inputs.standardInputSource().orElseThrow().open().readAllBytes();
     firstRead[1] = 8;
 
     assertTrue(inputs.workingDirectory().isAbsolute());
     assertTrue(inputs.workingDirectory().endsWith(Path.of("tmp", "inputs")));
     assertTrue(inputs.tempRoot().endsWith(Path.of("tmp", "inputs", "temp-root")));
     assertTrue(inputs.hasStandardInput());
-    assertArrayEquals(new byte[] {1, 2, 3}, inputs.standardInputBytes().orElseThrow());
+    assertArrayEquals(
+        new byte[] {1, 2, 3}, inputs.standardInputSource().orElseThrow().open().readAllBytes());
   }
 
   @Test
-  void requestInputsWithoutStandardInputUseNormalizedWorkingDirectories() {
+  void requestInputsWithoutStandardInputUseNormalizedWorkingDirectories()
+      throws java.io.IOException {
     GridGrindRequestInputs explicit = inputs(Path.of("."));
 
     assertTrue(explicit.workingDirectory().isAbsolute());
@@ -58,7 +60,8 @@ class GridGrindEngineApiTest {
   }
 
   @Test
-  void requestExecutorExplicitInputsRejectNullDelegatesAndPreserveCallerBindings() {
+  void requestExecutorExplicitInputsRejectNullDelegatesAndPreserveCallerBindings()
+      throws java.io.IOException {
     WorkbookPlan request = GridGrindProtocolCatalog.requestTemplate();
     AtomicReference<GridGrindRequestInputs> observedInputs = new AtomicReference<>();
     AtomicReference<GridGrindProgressSink> observedSink = new AtomicReference<>();
@@ -86,7 +89,7 @@ class GridGrindEngineApiTest {
   }
 
   @Test
-  void journalSinkAndDoctorNullGuardsStayCovered() {
+  void journalSinkAndDoctorNullGuardsStayCovered() throws java.io.IOException {
     GridGrindProgressSink sink = event -> {};
     GridGrindProgressSink.NOOP.emit(null);
     assertSame(sink, GridGrindProgressSink.requireNonNull(sink));
@@ -130,6 +133,7 @@ class GridGrindEngineApiTest {
     SecretReference reference = new SecretReference("provider-password");
     ExecutionGrant grant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(new ExecutionGrant.ReadAuthority.Stdin()),
             List.of("SET_CELL"),
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -323,6 +327,7 @@ class GridGrindEngineApiTest {
 
   private static ExecutionGrant noPublicationGrant() {
     return new ExecutionGrant(
+        16L * 1024 * 1024,
         List.of(),
         List.of(),
         new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),

@@ -112,7 +112,7 @@ final class CliDoctorRequestAnalyzer {
     if (requestPath.or(() -> executionRootPath).isEmpty()) {
       return requestDoctor.diagnose(analysis, requestInput);
     }
-    try (CliExecutionBindingsFactory.ManagedRequestInputs bindings =
+    CliExecutionBindingsFactory.ManagedRequestInputs bindings =
         CliExecutionBindingsFactory.create(
             requestPath,
             executionRootPath,
@@ -120,9 +120,23 @@ final class CliDoctorRequestAnalyzer {
             grantPath,
             secretsProviderPath,
             request,
-            stdin)) {
-      return requestDoctor.diagnose(analysis, requestInput, bindings.inputs());
+            stdin);
+    RequestDoctorReport report = null;
+    try (bindings) {
+      report = requestDoctor.diagnose(analysis, requestInput, bindings.inputs());
+    } catch (Exception exception) {
+      if (report == null) throw exception;
+      var problem =
+          dev.erst.gridgrind.engine.api.GridGrindProblems.fromException(
+              exception,
+              new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteRequest(
+                  requestShape(request)));
+      return RequestDoctorReport.invalid(
+          report.summary(),
+          report.warnings(),
+          Stream.concat(report.problems().stream(), Stream.of(problem)).toList());
     }
+    return report;
   }
 
   private static ProblemContextRequestSurfaces.RequestShape requestShape(WorkbookPlan request) {

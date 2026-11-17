@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.catalog;
 
+import dev.erst.gridgrind.core.metadata.CatalogType;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
@@ -25,9 +26,8 @@ public final class GridGrindProtocolCatalog {
   private static final TypeEntry REQUEST_TYPE =
       CatalogTypeEntryFactory.typeEntry(
           WorkbookPlan.class,
-          "WorkbookPlan",
-          "Complete GridGrind plan for workbook source, execution policy, formula environment,"
-              + " ordered mutation, assertion, and inspection steps, and persistence.");
+          WorkbookPlan.class.getAnnotation(CatalogType.class).id(),
+          WorkbookPlan.class.getAnnotation(CatalogType.class).summary());
   private static final List<CatalogTypeDescriptor> STEP_TYPES = CatalogTypes.STEP_TYPES;
   private static final List<CatalogTypeDescriptor> SOURCE_TYPES = CatalogTypes.SOURCE_TYPES;
   private static final List<CatalogTypeDescriptor> PERSISTENCE_TYPES =
@@ -74,7 +74,7 @@ public final class GridGrindProtocolCatalog {
    * plain type-group descriptor such as {@code cellValueSpecTypes} or {@code plainTypes:
    * chartSpecType}. Ambiguous or unknown lookups return empty.
    */
-  public static Optional<Object> lookupValueFor(String idOrQualifiedId) {
+  public static Optional<CatalogLookupValue> lookupValueFor(String idOrQualifiedId) {
     return GridGrindProtocolCatalogLookupSupport.lookupValueFor(CATALOG, idOrQualifiedId);
   }
 
@@ -104,8 +104,45 @@ public final class GridGrindProtocolCatalog {
   }
 
   /** Resolves the shared notes referenced by one previously resolved lookup value. */
-  public static List<CatalogNote> referencedNotesForLookupValue(Object lookupValue) {
+  public static List<CatalogNote> referencedNotesForLookupValue(CatalogLookupValue lookupValue) {
     return CatalogNoteResolutionSupport.referencedNotes(CATALOG, lookupValue);
+  }
+
+  /** Describes the semantic metadata carried by catalog fields and entries. */
+  public static List<CatalogFieldMetadataKey> fieldMetadataKeys() {
+    return List.of(
+        new CatalogFieldMetadataKey(
+            "defaultValue", "Field omission resolves to this constant JSON value."),
+        new CatalogFieldMetadataKey(
+            "defaultFrom", "Field omission copies the named sibling component's value."),
+        new CatalogFieldMetadataKey(
+            "projectedByFacets",
+            "Field is present only when one of the listed read-projection facets is"
+                + " requested."),
+        new CatalogFieldMetadataKey(
+            "noteRefs",
+            "Entry references stable note ids published once in the scoped lookup payload or"
+                + " full catalog."),
+        new CatalogFieldMetadataKey(
+            "enumValueDocs",
+            "Field publishes per-enum-value summaries aligned with enumValues so agents can"
+                + " choose the right token directly."));
+  }
+
+  /** Describes the catalog's stable qualified lookup forms. */
+  public static List<CatalogLookupNamespace> lookupNamespaces() {
+    return List.of(
+        new CatalogLookupNamespace(
+            "<topLevelGroup>:<id>",
+            "Resolve one top-level protocol type such as mutationActionTypes:SET_CELL."),
+        new CatalogLookupNamespace(
+            "nestedTypes:<group>",
+            "Resolve one nested tagged-union group such as nestedTypes:cellValueSpecTypes."),
+        new CatalogLookupNamespace(
+            "plainTypes:<group>",
+            "Resolve one plain record group such as plainTypes:sheetSummaryReportType."),
+        new CatalogLookupNamespace(
+            "<id>", "Resolve one unqualified catalog id only when it is globally unique."));
   }
 
   private static Catalog buildCatalog() {

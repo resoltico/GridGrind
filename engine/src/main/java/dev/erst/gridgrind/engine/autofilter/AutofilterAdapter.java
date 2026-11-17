@@ -15,7 +15,7 @@ import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
-import dev.erst.gridgrind.engine.poi.CellBounds;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.engine.poi.SheetStructure;
 import dev.erst.gridgrind.engine.styles.ColorAdapter;
 import java.util.ArrayList;
@@ -54,14 +54,14 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.STSortMethod;
 // surface.
 public final class AutofilterAdapter {
   /** Creates or replaces one sheet-level autofilter range. */
-  public void setSheetAutofilter(XSSFSheet sheet, String range) {
+  public void setSheetAutofilter(XSSFSheet sheet, RangeRef range) {
     setSheetAutofilter(sheet, range, List.of(), Optional.empty());
   }
 
   /** Creates or replaces one sheet-level autofilter range. */
   public void setSheetAutofilter(
       XSSFSheet sheet,
-      String range,
+      RangeRef range,
       List<AutofilterFilterColumnSpec> criteria,
       Optional<AutofilterSortStateSpec> sortState) {
     Objects.requireNonNull(sheet, "sheet must not be null");
@@ -70,7 +70,7 @@ public final class AutofilterAdapter {
         List.copyOf(Objects.requireNonNull(criteria, "criteria must not be null"));
     Objects.requireNonNull(sortState, "sortState must not be null");
 
-    CellBounds targetRange = CellBounds.parse(range);
+    RangeRef targetRange = range;
     if (SheetStructure.headerRowMissing(sheet, targetRange)) {
       throw new IllegalArgumentException(
           "autofilter range must include a nonblank header row: "
@@ -136,7 +136,7 @@ public final class AutofilterAdapter {
 
     String rawRange =
         Objects.requireNonNullElse(sheet.getCTWorksheet().getAutoFilter().getRef(), "");
-    Optional<CellBounds> targetRange = SheetStructure.parseOptionalRange(rawRange);
+    Optional<RangeRef> targetRange = SheetStructure.parseOptionalRange(rawRange);
     List<AnalysisFindingReport> findings = new ArrayList<>();
     if (targetRange.isEmpty()) {
       findings.add(
@@ -151,7 +151,7 @@ public final class AutofilterAdapter {
       return List.copyOf(findings);
     }
 
-    CellBounds parsedTargetRange = targetRange.orElseThrow();
+    RangeRef parsedTargetRange = targetRange.orElseThrow();
     String normalizedRange = SheetStructure.formatRange(parsedTargetRange);
     AnalysisLocationReport.Range location =
         new AnalysisLocationReport.Range(
@@ -169,7 +169,7 @@ public final class AutofilterAdapter {
 
     List<String> overlappingTables = new ArrayList<>();
     for (TableEntryReport table : tablesOnSheet) {
-      Optional<CellBounds> tableRange = SheetStructure.parseOptionalRange(table.range().value());
+      Optional<RangeRef> tableRange = SheetStructure.parseOptionalRange(table.range().value());
       if (tableRange.isPresent()
           && SheetStructure.intersects(parsedTargetRange, tableRange.orElseThrow())) {
         overlappingTables.add(table.name() + "@" + table.range());
@@ -192,10 +192,10 @@ public final class AutofilterAdapter {
     return List.copyOf(findings);
   }
 
-  private void requireNoTableOverlap(XSSFSheet sheet, CellBounds targetRange) {
+  private void requireNoTableOverlap(XSSFSheet sheet, RangeRef targetRange) {
     List<String> overlaps = new ArrayList<>();
     for (var table : sheet.getTables()) {
-      Optional<CellBounds> tableRange =
+      Optional<RangeRef> tableRange =
           SheetStructure.parseOptionalRange(
               Objects.requireNonNullElse(table.getCTTable().getRef(), ""));
       if (tableRange.isPresent()
@@ -444,20 +444,18 @@ public final class AutofilterAdapter {
           new dev.erst.gridgrind.core.vocabulary.RangeLabel(range),
           descending,
           dxfColor(workbook, sortCondition.getDxfId(), true)
-              .orElseThrow(
-                  () ->
-                      new IllegalArgumentException(
-                          "autofilter cell-color sort condition is missing dxf color")));
+              .orElseThrow(() ->
+                  new IllegalArgumentException(
+                      "autofilter cell-color sort condition is missing dxf color")));
     }
     if (sortBy == STSortBy.FONT_COLOR) {
       return new AutofilterSortConditionReport.FontColor(
           new dev.erst.gridgrind.core.vocabulary.RangeLabel(range),
           descending,
           dxfColor(workbook, sortCondition.getDxfId(), false)
-              .orElseThrow(
-                  () ->
-                      new IllegalArgumentException(
-                          "autofilter font-color sort condition is missing dxf color")));
+              .orElseThrow(() ->
+                  new IllegalArgumentException(
+                      "autofilter font-color sort condition is missing dxf color")));
     }
     return new AutofilterSortConditionReport.Icon(
         new dev.erst.gridgrind.core.vocabulary.RangeLabel(range),

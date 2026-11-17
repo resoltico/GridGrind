@@ -23,10 +23,10 @@ import dev.erst.gridgrind.engine.backend.xssf.DrawingObjectNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.PoiRelationRemoval;
 import dev.erst.gridgrind.engine.charts.ChartAdapter;
 import dev.erst.gridgrind.engine.formulas.FormulaRuntime;
+import dev.erst.gridgrind.engine.media.AuthoredImageAdmission;
 import dev.erst.gridgrind.engine.packaging.PackageRelations;
 import dev.erst.gridgrind.engine.poi.EnumMappings;
 import dev.erst.gridgrind.engine.poi.ImageCatalog;
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -82,17 +82,12 @@ public final class DrawingAdapter {
   }
 
   public List<DrawingObjectReport> drawingObjects(XSSFSheet sheet) {
-    return drawingObjects(sheet, null);
-  }
-
-  public List<DrawingObjectReport> drawingObjects(
-      XSSFSheet sheet, @Nullable FormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     List<DrawingObjectReport> snapshots = new ArrayList<>();
     XSSFDrawing drawing = sheet.getDrawingPatriarch();
     if (drawing != null) {
       for (XSSFShape shape : drawing.getShapes()) {
-        snapshots.add(snapshot(drawing, shape, formulaRuntime));
+        snapshots.add(snapshot(drawing, shape));
       }
     }
     for (DrawingObjectReport.SignatureLine signatureLine :
@@ -103,10 +98,6 @@ public final class DrawingAdapter {
   }
 
   public List<ChartReport> charts(XSSFSheet sheet) {
-    return charts(sheet, null);
-  }
-
-  public List<ChartReport> charts(XSSFSheet sheet, @Nullable FormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     XSSFDrawing drawing = sheet.getDrawingPatriarch();
     if (drawing == null) {
@@ -120,7 +111,7 @@ public final class DrawingAdapter {
       if (graphicFrame == null) {
         continue;
       }
-      snapshots.add(ChartAdapter.snapshotChart(chart, graphicFrame, formulaRuntime));
+      snapshots.add(ChartAdapter.snapshotChart(chart, graphicFrame));
     }
     return List.copyOf(snapshots);
   }
@@ -154,21 +145,24 @@ public final class DrawingAdapter {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
-    deleteNamedObjectIfPresent(sheet, definition.name());
-    XSSFDrawing drawing = sheet.createDrawingPatriarch();
-    org.apache.poi.xssf.usermodel.XSSFClientAnchor anchor =
-        toPoiAnchor(drawing, definition.anchor());
-    int pictureIndex =
-        ImageCatalog.addPicture(
-            sheet.getWorkbook(),
-            definition.imageData().bytes(),
-            toPoiPictureType(definition.format()));
-    XSSFPicture picture = drawing.createPicture(anchor, pictureIndex);
-    picture.getCTPicture().getNvPicPr().getCNvPr().setName(definition.name());
-    definition
-        .description()
-        .ifPresent(
-            description -> picture.getCTPicture().getNvPicPr().getCNvPr().setDescr(description));
+    var admitted = AuthoredImageAdmission.admitNative(definition.format(), definition.imageData());
+    AuthoredImageAdmission.mutate(() -> {
+      deleteNamedObjectIfPresent(sheet, definition.name());
+      XSSFDrawing drawing = sheet.createDrawingPatriarch();
+      org.apache.poi.xssf.usermodel.XSSFClientAnchor anchor =
+          toPoiAnchor(drawing, definition.anchor());
+      int pictureIndex =
+          ImageCatalog.addPicture(
+              sheet.getWorkbook(),
+              admitted.nativeBytes(definition.format(), definition.imageData()),
+              toPoiPictureType(definition.format()));
+      XSSFPicture picture = drawing.createPicture(anchor, pictureIndex);
+      picture.getCTPicture().getNvPicPr().getCNvPr().setName(definition.name());
+      definition
+          .description()
+          .ifPresent(
+              description -> picture.getCTPicture().getNvPicPr().getCNvPr().setDescr(description));
+    });
   }
 
   public void setChart(XSSFSheet sheet, ResolvedChart definition) {
@@ -194,8 +188,11 @@ public final class DrawingAdapter {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
-    deleteNamedObjectIfPresent(sheet, definition.name());
-    signatureLineController.setSignatureLine(sheet, definition);
+    var admitted = SignatureAdapter.admitPreview(definition);
+    AuthoredImageAdmission.mutate(() -> {
+      deleteNamedObjectIfPresent(sheet, definition.name());
+      signatureLineController.installAdmitted(sheet, definition, admitted);
+    });
   }
 
   public void setShape(XSSFSheet sheet, ResolvedShape definition) {
@@ -227,31 +224,35 @@ public final class DrawingAdapter {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
-    deleteNamedObjectIfPresent(sheet, definition.name());
-    XSSFDrawing drawing = sheet.createDrawingPatriarch();
-    org.apache.poi.xssf.usermodel.XSSFClientAnchor anchor =
-        toPoiAnchor(drawing, definition.anchor());
-    org.apache.poi.xssf.usermodel.XSSFObjectData objectData;
-    try {
-      int storageId =
-          sheet
-              .getWorkbook()
-              .addOlePackage(
-                  definition.payload().bytes(),
-                  definition.label(),
-                  definition.fileName(),
-                  definition.command());
-      int pictureIndex =
-          ImageCatalog.addPicture(
-              sheet.getWorkbook(),
-              definition.previewImage().bytes(),
-              toPoiPictureType(definition.previewFormat()));
-      objectData = drawing.createObjectData(anchor, storageId, pictureIndex);
-    } catch (java.io.IOException failure) {
-      throw new java.io.UncheckedIOException(
-          "Failed to create embedded object '" + definition.name() + "'", failure);
-    }
-    objectData.getCTShape().getNvSpPr().getCNvPr().setName(definition.name());
+    var admitted =
+        AuthoredImageAdmission.admitNative(definition.previewFormat(), definition.previewImage());
+    AuthoredImageAdmission.mutate(() -> {
+      deleteNamedObjectIfPresent(sheet, definition.name());
+      XSSFDrawing drawing = sheet.createDrawingPatriarch();
+      org.apache.poi.xssf.usermodel.XSSFClientAnchor anchor =
+          toPoiAnchor(drawing, definition.anchor());
+      org.apache.poi.xssf.usermodel.XSSFObjectData objectData;
+      try {
+        int storageId =
+            sheet
+                .getWorkbook()
+                .addOlePackage(
+                    definition.payload().bytes(),
+                    definition.label(),
+                    definition.fileName(),
+                    definition.command());
+        int pictureIndex =
+            ImageCatalog.addPicture(
+                sheet.getWorkbook(),
+                admitted.nativeBytes(definition.previewFormat(), definition.previewImage()),
+                toPoiPictureType(definition.previewFormat()));
+        objectData = drawing.createObjectData(anchor, storageId, pictureIndex);
+      } catch (java.io.IOException failure) {
+        throw new java.io.UncheckedIOException(
+            "Failed to create embedded object '" + definition.name() + "'", failure);
+      }
+      objectData.getCTShape().getNvSpPr().getCNvPr().setName(definition.name());
+    });
   }
 
   public void setDrawingObjectAnchor(
@@ -363,34 +364,7 @@ public final class DrawingAdapter {
   }
 
   public static DrawingAnchorReport snapshotAnchor(XmlObject shapeXml) {
-    XmlObject parentAnchor = parentAnchor(shapeXml).orElse(null);
-    return switch (parentAnchor) {
-      case org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTTwoCellAnchor
-              twoCellAnchor ->
-          new DrawingAnchorReport.TwoCell(
-              marker(twoCellAnchor.getFrom()),
-              marker(twoCellAnchor.getTo()),
-              behavior(twoCellAnchor.getEditAs()));
-      case org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTOneCellAnchor
-              oneCellAnchor ->
-          new DrawingAnchorReport.OneCell(
-              marker(oneCellAnchor.getFrom()),
-              oneCellAnchor.getExt().getCx(),
-              oneCellAnchor.getExt().getCy(),
-              ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
-      case org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTAbsoluteAnchor
-              absoluteAnchor ->
-          new DrawingAnchorReport.Absolute(
-              ((Number) absoluteAnchor.getPos().getX()).longValue(),
-              ((Number) absoluteAnchor.getPos().getY()).longValue(),
-              absoluteAnchor.getExt().getCx(),
-              absoluteAnchor.getExt().getCy(),
-              ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE);
-      case null -> throw new IllegalStateException("Drawing object is missing its parent anchor");
-      default ->
-          throw new IllegalStateException(
-              "Unsupported parent anchor type: " + parentAnchor.getClass().getName());
-    };
+    return StoredDrawingAnchorReader.anchor(shapeXml);
   }
 
   public static ExcelDrawingAnchorBehavior behavior(
@@ -408,11 +382,7 @@ public final class DrawingAdapter {
 
   public static DrawingMarkerReport marker(
       org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTMarker marker) {
-    return new DrawingMarkerReport(
-        marker.getCol(),
-        marker.getRow(),
-        Math.toIntExact(((Number) marker.getColOff()).longValue()),
-        Math.toIntExact(((Number) marker.getRowOff()).longValue()));
+    return StoredDrawingAnchorReader.marker(marker);
   }
 
   public static XmlObject shapeXml(XSSFShape shape) {
@@ -574,9 +544,8 @@ public final class DrawingAdapter {
     }
     Optional<String> drawingRelationId = previewDrawingRelationId(objectData);
     Optional<org.apache.poi.openxml4j.opc.PackagePart> drawingPreviewPart =
-        drawingRelationId.flatMap(
-            relationId ->
-                relatedInternalPart(objectData.getDrawing().getPackagePart(), relationId));
+        drawingRelationId.flatMap(relationId ->
+            relatedInternalPart(objectData.getDrawing().getPackagePart(), relationId));
     return drawingPreviewPart.filter(DrawingAdapter::supportedPreviewImagePart);
   }
 
@@ -1297,11 +1266,6 @@ public final class DrawingAdapter {
   }
 
   public static DrawingObjectReport snapshot(XSSFDrawing drawing, XSSFShape shape) {
-    return snapshot(drawing, shape, null);
-  }
-
-  public static DrawingObjectReport snapshot(
-      XSSFDrawing drawing, XSSFShape shape, @Nullable FormulaRuntime formulaRuntime) {
     if (shape instanceof XSSFPicture picture) {
       return snapshotPicture(picture);
     }
@@ -1318,7 +1282,7 @@ public final class DrawingAdapter {
       XSSFChart chart = ChartAdapter.chartForGraphicFrame(drawing, graphicFrame);
       return chart == null
           ? snapshotGraphicFrame(graphicFrame)
-          : ChartAdapter.snapshotChartDrawingObject(chart, graphicFrame, formulaRuntime);
+          : ChartAdapter.snapshotChartDrawingObject(chart, graphicFrame);
     }
     if (shape instanceof org.apache.poi.xssf.usermodel.XSSFSimpleShape simpleShape) {
       return snapshotShape(simpleShape);
@@ -1376,14 +1340,9 @@ public final class DrawingAdapter {
   }
 
   public static RasterDimensions rasterDimensions(byte[] bytes) {
-    try (ByteArrayInputStream input = new ByteArrayInputStream(bytes)) {
-      BufferedImage image = javax.imageio.ImageIO.read(input);
-      return image == null
-          ? RasterDimensions.none()
-          : new RasterDimensions(image.getWidth(), image.getHeight());
-    } catch (IOException exception) {
-      return RasterDimensions.none();
-    }
+    return dev.erst.gridgrind.engine.media.ObservedImageDimensions.read(bytes)
+        .map(value -> new RasterDimensions(value.width(), value.height()))
+        .orElseGet(RasterDimensions::none);
   }
 
   public record RasterDimensions(@Nullable Integer widthPixels, @Nullable Integer heightPixels) {

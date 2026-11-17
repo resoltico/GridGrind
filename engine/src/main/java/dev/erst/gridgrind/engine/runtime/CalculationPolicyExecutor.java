@@ -134,19 +134,18 @@ final class CalculationPolicyExecutor {
         Optional.of(report),
         assessments.size(),
         blocking.isPresent(),
-        blocking.map(
-            assessment ->
-                new FailureDetail(
-                    assessment.problemCode().orElse(null),
-                    Phase.PREFLIGHT,
-                    assessment.cell().sheetName().value(),
-                    assessment.cell().address().value(),
-                    assessment.formula(),
-                    assessment
-                        .message()
-                        .orElse(
-                            "Calculation preflight found formulas that are not immediately evaluable."),
-                    null)));
+        blocking.map(assessment ->
+            new FailureDetail(
+                assessment.problemCode().orElse(null),
+                Phase.PREFLIGHT,
+                assessment.cell().sheetName().value(),
+                assessment.cell().address().value(),
+                assessment.formula(),
+                assessment
+                    .message()
+                    .orElse(
+                        "Calculation preflight found formulas that are not immediately evaluable."),
+                null)));
   }
 
   private static ExecutionOutcome executeDoNotCalculate(

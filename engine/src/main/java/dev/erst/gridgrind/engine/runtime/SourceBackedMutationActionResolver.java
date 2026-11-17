@@ -80,7 +80,7 @@ final class SourceBackedMutationActionResolver {
   private static CellMutationAction resolveSetCell(
       CellMutationAction.SetCell setCell, ExecutionInputBindings bindings) throws IOException {
     CellValueSpec resolvedValue =
-        SourceBackedPlanResolver.resolveCellInput(setCell.value(), bindings);
+        SourceBackedPlanResolver.resolveCellWriteInput(setCell.value(), bindings);
     return sameReference(resolvedValue, setCell.value())
         ? setCell
         : new CellMutationAction.SetCell(resolvedValue);
@@ -110,7 +110,8 @@ final class SourceBackedMutationActionResolver {
     try {
       return new CellMutationAction.SetArrayFormula(new ArrayFormulaSpec(resolved));
     } catch (IllegalArgumentException failure) {
-      if (bindings.collectInputResolutionFailure(failure, source)) {
+      if (bindings.collectInputResolutionFailure(
+          failure, source, bindings.lastInputOrigin(source))) {
         return action;
       }
       throw failure;

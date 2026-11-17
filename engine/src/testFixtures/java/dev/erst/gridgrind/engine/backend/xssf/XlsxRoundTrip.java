@@ -542,12 +542,11 @@ public final class XlsxRoundTrip {
     return new CellGradientStopReport(
         stop.getPosition(),
         ColorAdapter.snapshot(workbook, stop.getColor())
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "Gradient stop at position "
-                            + stop.getPosition()
-                            + " is missing its color definition.")));
+            .orElseThrow(() ->
+                new IllegalStateException(
+                    "Gradient stop at position "
+                        + stop.getPosition()
+                        + " is missing its color definition.")));
   }
 
   private static CellBorderSideReport borderSideSnapshot(

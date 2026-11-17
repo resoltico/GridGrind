@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
@@ -35,10 +36,16 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertEquals(0, from.dy());
     assertEquals(5, to.dx());
     assertEquals(6, to.dy());
-    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(-1, 0, 0, 0));
-    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(0, -1, 0, 0));
-    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(0, 0, -1, 0));
-    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(0, 0, 0, -1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingMarkerReport(
+                -1, 0, new DrawingCoordinateReport.Emu(0), new DrawingCoordinateReport.Emu(0)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingMarkerReport(
+                0, -1, new DrawingCoordinateReport.Emu(0), new DrawingCoordinateReport.Emu(0)));
 
     DrawingAnchorSpec.TwoCell twoCell =
         new DrawingAnchorSpec.TwoCell(
@@ -94,37 +101,11 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
     assertEquals(ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE, oneCell.behavior());
     assertThrows(
         NullPointerException.class, () -> new DrawingAnchorReport.OneCell(null, 10L, 12L, null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new DrawingAnchorReport.OneCell(
-                DrawingGeometryFixtures.marker(from),
-                0L,
-                12L,
-                ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new DrawingAnchorReport.OneCell(
-                DrawingGeometryFixtures.marker(from),
-                10L,
-                0L,
-                ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE));
 
-    DrawingAnchorReport.Absolute absolute = new DrawingAnchorReport.Absolute(1L, 2L, 3L, 4L, null);
+    DrawingAnchorReport.Absolute absolute =
+        new DrawingAnchorReport.Absolute(
+            new DrawingCoordinateReport.Emu(1L), new DrawingCoordinateReport.Emu(2L), 3L, 4L, null);
     assertEquals(ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE, absolute.behavior());
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new DrawingAnchorReport.Absolute(-1L, 0L, 1L, 1L, null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new DrawingAnchorReport.Absolute(0L, -1L, 1L, 1L, null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new DrawingAnchorReport.Absolute(0L, 0L, 0L, 1L, null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new DrawingAnchorReport.Absolute(0L, 0L, 1L, 0L, null));
 
     for (ExcelPictureFormat format : ExcelPictureFormat.values()) {
       assertSame(

@@ -29,11 +29,12 @@ class ExecutionGrantValidatorTest {
   @TempDir Path root;
 
   @Test
-  void acceptsAnExactlyAuthorizedSaveAsPlan() {
+  void acceptsAnExactlyAuthorizedSaveAsPlan() throws Exception {
     WorkbookPlan request = saveAsPlan();
     Path output = root.resolve("report.xlsx");
     ExecutionGrant grant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of("ENSURE_SHEET"),
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -42,13 +43,16 @@ class ExecutionGrantValidatorTest {
             List.of(),
             dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
-    assertTrue(ExecutionGrantValidator.violations(request, grant, root).isEmpty());
+    assertTrue(
+        ExecutionGrantValidator.violations(request, grant, new RequestPathIdentity(root))
+            .isEmpty());
   }
 
   @Test
-  void rejectsAnOperationAbsentFromTheHostGrant() {
+  void rejectsAnOperationAbsentFromTheHostGrant() throws Exception {
     ExecutionGrant grant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of(),
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -58,7 +62,7 @@ class ExecutionGrantValidatorTest {
             dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
     List<ExecutionAuthorityDeniedException> violations =
-        ExecutionGrantValidator.violations(saveAsPlan(), grant, root);
+        ExecutionGrantValidator.violations(saveAsPlan(), grant, new RequestPathIdentity(root));
 
     assertEquals(1, violations.size());
     assertEquals(
@@ -66,9 +70,10 @@ class ExecutionGrantValidatorTest {
   }
 
   @Test
-  void rejectsConservativeWorkbookWideMutationUnderASheetScopedGrant() {
+  void rejectsConservativeWorkbookWideMutationUnderASheetScopedGrant() throws Exception {
     ExecutionGrant grant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of("ENSURE_SHEET"),
             new ExecutionGrant.WorkbookTargetAuthority.SelectedSheets(List.of("Budget")),
@@ -78,7 +83,7 @@ class ExecutionGrantValidatorTest {
             dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
     List<ExecutionAuthorityDeniedException> violations =
-        ExecutionGrantValidator.violations(saveAsPlan(), grant, root);
+        ExecutionGrantValidator.violations(saveAsPlan(), grant, new RequestPathIdentity(root));
 
     assertEquals(1, violations.size());
     assertEquals(
@@ -87,7 +92,7 @@ class ExecutionGrantValidatorTest {
   }
 
   @Test
-  void acceptsTargetBoundReadsWhenTheirSelectorIsContainedInTheGrantedSheets() {
+  void acceptsTargetBoundReadsWhenTheirSelectorIsContainedInTheGrantedSheets() throws Exception {
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
@@ -101,6 +106,7 @@ class ExecutionGrantValidatorTest {
                     new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary())));
     ExecutionGrant grant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of("GET_SHEET_SUMMARY"),
             new ExecutionGrant.WorkbookTargetAuthority.SelectedSheets(List.of("Budget")),
@@ -108,11 +114,13 @@ class ExecutionGrantValidatorTest {
             List.of(),
             dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
-    assertTrue(ExecutionGrantValidator.violations(request, grant, root).isEmpty());
+    assertTrue(
+        ExecutionGrantValidator.violations(request, grant, new RequestPathIdentity(root))
+            .isEmpty());
   }
 
   @Test
-  void rejectsTargetBoundReadsWhenTheirSelectorNamesAnUngrantedSheet() {
+  void rejectsTargetBoundReadsWhenTheirSelectorNamesAnUngrantedSheet() throws Exception {
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
@@ -126,6 +134,7 @@ class ExecutionGrantValidatorTest {
                     new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary())));
     ExecutionGrant grant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of("GET_SHEET_SUMMARY"),
             new ExecutionGrant.WorkbookTargetAuthority.SelectedSheets(List.of("Budget")),
@@ -134,7 +143,7 @@ class ExecutionGrantValidatorTest {
             dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
     List<ExecutionAuthorityDeniedException> violations =
-        ExecutionGrantValidator.violations(request, grant, root);
+        ExecutionGrantValidator.violations(request, grant, new RequestPathIdentity(root));
 
     assertEquals(1, violations.size());
     assertEquals(
@@ -143,7 +152,7 @@ class ExecutionGrantValidatorTest {
   }
 
   @Test
-  void rejectsSheetScopedAuthorityWhenTheReadSelectorIsNotExactlyResolved() {
+  void rejectsSheetScopedAuthorityWhenTheReadSelectorIsNotExactlyResolved() throws Exception {
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
@@ -157,6 +166,7 @@ class ExecutionGrantValidatorTest {
                     new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary())));
     ExecutionGrant grant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of("GET_SHEET_SUMMARY"),
             new ExecutionGrant.WorkbookTargetAuthority.SelectedSheets(List.of("Budget")),
@@ -166,13 +176,16 @@ class ExecutionGrantValidatorTest {
 
     assertEquals(
         "host grant requires an exactly resolved target footprint for GET_SHEET_SUMMARY",
-        ExecutionGrantValidator.violations(request, grant, root).getFirst().getMessage());
+        ExecutionGrantValidator.violations(request, grant, new RequestPathIdentity(root))
+            .getFirst()
+            .getMessage());
   }
 
   @Test
-  void rejectsMismatchedSaveAsAndOverwritePublicationAuthorities() {
+  void rejectsMismatchedSaveAsAndOverwritePublicationAuthorities() throws Exception {
     ExecutionGrant noPublication =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of("ENSURE_SHEET"),
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -189,14 +202,18 @@ class ExecutionGrantValidatorTest {
 
     assertEquals(
         "host grant does not permit SAVE_AS publication to " + root.resolve("report.xlsx"),
-        ExecutionGrantValidator.violations(saveAsPlan(), noPublication, root)
+        ExecutionGrantValidator.violations(
+                saveAsPlan(), noPublication, new RequestPathIdentity(root))
             .getLast()
             .getMessage());
     assertEquals(
         "host grant does not permit overwriting the source workbook",
-        ExecutionGrantValidator.violations(overwrite, noPublication, root).getLast().getMessage());
+        ExecutionGrantValidator.violations(overwrite, noPublication, new RequestPathIdentity(root))
+            .getLast()
+            .getMessage());
     ExecutionGrant wrongSaveAs =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of("ENSURE_SHEET"),
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -206,9 +223,12 @@ class ExecutionGrantValidatorTest {
             dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
     assertEquals(
         "host grant does not permit SAVE_AS publication to " + root.resolve("report.xlsx"),
-        ExecutionGrantValidator.violations(saveAsPlan(), wrongSaveAs, root).getLast().getMessage());
+        ExecutionGrantValidator.violations(saveAsPlan(), wrongSaveAs, new RequestPathIdentity(root))
+            .getLast()
+            .getMessage());
     ExecutionGrant wrongCollisionPolicy =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of("ENSURE_SHEET"),
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -218,13 +238,14 @@ class ExecutionGrantValidatorTest {
             dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
     assertEquals(
         "host grant does not permit SAVE_AS publication to " + root.resolve("report.xlsx"),
-        ExecutionGrantValidator.violations(saveAsPlan(), wrongCollisionPolicy, root)
+        ExecutionGrantValidator.violations(
+                saveAsPlan(), wrongCollisionPolicy, new RequestPathIdentity(root))
             .getLast()
             .getMessage());
   }
 
   @Test
-  void evaluatesEveryPersistenceEncryptionAlternativeForSecretAuthority() {
+  void evaluatesEveryPersistenceEncryptionAlternativeForSecretAuthority() throws Exception {
     WorkbookPlan preservedSourceEncryption =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
@@ -239,6 +260,7 @@ class ExecutionGrantValidatorTest {
             List.of());
     ExecutionGrant noSecretGrant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of(),
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -248,7 +270,8 @@ class ExecutionGrantValidatorTest {
             dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
     assertTrue(
-        ExecutionGrantValidator.violations(preservedSourceEncryption, noSecretGrant, root)
+        ExecutionGrantValidator.violations(
+                preservedSourceEncryption, noSecretGrant, new RequestPathIdentity(root))
             .isEmpty());
     WorkbookPlan plaintext =
         WorkbookPlan.standard(
@@ -260,7 +283,9 @@ class ExecutionGrantValidatorTest {
             ExecutionPolicySpec.defaults(),
             FormulaEnvironmentSpec.empty(),
             List.of());
-    assertTrue(ExecutionGrantValidator.violations(plaintext, noSecretGrant, root).isEmpty());
+    assertTrue(
+        ExecutionGrantValidator.violations(plaintext, noSecretGrant, new RequestPathIdentity(root))
+            .isEmpty());
 
     SecretReference encryptionPassword = new SecretReference("encryption-password");
     WorkbookPlan encrypted =
@@ -281,6 +306,7 @@ class ExecutionGrantValidatorTest {
             List.of());
     ExecutionGrant encryptedGrant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of(),
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -289,7 +315,9 @@ class ExecutionGrantValidatorTest {
             List.of(encryptionPassword),
             dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
-    assertTrue(ExecutionGrantValidator.violations(encrypted, encryptedGrant, root).isEmpty());
+    assertTrue(
+        ExecutionGrantValidator.violations(encrypted, encryptedGrant, new RequestPathIdentity(root))
+            .isEmpty());
   }
 
   private WorkbookPlan saveAsPlan() {

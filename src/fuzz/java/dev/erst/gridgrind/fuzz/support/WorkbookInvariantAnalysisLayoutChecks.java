@@ -34,13 +34,12 @@ final class WorkbookInvariantAnalysisLayoutChecks {
             sparse.populatedCells() != null, "window populatedCells must not be null");
         sparse
             .populatedCells()
-            .forEach(
-                cell -> {
-                  WorkbookInvariantCellSurfaceChecks.requireCellReportShape(cell);
-                  WorkbookInvariantChecks.require(
-                      !(cell instanceof dev.erst.gridgrind.core.model.value.CellReport.BlankReport),
-                      "sparse windows must not contain blank cells");
-                });
+            .forEach(cell -> {
+              WorkbookInvariantCellSurfaceChecks.requireCellReportShape(cell);
+              WorkbookInvariantChecks.require(
+                  !(cell instanceof dev.erst.gridgrind.core.model.value.CellReport.BlankReport),
+                  "sparse windows must not contain blank cells");
+            });
       }
       case WindowReport.Dense dense -> {
         WorkbookInvariantChecks.require(dense.rows() != null, "window rows must not be null");
@@ -49,17 +48,16 @@ final class WorkbookInvariantAnalysisLayoutChecks {
             "window rows size must match rowCount");
         dense
             .rows()
-            .forEach(
-                row -> {
-                  WorkbookInvariantChecks.require(
-                      row.rowIndex() >= 0, "window row index must not be negative");
-                  WorkbookInvariantChecks.require(
-                      row.cells() != null, "window row cells must not be null");
-                  WorkbookInvariantChecks.require(
-                      row.cells().size() == window.dimensions().columnCount(),
-                      "window row cells size must match columnCount");
-                  row.cells().forEach(WorkbookInvariantCellSurfaceChecks::requireCellReportShape);
-                });
+            .forEach(row -> {
+              WorkbookInvariantChecks.require(
+                  row.rowIndex() >= 0, "window row index must not be negative");
+              WorkbookInvariantChecks.require(
+                  row.cells() != null, "window row cells must not be null");
+              WorkbookInvariantChecks.require(
+                  row.cells().size() == window.dimensions().columnCount(),
+                  "window row cells size must match columnCount");
+              row.cells().forEach(WorkbookInvariantCellSurfaceChecks::requireCellReportShape);
+            });
       }
     }
   }
@@ -114,23 +112,21 @@ final class WorkbookInvariantAnalysisLayoutChecks {
     }
     layout
         .columns()
-        .forEach(
-            column -> {
-              WorkbookInvariantChecks.require(
-                  column.columnIndex() >= 0, "columnIndex must not be negative");
-              WorkbookInvariantChecks.require(
-                  Double.isFinite(column.widthCharacters()) && column.widthCharacters() > 0.0d,
-                  "column width must be finite and greater than 0");
-            });
+        .forEach(column -> {
+          WorkbookInvariantChecks.require(
+              column.columnIndex() >= 0, "columnIndex must not be negative");
+          WorkbookInvariantChecks.require(
+              Double.isFinite(column.widthCharacters()) && column.widthCharacters() > 0.0d,
+              "column width must be finite and greater than 0");
+        });
     layout
         .rows()
-        .forEach(
-            row -> {
-              WorkbookInvariantChecks.require(row.rowIndex() >= 0, "rowIndex must not be negative");
-              WorkbookInvariantChecks.require(
-                  Double.isFinite(row.heightPoints()) && row.heightPoints() > 0.0d,
-                  "row height must be finite and greater than 0");
-            });
+        .forEach(row -> {
+          WorkbookInvariantChecks.require(row.rowIndex() >= 0, "rowIndex must not be negative");
+          WorkbookInvariantChecks.require(
+              Double.isFinite(row.heightPoints()) && row.heightPoints() > 0.0d,
+              "row height must be finite and greater than 0");
+        });
   }
 
   static void requirePrintLayoutShape(PrintLayoutReport layout) {
@@ -186,10 +182,9 @@ final class WorkbookInvariantAnalysisLayoutChecks {
     table
         .structure()
         .columnNames()
-        .forEach(
-            columnName ->
-                WorkbookInvariantChecks.require(
-                    columnName != null, "table column name must not be null"));
+        .forEach(columnName ->
+            WorkbookInvariantChecks.require(
+                columnName != null, "table column name must not be null"));
     for (int index = 0; index < table.structure().columns().size(); index++) {
       WorkbookInvariantCellSurfaceChecks.requireTableColumnShape(
           table.structure().columns().get(index));

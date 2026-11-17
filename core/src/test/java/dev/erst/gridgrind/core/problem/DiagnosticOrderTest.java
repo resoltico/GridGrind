@@ -43,7 +43,9 @@ class DiagnosticOrderTest {
     GridGrindProblemDetail.Problem resolveInputs =
         problem(new ProblemContext.ResolveInputs(SHAPE, InputReference.unknown()));
     GridGrindProblemDetail.Problem openWorkbook =
-        problem(new ProblemContext.OpenWorkbook(SHAPE, WorkbookReference.newWorkbook()));
+        problem(
+            new ProblemContext.OpenWorkbook(
+                SHAPE, WorkbookReference.newWorkbook(), java.util.Optional.empty()));
     GridGrindProblemDetail.Problem calculationExecution =
         problem(new ProblemContext.ExecuteCalculation.Execution(SHAPE, ProblemLocation.unknown()));
     GridGrindProblemDetail.Problem executeStep =

@@ -19,22 +19,20 @@ final class EnumMappingAssertions {
       Map<Source, Target> expectedMappings,
       Function<Source, Target> fromSource,
       Function<Target, Source> toSource) {
-    expectedMappings.forEach(
-        (source, expectedTarget) -> {
-          assertSameValue(expectedTarget, fromSource.apply(source));
-          assertSameValue(source, toSource.apply(expectedTarget));
-        });
+    expectedMappings.forEach((source, expectedTarget) -> {
+      assertSameValue(expectedTarget, fromSource.apply(source));
+      assertSameValue(source, toSource.apply(expectedTarget));
+    });
   }
 
   static <Source, Target> void assertOptionalBidirectionalMappings(
       Map<Source, Target> expectedMappings,
       Function<Source, Optional<Target>> fromSource,
       Function<Target, Source> toSource) {
-    expectedMappings.forEach(
-        (source, expectedTarget) -> {
-          assertSameValue(Optional.of(expectedTarget), fromSource.apply(source));
-          assertSameValue(source, toSource.apply(expectedTarget));
-        });
+    expectedMappings.forEach((source, expectedTarget) -> {
+      assertSameValue(Optional.of(expectedTarget), fromSource.apply(source));
+      assertSameValue(source, toSource.apply(expectedTarget));
+    });
   }
 
   private static void assertSameValue(Object expected, Object actual) {

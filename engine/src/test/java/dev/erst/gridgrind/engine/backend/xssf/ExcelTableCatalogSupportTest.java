@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
-import dev.erst.gridgrind.engine.poi.CellBounds;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.engine.tables.TableAdapter;
 import java.util.List;
 import java.util.Optional;
@@ -79,7 +79,7 @@ class ExcelTableCatalogSupportTest {
       sheet.getRow(2).createCell(1).setCellValue("Pack");
       XSSFTable table = sheet.createTable(new AreaReference("A1:B3", SpreadsheetVersion.EXCEL2007));
       table.setName("Queue");
-      TableAdapter.applyAutofilter(table, CellBounds.parse("A1:B3"), false);
+      TableAdapter.applyAutofilter(table, RangeRef.parse("A1:B3"), false);
       TableAdapter.applyStyle(
           table, new TableStyleSpec.Named("TableStyleMedium2", true, false, true, false));
       table.getCTTable().setComment("Queue comment");

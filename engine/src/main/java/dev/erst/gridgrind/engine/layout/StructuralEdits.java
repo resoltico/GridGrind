@@ -8,9 +8,9 @@ import dev.erst.gridgrind.core.model.layout.RowLayoutReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.engine.comments.CommentAdapter;
 import dev.erst.gridgrind.engine.names.NamedRangeAdapter;
-import dev.erst.gridgrind.engine.poi.CellBounds;
 import dev.erst.gridgrind.engine.poi.SheetStructure;
 import dev.erst.gridgrind.engine.poi.SqrefRanges;
 import dev.erst.gridgrind.engine.validation.DataValidationAdapter;
@@ -350,7 +350,7 @@ public final class StructuralEdits {
 
   public static void rejectAffectedRowStructuresForInsert(XSSFSheet sheet, int rowIndex) {
     for (XSSFTable table : sheet.getTables()) {
-      CellBounds range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
+      RangeRef range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
       if (range.lastRow() >= rowIndex) {
         throw unsupportedStructure(
             "INSERT_ROWS",
@@ -359,7 +359,7 @@ public final class StructuralEdits {
             "row structural edits that would move tables are not supported");
       }
     }
-    Optional<CellBounds> autofilter = sheetAutofilterRange(sheet);
+    Optional<RangeRef> autofilter = sheetAutofilterRange(sheet);
     if (autofilter.isPresent() && autofilter.orElseThrow().lastRow() >= rowIndex) {
       throw unsupportedStructure(
           "INSERT_ROWS",
@@ -371,7 +371,7 @@ public final class StructuralEdits {
 
   public static void rejectAffectedRowStructuresForDelete(XSSFSheet sheet, ExcelRowSpan rows) {
     for (XSSFTable table : sheet.getTables()) {
-      CellBounds range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
+      RangeRef range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
       if (range.lastRow() >= rows.firstRowIndex()) {
         throw unsupportedStructure(
             "DELETE_ROWS",
@@ -380,7 +380,7 @@ public final class StructuralEdits {
             "row structural edits that would move or truncate tables are not supported");
       }
     }
-    Optional<CellBounds> autofilter = sheetAutofilterRange(sheet);
+    Optional<RangeRef> autofilter = sheetAutofilterRange(sheet);
     if (autofilter.isPresent() && autofilter.orElseThrow().lastRow() >= rows.firstRowIndex()) {
       throw unsupportedStructure(
           "DELETE_ROWS",
@@ -389,7 +389,7 @@ public final class StructuralEdits {
           "row structural edits that would move or truncate sheet autofilters are not supported");
     }
     for (String validationRange : dataValidationRanges(sheet)) {
-      CellBounds range = parsedRange(validationRange, "data validation", validationRange);
+      RangeRef range = parsedRange(validationRange, "data validation", validationRange);
       if (range.lastRow() >= rows.firstRowIndex()) {
         throw unsupportedStructure(
             "DELETE_ROWS",
@@ -404,7 +404,7 @@ public final class StructuralEdits {
   public static void rejectAffectedRowStructuresForShift(
       XSSFSheet sheet, ExcelRowSpan rows, int delta) {
     for (XSSFTable table : sheet.getTables()) {
-      CellBounds range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
+      RangeRef range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
       if (affectsRows(range, rows, delta)) {
         throw unsupportedStructure(
             "SHIFT_ROWS",
@@ -413,7 +413,7 @@ public final class StructuralEdits {
             "row structural edits that would move tables are not supported");
       }
     }
-    Optional<CellBounds> autofilter = sheetAutofilterRange(sheet);
+    Optional<RangeRef> autofilter = sheetAutofilterRange(sheet);
     if (autofilter.isPresent() && affectsRows(autofilter.orElseThrow(), rows, delta)) {
       throw unsupportedStructure(
           "SHIFT_ROWS",
@@ -422,7 +422,7 @@ public final class StructuralEdits {
           "row structural edits that would move sheet autofilters are not supported");
     }
     for (String validationRange : dataValidationRanges(sheet)) {
-      CellBounds range = parsedRange(validationRange, "data validation", validationRange);
+      RangeRef range = parsedRange(validationRange, "data validation", validationRange);
       if (affectsRows(range, rows, delta)) {
         throw unsupportedStructure(
             "SHIFT_ROWS",
@@ -436,7 +436,7 @@ public final class StructuralEdits {
 
   public static void rejectAffectedColumnStructuresForInsert(XSSFSheet sheet, int columnIndex) {
     for (XSSFTable table : sheet.getTables()) {
-      CellBounds range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
+      RangeRef range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
       if (range.lastColumn() >= columnIndex) {
         throw unsupportedStructure(
             "INSERT_COLUMNS",
@@ -445,7 +445,7 @@ public final class StructuralEdits {
             "column structural edits that would move tables are not supported");
       }
     }
-    Optional<CellBounds> autofilter = sheetAutofilterRange(sheet);
+    Optional<RangeRef> autofilter = sheetAutofilterRange(sheet);
     if (autofilter.isPresent() && autofilter.orElseThrow().lastColumn() >= columnIndex) {
       throw unsupportedStructure(
           "INSERT_COLUMNS",
@@ -458,7 +458,7 @@ public final class StructuralEdits {
   public static void rejectAffectedColumnStructuresForDelete(
       XSSFSheet sheet, ExcelColumnSpan columns) {
     for (XSSFTable table : sheet.getTables()) {
-      CellBounds range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
+      RangeRef range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
       if (range.lastColumn() >= columns.firstColumnIndex()) {
         throw unsupportedStructure(
             "DELETE_COLUMNS",
@@ -467,23 +467,25 @@ public final class StructuralEdits {
             "column structural edits that would move or truncate tables are not supported");
       }
     }
-    Optional<CellBounds> autofilter = sheetAutofilterRange(sheet);
+    Optional<RangeRef> autofilter = sheetAutofilterRange(sheet);
     if (autofilter.isPresent()
         && autofilter.orElseThrow().lastColumn() >= columns.firstColumnIndex()) {
       throw unsupportedStructure(
           "DELETE_COLUMNS",
           sheet,
           "sheet autofilter " + SheetStructure.formatRange(autofilter.orElseThrow()),
-          "column structural edits that would move or truncate sheet autofilters are not supported");
+          "column structural edits that would move or truncate sheet autofilters are not"
+              + " supported");
     }
     for (String validationRange : dataValidationRanges(sheet)) {
-      CellBounds range = parsedRange(validationRange, "data validation", validationRange);
+      RangeRef range = parsedRange(validationRange, "data validation", validationRange);
       if (range.lastColumn() >= columns.firstColumnIndex()) {
         throw unsupportedStructure(
             "DELETE_COLUMNS",
             sheet,
             "data validation " + validationRange,
-            "column structural edits that would move or truncate data validations are not supported");
+            "column structural edits that would move or truncate data validations are not"
+                + " supported");
       }
     }
     rejectDestructiveNamedRangesForColumnDelete(sheet.getWorkbook(), sheet, columns);
@@ -492,7 +494,7 @@ public final class StructuralEdits {
   public static void rejectAffectedColumnStructuresForShift(
       XSSFSheet sheet, ExcelColumnSpan columns, int delta) {
     for (XSSFTable table : sheet.getTables()) {
-      CellBounds range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
+      RangeRef range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
       if (affectsColumns(range, columns, delta)) {
         throw unsupportedStructure(
             "SHIFT_COLUMNS",
@@ -501,7 +503,7 @@ public final class StructuralEdits {
             "column structural edits that would move tables are not supported");
       }
     }
-    Optional<CellBounds> autofilter = sheetAutofilterRange(sheet);
+    Optional<RangeRef> autofilter = sheetAutofilterRange(sheet);
     if (autofilter.isPresent() && affectsColumns(autofilter.orElseThrow(), columns, delta)) {
       throw unsupportedStructure(
           "SHIFT_COLUMNS",
@@ -510,7 +512,7 @@ public final class StructuralEdits {
           "column structural edits that would move sheet autofilters are not supported");
     }
     for (String validationRange : dataValidationRanges(sheet)) {
-      CellBounds range = parsedRange(validationRange, "data validation", validationRange);
+      RangeRef range = parsedRange(validationRange, "data validation", validationRange);
       if (affectsColumns(range, columns, delta)) {
         throw unsupportedStructure(
             "SHIFT_COLUMNS",
@@ -551,7 +553,8 @@ public final class StructuralEdits {
             "SHIFT_ROWS",
             sheet,
             namedRange.label(),
-            "row structural edits that would overwrite or partially move range-backed named ranges are not supported");
+            "row structural edits that would overwrite or partially move range-backed named ranges"
+                + " are not supported");
       }
     }
   }
@@ -568,7 +571,8 @@ public final class StructuralEdits {
             "DELETE_COLUMNS",
             sheet,
             namedRange.label(),
-            "column structural edits that would truncate range-backed named ranges are not supported");
+            "column structural edits that would truncate range-backed named ranges are not"
+                + " supported");
       }
     }
   }
@@ -585,7 +589,8 @@ public final class StructuralEdits {
             "SHIFT_COLUMNS",
             sheet,
             namedRange.label(),
-            "column structural edits that would overwrite or partially move range-backed named ranges are not supported");
+            "column structural edits that would overwrite or partially move range-backed named"
+                + " ranges are not supported");
       }
     }
   }
@@ -595,12 +600,14 @@ public final class StructuralEdits {
     if (workbookContainsFormulas(workbook)) {
       throw new IllegalArgumentException(
           operationType
-              + " cannot run while workbook formulas are present; formula-bearing column structural edits are unsupported");
+              + " cannot run while workbook formulas are present; formula-bearing column structural"
+              + " edits are unsupported");
     }
     if (workbookContainsFormulaDefinedNames(workbook)) {
       throw new IllegalArgumentException(
           operationType
-              + " cannot run while formula-defined names are present; formula-bearing column structural edits are unsupported");
+              + " cannot run while formula-defined names are present; formula-bearing column"
+              + " structural edits are unsupported");
     }
   }
 
@@ -650,13 +657,10 @@ public final class StructuralEdits {
     List<ResolvedNamedRange> resolved = new ArrayList<>();
     for (Name name : names) {
       resolvedRangeBackedTarget(workbook, name)
-          .ifPresent(
-              target ->
-                  resolved.add(
-                      new ResolvedNamedRange(
-                          name.getNameName(),
-                          target,
-                          CellBounds.parse(((NamedRangeTarget.Range) target).range().value()))));
+          .ifPresent(target ->
+              resolved.add(
+                  new ResolvedNamedRange(
+                      name.getNameName(), target, ((NamedRangeTarget.Range) target).range())));
     }
     return List.copyOf(resolved);
   }
@@ -682,38 +686,38 @@ public final class StructuralEdits {
             + reason);
   }
 
-  public static boolean affectsRows(CellBounds range, ExcelRowSpan rows, int delta) {
+  public static boolean affectsRows(RangeRef range, ExcelRowSpan rows, int delta) {
     int affectedFirstRow = Math.min(rows.firstRowIndex(), rows.firstRowIndex() + delta);
     int affectedLastRow = Math.max(rows.lastRowIndex(), rows.lastRowIndex() + delta);
     return range.firstRow() <= affectedLastRow && range.lastRow() >= affectedFirstRow;
   }
 
-  public static boolean affectsColumns(CellBounds range, ExcelColumnSpan columns, int delta) {
+  public static boolean affectsColumns(RangeRef range, ExcelColumnSpan columns, int delta) {
     int affectedFirstColumn =
         Math.min(columns.firstColumnIndex(), columns.firstColumnIndex() + delta);
     int affectedLastColumn = Math.max(columns.lastColumnIndex(), columns.lastColumnIndex() + delta);
     return range.firstColumn() <= affectedLastColumn && range.lastColumn() >= affectedFirstColumn;
   }
 
-  private static boolean overlapsRows(CellBounds range, ExcelRowSpan rows) {
+  private static boolean overlapsRows(RangeRef range, ExcelRowSpan rows) {
     return range.firstRow() <= rows.lastRowIndex() && range.lastRow() >= rows.firstRowIndex();
   }
 
-  private static boolean overlapsColumns(CellBounds range, ExcelColumnSpan columns) {
+  private static boolean overlapsColumns(RangeRef range, ExcelColumnSpan columns) {
     return range.firstColumn() <= columns.lastColumnIndex()
         && range.lastColumn() >= columns.firstColumnIndex();
   }
 
-  private static boolean fullyWithinRows(CellBounds range, ExcelRowSpan rows) {
+  private static boolean fullyWithinRows(RangeRef range, ExcelRowSpan rows) {
     return range.firstRow() >= rows.firstRowIndex() && range.lastRow() <= rows.lastRowIndex();
   }
 
-  private static boolean fullyWithinColumns(CellBounds range, ExcelColumnSpan columns) {
+  private static boolean fullyWithinColumns(RangeRef range, ExcelColumnSpan columns) {
     return range.firstColumn() >= columns.firstColumnIndex()
         && range.lastColumn() <= columns.lastColumnIndex();
   }
 
-  public static boolean shiftWouldCorruptRows(CellBounds range, ExcelRowSpan rows, int delta) {
+  public static boolean shiftWouldCorruptRows(RangeRef range, ExcelRowSpan rows, int delta) {
     if (fullyWithinRows(range, rows)) {
       return false;
     }
@@ -723,7 +727,7 @@ public final class StructuralEdits {
   }
 
   public static boolean shiftWouldCorruptColumns(
-      CellBounds range, ExcelColumnSpan columns, int delta) {
+      RangeRef range, ExcelColumnSpan columns, int delta) {
     if (fullyWithinColumns(range, columns)) {
       return false;
     }
@@ -732,7 +736,7 @@ public final class StructuralEdits {
     return overlapsColumns(range, columns) || overlapsColumns(range, destination);
   }
 
-  public record ResolvedNamedRange(String name, NamedRangeTarget target, CellBounds range) {
+  public record ResolvedNamedRange(String name, NamedRangeTarget target, RangeRef range) {
     public ResolvedNamedRange {
       Objects.requireNonNull(name, "name must not be null");
       Objects.requireNonNull(target, "target must not be null");
@@ -748,7 +752,7 @@ public final class StructuralEdits {
     }
   }
 
-  private static Optional<CellBounds> sheetAutofilterRange(XSSFSheet sheet) {
+  private static Optional<RangeRef> sheetAutofilterRange(XSSFSheet sheet) {
     if (!sheet.getCTWorksheet().isSetAutoFilter()) {
       return Optional.empty();
     }
@@ -771,8 +775,8 @@ public final class StructuralEdits {
     return List.copyOf(ranges);
   }
 
-  private static CellBounds parsedRange(String rawRange, String structureType, String detail) {
-    Optional<CellBounds> range = SheetStructure.parseOptionalRange(rawRange);
+  private static RangeRef parsedRange(String rawRange, String structureType, String detail) {
+    Optional<RangeRef> range = SheetStructure.parseOptionalRange(rawRange);
     if (range.isEmpty()) {
       throw new IllegalArgumentException(
           "Stored " + structureType + " range is invalid and cannot be normalized: " + detail);

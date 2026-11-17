@@ -1,0 +1,18 @@
+--- org/apache/poi/ss/formula/atp/YearFrac.java
++++ org/apache/poi/ss/formula/atp/YearFrac.java
+@@ -95,13 +95,13 @@
+                 return dVal;
+             }
+             LocalDate date = DateParser.parseLocalDate(strVal);
+-            return checkDate(DateUtil.getExcelDate(date, false));
++            return checkDate(DateUtil.getExcelDate(date, org.apache.poi.ss.usermodel.DateSystemContext.is1904()));
+         }
+         return checkDate(OperandResolver.coerceValueToDouble(ve));
+     }
+ 
+     private static double checkDate(double serial) throws EvaluationException {
+-        if (serial < 0 || serial >= DateUtil.MAX_EXCEL_DATE_SERIAL + 1) {
++        if (serial < 0 || serial >= org.apache.poi.ss.usermodel.DateSystemContext.maximumSerial() + 1) {
+             throw new EvaluationException(ErrorEval.NUM_ERROR);
+         }
+         return serial;

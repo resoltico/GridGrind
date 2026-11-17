@@ -32,9 +32,9 @@ public final class EventWorkbookReader {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
     Objects.requireNonNull(commands, "commands must not be null");
 
-    try (OPCPackage pkg = OPCPackage.open(workbookPath.toFile(), PackageAccess.READ)) {
-      XSSFReader reader = new XSSFReader(pkg);
-      EventWorkbookMetadata metadata = EventWorkbookMetadata.workbookMetadata(reader);
+    try (OPCPackage pkg = openSourcePackage(workbookPath)) {
+      XSSFReader reader = sourceReader(pkg, workbookPath);
+      EventWorkbookMetadata metadata = sourceMetadata(reader, workbookPath);
       Map<String, EventSheetSummary> sheetSummaries = new ConcurrentHashMap<>();
       List<InspectionIntrospectionResult> results = new ArrayList<>();
       for (dev.erst.gridgrind.core.plan.ResolvedInspectionStep command : commands) {
@@ -42,11 +42,38 @@ public final class EventWorkbookReader {
         results.add(applyOne(reader, metadata, sheetSummaries, command));
       }
       return List.copyOf(results);
-    } catch (NotOfficeXmlFileException exception) {
-      throw new IllegalArgumentException("Only .xlsx workbooks are supported", exception);
-    } catch (OpenXML4JException | XmlException exception) {
-      throw new IOException(
-          "Failed to read workbook through the XSSF event model: " + workbookPath, exception);
+    }
+  }
+
+  private static OPCPackage openSourcePackage(Path path) throws IOException {
+    try {
+      return OPCPackage.open(path.toFile(), PackageAccess.READ);
+    } catch (NotOfficeXmlFileException
+        | org.apache.poi.openxml4j.exceptions.InvalidFormatException failure) {
+      throw new dev.erst.gridgrind.engine.backend.xssf.WorkbookNotOpenableException(path, failure);
+    } catch (RuntimeException failure) {
+      throw dev.erst.gridgrind.engine.backend.xssf.WorkbookSourceXmlRefusals.translate(failure);
+    }
+  }
+
+  private static XSSFReader sourceReader(OPCPackage pkg, Path path) throws IOException {
+    try {
+      return new XSSFReader(pkg);
+    } catch (org.apache.poi.openxml4j.exceptions.InvalidFormatException failure) {
+      throw new dev.erst.gridgrind.engine.backend.xssf.WorkbookNotOpenableException(path, failure);
+    } catch (OpenXML4JException | RuntimeException failure) {
+      throw dev.erst.gridgrind.engine.backend.xssf.WorkbookSourceXmlRefusals.translate(failure);
+    }
+  }
+
+  private static EventWorkbookMetadata sourceMetadata(XSSFReader reader, Path path)
+      throws IOException {
+    try {
+      return EventWorkbookMetadata.workbookMetadata(reader);
+    } catch (org.apache.poi.openxml4j.exceptions.InvalidFormatException failure) {
+      throw new dev.erst.gridgrind.engine.backend.xssf.WorkbookNotOpenableException(path, failure);
+    } catch (OpenXML4JException | XmlException | RuntimeException failure) {
+      throw dev.erst.gridgrind.engine.backend.xssf.WorkbookSourceXmlRefusals.translate(failure);
     }
   }
 
@@ -150,10 +177,22 @@ public final class EventWorkbookReader {
       xmlReader.setContentHandler(handler);
       xmlReader.parse(new InputSource(inputStream));
       return handler.summary();
-    } catch (IOException | SAXException exception) {
-      throw new IOException("Failed to parse sheet " + sheet.name(), exception);
-    } catch (Exception exception) {
-      throw new IOException("Failed to parse sheet " + sheet.name(), exception);
+    } catch (org.apache.poi.openxml4j.exceptions.InvalidFormatException failure) {
+      throw new dev.erst.gridgrind.engine.backend.xssf.WorkbookContentRefusalException(
+          dev.erst.gridgrind.core.problem.WorkbookContentIssue.INVALID_NATIVE_VALUE,
+          java.util.Optional.of(
+              new dev.erst.gridgrind.core.problem.WorkbookContentLocation(
+                  java.util.Optional.of(
+                      new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheet.name())),
+                  java.util.Optional.empty(),
+                  java.util.Optional.of("sheet.relationship"),
+                  java.util.Optional.empty(),
+                  java.util.Optional.empty())),
+          failure);
+    } catch (SAXException
+        | javax.xml.parsers.ParserConfigurationException
+        | RuntimeException failure) {
+      throw dev.erst.gridgrind.engine.backend.xssf.WorkbookSourceXmlRefusals.translate(failure);
     }
   }
 }

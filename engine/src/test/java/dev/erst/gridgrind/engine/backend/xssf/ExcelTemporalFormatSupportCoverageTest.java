@@ -17,48 +17,55 @@ class ExcelTemporalFormatSupportCoverageTest {
   void observedKindDistinguishesDatesAndDateTimes() {
     assertEquals(Optional.empty(), TemporalFormats.observedKind("0.00"));
     assertEquals(
-        Optional.of(TemporalFormats.ObservedKind.DATE), TemporalFormats.observedKind("m/d/yyyy"));
+        Optional.of(dev.erst.gridgrind.core.model.value.CellTemporalKind.DATE),
+        TemporalFormats.observedKind("m/d/yyyy"));
     assertEquals(
-        Optional.of(TemporalFormats.ObservedKind.TIME), TemporalFormats.observedKind("h:mm"));
+        Optional.of(dev.erst.gridgrind.core.model.value.CellTemporalKind.TIME),
+        TemporalFormats.observedKind("h:mm"));
     assertEquals(
-        Optional.of(TemporalFormats.ObservedKind.TIME), TemporalFormats.observedKind("mm:ss"));
+        Optional.of(dev.erst.gridgrind.core.model.value.CellTemporalKind.TIME),
+        TemporalFormats.observedKind("mm:ss"));
     assertEquals(
-        Optional.of(TemporalFormats.ObservedKind.DATE_TIME),
+        Optional.of(dev.erst.gridgrind.core.model.value.CellTemporalKind.DATE_TIME),
         TemporalFormats.observedKind("m/d/yyyy h:mm"));
     assertEquals(
-        Optional.of(TemporalFormats.ObservedKind.TIME), TemporalFormats.observedKind("[h]:mm:ss"));
+        Optional.of(dev.erst.gridgrind.core.model.value.CellTemporalKind.ELAPSED),
+        TemporalFormats.observedKind("[h]:mm:ss"));
     assertTrue(
-        java.util.EnumSet.allOf(TemporalFormats.ObservedKind.class)
-            .contains(TemporalFormats.ObservedKind.DATE_TIME));
+        java.util.EnumSet.allOf(dev.erst.gridgrind.core.model.value.CellTemporalKind.class)
+            .contains(dev.erst.gridgrind.core.model.value.CellTemporalKind.DATE_TIME));
   }
 
   @Test
   void normalizeFormatHandlesQuotesEscapesAndBracketSections() {
     assertEquals("m/d/yyyy  h:mm", normalize("m/d/yyyy \"at\" h:mm"));
     assertEquals("mdyyyy", normalize("m\\/d\\/yyyy"));
-    assertEquals("h:mm:ss", normalize("[h]:mm:ss"));
-    assertEquals("s", normalize("[s]"));
+    assertEquals("[h]:mm:ss", normalize("[h]:mm:ss"));
+    assertEquals("[s]", normalize("[s]"));
     assertEquals("m/d/yyyy", normalize("[Red]m/d/yyyy"));
     assertEquals("m/d/yyyy [", normalize("m/d/yyyy ["));
     assertEquals("\\", normalize("\\"));
     assertEquals(
-        Optional.of(TemporalFormats.ObservedKind.DATE_TIME),
+        Optional.of(dev.erst.gridgrind.core.model.value.CellTemporalKind.DATE_TIME),
         TemporalFormats.observedKind("m/d/yyyy AM/PM"));
     assertEquals(
-        Optional.of(TemporalFormats.ObservedKind.DATE_TIME),
+        Optional.of(dev.erst.gridgrind.core.model.value.CellTemporalKind.DATE_TIME),
         TemporalFormats.observedKind("m/d/yyyy A/P"));
     assertEquals(
-        Optional.of(TemporalFormats.ObservedKind.DATE_TIME),
+        Optional.of(dev.erst.gridgrind.core.model.value.CellTemporalKind.DATE_TIME),
         TemporalFormats.observedKind("m/d/yyyy h"));
     assertEquals(
-        Optional.of(TemporalFormats.ObservedKind.DATE_TIME),
+        Optional.of(dev.erst.gridgrind.core.model.value.CellTemporalKind.DATE_TIME),
         TemporalFormats.observedKind("m/d/yyyy s"));
     assertEquals(
-        Optional.of(TemporalFormats.ObservedKind.DATE), TemporalFormats.observedKind("m/d/yyyy"));
+        Optional.of(dev.erst.gridgrind.core.model.value.CellTemporalKind.DATE),
+        TemporalFormats.observedKind("m/d/yyyy"));
     assertEquals(
-        Optional.of(TemporalFormats.ObservedKind.TIME), TemporalFormats.observedKind("h:mm"));
+        Optional.of(dev.erst.gridgrind.core.model.value.CellTemporalKind.TIME),
+        TemporalFormats.observedKind("h:mm"));
     assertEquals(
-        Optional.of(TemporalFormats.ObservedKind.TIME), TemporalFormats.observedKind("mm:ss"));
+        Optional.of(dev.erst.gridgrind.core.model.value.CellTemporalKind.TIME),
+        TemporalFormats.observedKind("mm:ss"));
   }
 
   @Test

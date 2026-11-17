@@ -41,12 +41,12 @@ class DynamicAutofilterCodecTest {
     var plan =
         GridGrindJson.readRequest(
             """
-        {"protocolVersion":1,"source":{"type":"NEW"},
-         "persistence":{"type":"SAVE_AS","path":"out.xlsx","ifExists":"REPLACE"},
-         "steps":[{"stepId":"filter","target":{"type":"RANGE_BY_RANGE","sheetName":"Data","range":"A1:A3"},
-           "action":{"type":"SET_AUTOFILTER","criteria":[{"columnId":0,
-             "criterion":{"type":"DYNAMIC","dynamicType":"today"}}]}}]}
-        """);
+            {"protocolVersion":1,"source":{"type":"NEW"},
+             "persistence":{"type":"SAVE_AS","path":"out.xlsx","ifExists":"REPLACE"},
+             "steps":[{"stepId":"filter","target":{"type":"RANGE_BY_RANGE","sheetName":"Data","range":"A1:A3"},
+               "action":{"type":"SET_AUTOFILTER","criteria":[{"columnId":0,
+                 "criterion":{"type":"DYNAMIC","dynamicType":"today"}}]}}]}
+            """);
     var step = assertInstanceOf(MutationStep.class, plan.steps().getFirst());
     var action = assertInstanceOf(StructuredMutationAction.SetAutofilter.class, step.action());
     var criterion =

@@ -11,7 +11,6 @@ import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackSpec;
 import dev.erst.gridgrind.core.model.formula.ResolvedExternalWorkbook;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -120,11 +119,31 @@ class ExcelFormulaEnvironmentTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
-      workbook.sheet("Budget").cells().setCell("C1", new ResolvedFormula("A1*3"));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(2.0d));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new ResolvedFormula("A1*2"));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+              new ResolvedFormula("A1*3"));
       workbook.formulas().evaluateAll();
-      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(4.0d));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(4.0d));
       workbook
           .formulas()
           .evaluate(List.of(new FormulaCellTarget(new SheetName("Budget"), new CellAddress("B1"))));
@@ -147,9 +166,24 @@ class ExcelFormulaEnvironmentTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
-      workbook.sheet("Budget").cells().setCell("C1", new ResolvedFormula("A1*3"));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(2.0d));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new ResolvedFormula("A1*2"));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+              new ResolvedFormula("A1*3"));
       workbook.formulas().evaluateAll();
       workbook.formulas().clearCaches();
       workbook
@@ -173,8 +207,18 @@ class ExcelFormulaEnvironmentTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(2.0d));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new ResolvedFormula("A1*2"));
 
       assertEquals(
           List.of(
@@ -228,8 +272,18 @@ class ExcelFormulaEnvironmentTest {
       throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(2.0d));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new ResolvedFormula("A1*2"));
 
       assertEquals(
           List.of(
@@ -301,7 +355,11 @@ class ExcelFormulaEnvironmentTest {
                 poiWorkbook,
                 FormulaRuntimeTestDouble.alwaysFail(new IllegalStateException("boom")))) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", new ResolvedFormula("1+1"));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), new ResolvedFormula("1+1"));
 
       IllegalStateException failure =
           assertThrows(IllegalStateException.class, workbook.formulas()::assessAllCapabilities);

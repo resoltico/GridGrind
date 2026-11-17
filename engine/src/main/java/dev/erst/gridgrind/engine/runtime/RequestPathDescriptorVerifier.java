@@ -44,7 +44,14 @@ final class RequestPathDescriptorVerifier {
   static void reverifyDirectories(RequestPathDescriptorChain chain) throws IOException {
     List<RequestPathBoundDirectory> directories = chain.directories();
     RequestPathBoundDirectory root = directories.getFirst();
-    if (!root.identity().equals(RequestPathTopology.identityOf(root.path(), true))) {
+    if (!root.identity().equals(RequestPathTopology.identityOf(root.path(), true))
+        || !root.identity()
+            .equals(
+                RequestPathTopology.identityOf(
+                    root.stream()
+                        .getFileAttributeView(java.nio.file.attribute.BasicFileAttributeView.class),
+                    root.path(),
+                    true))) {
       throw topologyChanged(chain.resolvedPath());
     }
     for (int index = 1; index < directories.size(); index++) {

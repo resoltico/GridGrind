@@ -32,7 +32,7 @@ public final class EventSheetSummaryHandler extends DefaultHandler {
   private void handleRow(Attributes attributes) {
     physicalRowCount++;
     String rowRef = attributes.getValue("r");
-    int rowIndex = rowRef == null ? nextRowIndex : Integer.parseInt(rowRef) - 1;
+    int rowIndex = rowRef == null ? nextRowIndex : indexAttribute(rowRef, "worksheet.row.r");
     lastRowIndex = Math.max(lastRowIndex, rowIndex);
     nextRowIndex = rowIndex + 1;
   }
@@ -50,7 +50,25 @@ public final class EventSheetSummaryHandler extends DefaultHandler {
     if (max == null || max.isBlank()) {
       return;
     }
-    lastColumnIndex = Math.max(lastColumnIndex, Integer.parseInt(max) - 1);
+    lastColumnIndex = Math.max(lastColumnIndex, indexAttribute(max, "worksheet.col.max"));
+  }
+
+  /** Classifies only the explicit native numeric attribute conversion at its input boundary. */
+  private static int indexAttribute(String value, String field) {
+    try {
+      return Integer.parseInt(value) - 1;
+    } catch (NumberFormatException malformed) {
+      throw new dev.erst.gridgrind.engine.backend.xssf.WorkbookContentRefusalException(
+          dev.erst.gridgrind.core.problem.WorkbookContentIssue.INVALID_NATIVE_VALUE,
+          java.util.Optional.of(
+              new dev.erst.gridgrind.core.problem.WorkbookContentLocation(
+                  java.util.Optional.empty(),
+                  java.util.Optional.empty(),
+                  java.util.Optional.of(field),
+                  java.util.Optional.empty(),
+                  java.util.Optional.empty())),
+          malformed);
+    }
   }
 
   private SheetProtectionReport sheetProtection(Attributes attributes) {

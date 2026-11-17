@@ -1,0 +1,44 @@
+--- org/apache/poi/ss/formula/functions/DateFunc.java
++++ org/apache/poi/ss/formula/functions/DateFunc.java
+@@ -46,6 +46,7 @@
+             double d2 = NumericFunction.singleOperandEvaluate(arg2, srcRowIndex, srcColumnIndex);
+             result = evaluate(getYear(d0), OperandResolver.coerceDoubleToInt(d1 - 1), OperandResolver.coerceDoubleToInt(d2));
+             NumericFunction.checkValue(result);
++            if (result < 0 || result >= org.apache.poi.ss.usermodel.DateSystemContext.maximumSerial()+1) return ErrorEval.NUM_ERROR;
+         } catch (EvaluationException e) {
+             return e.getErrorEval();
+         }
+@@ -69,14 +70,14 @@
+         
+         // Excel has bugs around leap years in 1900, handle them
+         // Special case for the non-existent 1900 leap year
+-        if (year == 1900 && month == Calendar.FEBRUARY && pDay == 29) {
++        if (!org.apache.poi.ss.usermodel.DateSystemContext.is1904() && year == 1900 && month == Calendar.FEBRUARY && pDay == 29) {
+             return 60.0;
+         }
+ 
+         // If they give a date in 1900 in Jan/Feb, with the days
+         //  putting it past the leap year, adjust
+         int day = pDay;
+-        if (year == 1900) {
++        if (!org.apache.poi.ss.usermodel.DateSystemContext.is1904() && year == 1900) {
+             if ((month == Calendar.JANUARY && day >= 60) ||
+                     (month == Calendar.FEBRUARY && day >= 30)) {
+                 day--;
+@@ -88,14 +89,14 @@
+         
+         // Handle negative days of the week, that pull us across
+         //  the 29th of Feb 1900
+-        if (pDay < 0 && c.get(Calendar.YEAR) == 1900 &&
++        if (!org.apache.poi.ss.usermodel.DateSystemContext.is1904() && pDay < 0 && c.get(Calendar.YEAR) == 1900 &&
+               month > Calendar.FEBRUARY && 
+               c.get(Calendar.MONTH) < Calendar.MARCH) {
+            c.add(Calendar.DATE, 1);
+         }
+ 
+         // TODO Identify if we're doing 1900 or 1904 date windowing
+-        boolean use1904windowing = false;
++        boolean use1904windowing = org.apache.poi.ss.usermodel.DateSystemContext.is1904();
+         
+         // Have this Java date turned back into an Excel one
+         return DateUtil.getExcelDate(c.getTime(), use1904windowing);

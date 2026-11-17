@@ -57,23 +57,6 @@ configure<PitestPluginExtension> {
     )
 }
 
-val downstreamCoverageProjects =
-    listOf(project(":json"), project(":engine"), project(":cli"))
-
-fun downstreamCoverageTaskPaths(): List<String> =
-    downstreamCoverageProjects.flatMap { downstreamProject ->
-        downstreamProject.coverageTestTasks().map { task -> task.path }
-    }
-
-fun downstreamCoverageExecutionData() =
-    provider {
-        downstreamCoverageProjects.flatMap { downstreamProject ->
-            downstreamProject.coverageTestTasks().map { testTask ->
-                testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile
-            }
-        }
-    }
-
 fun localCoverageExecutionData() =
     provider {
         listOf(
@@ -86,12 +69,8 @@ fun localCoverageExecutionData() =
     }
 
 dependencies {
-    testImplementation(testFixtures(project(":engine")))
     testImplementation(libs.junit.jupiter)
-    testImplementation(libs.poi.ooxml)
-    testImplementation(libs.poi.ooxml.full)
     testRuntimeOnly(libs.junit.platform.launcher)
-    testRuntimeOnly(libs.log4j.core)
 }
 
 tasks.named<Test>("test") {
@@ -105,6 +84,4 @@ tasks.named<Test>("test") {
 tasks.named<JacocoReport>("jacocoTestReport") {
     dependsOn(tasks.named<Test>("test"))
     executionData.from(localCoverageExecutionData())
-    dependsOn(downstreamCoverageTaskPaths())
-    executionData.from(downstreamCoverageExecutionData())
 }

@@ -41,62 +41,63 @@ class WireStringPropertyTest {
   @SuppressWarnings("PMD.UnitTestShouldIncludeAssert") // Assertions execute in each dynamic case.
   Stream<DynamicTest> validAndInvalidDomainStrings() {
     return domains().stream()
-        .flatMap(
-            domain ->
-                Stream.of(
-                    DynamicTest.dynamicTest(
-                        domain.type().getSimpleName() + "/generated-valid",
-                        () -> {
-                          for (String text : domain.valid()) {
-                            WireString value = domain.construct().apply(text);
-                            byte[] bytes =
-                                GridGrindJsonMapperSupport.JSON_MAPPER.writeValueAsBytes(value);
-                            assertEquals(
-                                value,
-                                GridGrindJsonMapperSupport.JSON_MAPPER.readValue(
-                                    bytes, domain.type()),
-                                text);
-                            String expected =
-                                domain.type() == RgbHex.class
-                                    ? text.toUpperCase(java.util.Locale.ROOT)
+        .flatMap(domain ->
+            Stream.of(
+                DynamicTest.dynamicTest(
+                    domain.type().getSimpleName() + "/generated-valid",
+                    () -> {
+                      for (String text : domain.valid()) {
+                        WireString value = domain.construct().apply(text);
+                        byte[] bytes =
+                            GridGrindJsonMapperSupport.JSON_MAPPER.writeValueAsBytes(value);
+                        assertEquals(
+                            value,
+                            GridGrindJsonMapperSupport.JSON_MAPPER.readValue(bytes, domain.type()),
+                            text);
+                        String expected =
+                            domain.type() == RgbHex.class
+                                ? text.toUpperCase(java.util.Locale.ROOT)
+                                : domain.type() == CellAddress.class
+                                        || domain.type() == RangeRef.class
+                                    ? canonicalCoordinates(text)
                                     : text;
-                            assertEquals(expected, value.value());
-                            assertArrayEquals(
-                                GridGrindJsonMapperSupport.JSON_MAPPER.writeValueAsBytes(expected),
-                                bytes);
-                            assertEquals(value.value(), value.toString());
-                          }
-                        }),
-                    DynamicTest.dynamicTest(
-                        domain.type().getSimpleName() + "/generated-invalid",
-                        () -> {
-                          assertThrows(
-                              NullPointerException.class, () -> domain.construct().apply(null));
-                          for (String text : domain.invalid()) {
-                            assertThrows(
-                                IllegalArgumentException.class,
-                                () -> domain.construct().apply(text),
-                                text);
-                            String json =
-                                GridGrindJsonMapperSupport.JSON_MAPPER.writeValueAsString(text);
-                            JacksonException failure =
-                                assertThrows(
-                                    JacksonException.class,
-                                    () ->
-                                        GridGrindJsonMapperSupport.JSON_MAPPER.readValue(
-                                            json, domain.type()),
-                                    text);
-                            assertInstanceOf(InvalidRequestException.class, failure.getCause());
-                          }
-                          for (String json : List.of("1", "true", "{}", "[]")) {
+                        assertEquals(expected, value.value());
+                        assertArrayEquals(
+                            GridGrindJsonMapperSupport.JSON_MAPPER.writeValueAsBytes(expected),
+                            bytes);
+                        assertEquals(value.value(), value.toString());
+                      }
+                    }),
+                DynamicTest.dynamicTest(
+                    domain.type().getSimpleName() + "/generated-invalid",
+                    () -> {
+                      assertThrows(
+                          NullPointerException.class, () -> domain.construct().apply(null));
+                      for (String text : domain.invalid()) {
+                        assertThrows(
+                            IllegalArgumentException.class,
+                            () -> domain.construct().apply(text),
+                            text);
+                        String json =
+                            GridGrindJsonMapperSupport.JSON_MAPPER.writeValueAsString(text);
+                        JacksonException failure =
                             assertThrows(
                                 JacksonException.class,
                                 () ->
                                     GridGrindJsonMapperSupport.JSON_MAPPER.readValue(
                                         json, domain.type()),
-                                json);
-                          }
-                        })));
+                                text);
+                        assertInstanceOf(InvalidRequestException.class, failure.getCause());
+                      }
+                      for (String json : List.of("1", "true", "{}", "[]")) {
+                        assertThrows(
+                            JacksonException.class,
+                            () ->
+                                GridGrindJsonMapperSupport.JSON_MAPPER.readValue(
+                                    json, domain.type()),
+                            json);
+                      }
+                    })));
   }
 
   @Test
@@ -118,7 +119,7 @@ class WireStringPropertyTest {
             Optional.of(new SheetName("Budget")),
             List.of(new CellAddress("A1"), new CellAddress("$XFD$1048576")));
     String json = GridGrindJsonMapperSupport.WIRE_JSON_MAPPER.writeValueAsString(value);
-    assertEquals("{\"sheet\":\"Budget\",\"cells\":[\"A1\",\"$XFD$1048576\"]}", json);
+    assertEquals("{\"sheet\":\"Budget\",\"cells\":[\"A1\",\"XFD1048576\"]}", json);
     assertEquals(value, GridGrindJsonMapperSupport.JSON_MAPPER.readValue(json, Envelope.class));
     String missing =
         GridGrindJsonMapperSupport.WIRE_JSON_MAPPER.writeValueAsString(
@@ -131,7 +132,7 @@ class WireStringPropertyTest {
         GridGrindJsonMapperSupport.JSON_MAPPER.readValue(
             "[\"Budget\",\"Forecast\"]", new TypeReference<List<SheetName>>() {});
     assertEquals(List.of(new SheetName("Budget"), new SheetName("Forecast")), sheets);
-    assertEquals("B2:A1", new RangeRef("B2:A1").value());
+    assertThrows(IllegalArgumentException.class, () -> new RangeRef("B2:A1"));
   }
 
   @Test
@@ -157,10 +158,10 @@ class WireStringPropertyTest {
             () ->
                 GridGrindJson.readRequest(
                     """
-            {"protocolVersion":1,"source":{"type":"NEW"},"persistence":{"type":"NONE"},
-            "steps":[{"stepId":"cells","target":{"type":"CELL_BY_ADDRESSES","sheetName":"Data",
-            "addresses":["A1","A0"]},"query":{"type":"GET_CELLS"}}]}
-            """));
+                    {"protocolVersion":1,"source":{"type":"NEW"},"persistence":{"type":"NONE"},
+                    "steps":[{"stepId":"cells","target":{"type":"CELL_BY_ADDRESSES","sheetName":"Data",
+                    "addresses":["A1","A0"]},"query":{"type":"GET_CELLS"}}]}
+                    """));
     assertEquals(Optional.of("steps[0].target.addresses[1]"), failure.jsonPath());
     var problem = assertInstanceOf(FieldValidationProblem.class, failure.requestProblem());
     assertEquals(FieldValidationAddressRule.ADDRESS_SYNTAX, problem.rule());
@@ -205,7 +206,7 @@ class WireStringPropertyTest {
   private static List<Domain> domains() {
     SplittableRandom random = new SplittableRandom(20261025);
     List<String> cells = new ArrayList<>(List.of("A1", "$a$1", "XFD1048576"));
-    List<String> ranges = new ArrayList<>(List.of("A1", "$A1:B$2", "B2:A1"));
+    List<String> ranges = new ArrayList<>(List.of("A1", "$A1:B$2", "A1:B2"));
     List<String> sheets = new ArrayList<>(List.of("Budget", "予算", "a".repeat(31), "Forecast 2026"));
     List<String> names = new ArrayList<>(List.of("Revenue_Total", "_budget", "売上", "\\name"));
     List<String> colors = new ArrayList<>(List.of("#000000", "#FFFFFF", "#a1b2c3"));
@@ -241,11 +242,14 @@ class WireStringPropertyTest {
       String cell =
           CellReference.convertNumToColString(random.nextInt(16384)) + random.nextInt(1, 1048577);
       cells.add(cell);
+      int firstColumn = random.nextInt(16384);
+      int firstRow = random.nextInt(1, 1048577);
       ranges.add(
-          cell
+          CellReference.convertNumToColString(firstColumn)
+              + firstRow
               + ":"
-              + CellReference.convertNumToColString(random.nextInt(16384))
-              + random.nextInt(1, 1048577));
+              + CellReference.convertNumToColString(random.nextInt(firstColumn, 16384))
+              + random.nextInt(firstRow, 1048577));
       sheets.add("Sheet " + index);
       names.add("Name_" + index);
       colors.add("#%06x".formatted(random.nextInt(0x1000000)));
@@ -290,6 +294,12 @@ class WireStringPropertyTest {
         new Domain(RgbHex.class, RgbHex::new, colors, invalidColors),
         new Domain(StepId.class, StepId::new, steps, invalidSteps),
         new Domain(PlanId.class, PlanId::new, plans, invalidPlans));
+  }
+
+  private static String canonicalCoordinates(String text) {
+    String value = text.replace("$", "").toUpperCase(java.util.Locale.ROOT);
+    String[] endpoints = value.split(":");
+    return endpoints.length == 2 && endpoints[0].equals(endpoints[1]) ? endpoints[0] : value;
   }
 
   private record Domain(

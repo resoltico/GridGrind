@@ -151,7 +151,8 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
     assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
     assertEquals("Missing value for --request", failure.primaryProblem().message());
     assertEquals(
-        "Provide a readable request JSON file, or use --request - with an explicit --execution-root.",
+        "Provide a readable request JSON file, or use --request - with an explicit"
+            + " --execution-root.",
         failure.primaryProblem().resolution());
   }
 
@@ -449,10 +450,9 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
             .resolve("nested")
             .resolve("response.json");
     GridGrindCli cli =
-        GridGrindCli.forTesting(
-            (request, bindings, sink) -> {
-              throw new UnsupportedOperationException("boom");
-            });
+        GridGrindCli.forTesting((request, bindings, sink) -> {
+          throw new UnsupportedOperationException("boom");
+        });
 
     int exitCode =
         cli.run(
@@ -480,10 +480,9 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     GridGrindCli cli =
-        GridGrindCli.forTesting(
-            (request, bindings, sink) -> {
-              throw new UnsupportedOperationException("boom");
-            });
+        GridGrindCli.forTesting((request, bindings, sink) -> {
+          throw new UnsupportedOperationException("boom");
+        });
 
     int exitCode =
         cli.run(
@@ -522,10 +521,9 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     GridGrindCli cli =
-        GridGrindCli.forTesting(
-            (request, bindings, sink) -> {
-              throw new UnsupportedOperationException("boom");
-            });
+        GridGrindCli.forTesting((request, bindings, sink) -> {
+          throw new UnsupportedOperationException("boom");
+        });
 
     int exitCode =
         cli.run(
@@ -565,10 +563,9 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
   void redactsInternalExecutionErrorsWithoutMessages() throws IOException {
     Path responsePath = Path.of("gridgrind-cli-response-" + UUID.randomUUID() + ".json");
     GridGrindCli cli =
-        GridGrindCli.forTesting(
-            (request, bindings, sink) -> {
-              throw new UnsupportedOperationException();
-            });
+        GridGrindCli.forTesting((request, bindings, sink) -> {
+          throw new UnsupportedOperationException();
+        });
 
     try {
       int exitCode =
@@ -771,7 +768,8 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.primaryProblem().code());
     assertEquals("run", failure.command());
     assertEquals(
-        "Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.",
+        "Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored"
+            + " payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.",
         failure.primaryProblem().message());
   }
 
@@ -833,10 +831,9 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     GridGrindCli cli =
-        GridGrindCli.forTesting(
-            (request, bindings, sink) -> {
-              throw new UnsupportedOperationException("boom");
-            });
+        GridGrindCli.forTesting((request, bindings, sink) -> {
+          throw new UnsupportedOperationException("boom");
+        });
 
     int exitCode =
         cli.run(

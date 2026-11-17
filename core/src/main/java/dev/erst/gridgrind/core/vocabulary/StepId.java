@@ -13,7 +13,9 @@ public record StepId(String value) implements WireString {
   public StepId {
     value = TextValidation.requireNonBlank(value, "stepId");
     if (!PATTERN.matcher(value).matches()) {
-      throw new IllegalArgumentException("stepId must match [A-Za-z0-9._-]+");
+      throw new dev.erst.gridgrind.core.problem.ValueInvariantException(
+          new dev.erst.gridgrind.core.problem.MessageInvariant(
+              "stepId must match [A-Za-z0-9._-]+", java.util.Optional.of("stepId")));
     }
   }
 

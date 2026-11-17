@@ -21,12 +21,11 @@ public record PictureSpec(
     Objects.requireNonNull(image, "image must not be null");
     anchor = requireTwoCellAnchor(anchor);
     Objects.requireNonNull(description, "description must not be null");
-    description.ifPresent(
-        value -> {
-          if (value instanceof TextSourceSpec.Inline inline && inline.text().isBlank()) {
-            throw new IllegalArgumentException("description must not be blank");
-          }
-        });
+    description.ifPresent(value -> {
+      if (value instanceof TextSourceSpec.Inline inline && inline.text().isBlank()) {
+        throw new IllegalArgumentException("description must not be blank");
+      }
+    });
   }
 
   private static DrawingAnchorSpec requireTwoCellAnchor(DrawingAnchorSpec anchor) {

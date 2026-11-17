@@ -171,38 +171,35 @@ class ExcelConditionalFormattingDomainModelTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty()));
-    assertDoesNotThrow(
-        () ->
-            new DifferentialBorderPatch(
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.of(side)));
-    assertDoesNotThrow(
-        () ->
-            new DifferentialStylePatch(
-                Optional.empty(),
-                Optional.of(true),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty()));
-    assertDoesNotThrow(
-        () ->
-            new DifferentialStylePatch(
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.ofNullable(border)));
+    assertDoesNotThrow(() ->
+        new DifferentialBorderPatch(
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(side)));
+    assertDoesNotThrow(() ->
+        new DifferentialStylePatch(
+            Optional.empty(),
+            Optional.of(true),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty()));
+    assertDoesNotThrow(() ->
+        new DifferentialStylePatch(
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.ofNullable(border)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -287,19 +284,18 @@ class ExcelConditionalFormattingDomainModelTest {
                 Optional.empty(),
                 Optional.empty(),
                 List.of()));
-    assertDoesNotThrow(
-        () ->
-            new DifferentialStyleReport(
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                List.of(ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT)));
+    assertDoesNotThrow(() ->
+        new DifferentialStyleReport(
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            List.of(ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT)));
   }
 
   @Test
@@ -320,33 +316,27 @@ class ExcelConditionalFormattingDomainModelTest {
                     Optional.empty(),
                     Optional.empty())));
     assertEquals("=A1>0", rule.formula());
-    assertDoesNotThrow(
-        () ->
-            new ConditionalFormattingThresholdReport(
-                ExcelConditionalFormattingThresholdType.NUMBER, null, 1.0d));
-    assertDoesNotThrow(
-        () ->
-            new ConditionalFormattingThresholdReport(
-                ExcelConditionalFormattingThresholdType.FORMULA, "A1", null));
-    assertDoesNotThrow(
-        () ->
-            new ConditionalFormattingEntryReport(
-                List.of("A1:A3").stream()
-                    .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
-                    .toList(),
-                List.of(
-                    new ConditionalFormattingRuleReport.UnsupportedRule(
-                        1, false, "FORMULA", "detail"))));
+    assertDoesNotThrow(() ->
+        new ConditionalFormattingThresholdReport(
+            ExcelConditionalFormattingThresholdType.NUMBER, null, 1.0d));
+    assertDoesNotThrow(() ->
+        new ConditionalFormattingThresholdReport(
+            ExcelConditionalFormattingThresholdType.FORMULA, "A1", null));
+    assertDoesNotThrow(() ->
+        new ConditionalFormattingEntryReport(
+            List.of("A1:A3").stream()
+                .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                .toList(),
+            List.of(
+                new ConditionalFormattingRuleReport.UnsupportedRule(
+                    1, false, "FORMULA", "detail"))));
 
-    assertDoesNotThrow(
-        () ->
-            new ConditionalFormattingEntryReport(
-                List.of(" ").stream()
-                    .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
-                    .toList(),
-                List.of(
-                    new ConditionalFormattingRuleReport.UnsupportedRule(
-                        1, false, "FORMULA", "detail"))));
+    assertDoesNotThrow(() ->
+        new ConditionalFormattingEntryReport(
+            List.of(" ").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            List.of(
+                new ConditionalFormattingRuleReport.UnsupportedRule(
+                    1, false, "FORMULA", "detail"))));
 
     assertThrows(
         NullPointerException.class,

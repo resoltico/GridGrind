@@ -63,12 +63,23 @@ final class FullXssfWorkflow implements ExecutionBackend<FullXssfWorkflow.Call> 
 
   record Call(
       ProtocolVersion protocolVersion,
-      ResolvedPlan plan,
+      RequestPreflight.PreparedRequest prepared,
       XssfWorkbook workbook,
       dev.erst.gridgrind.core.plan.ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,
-      ExecutionJournalRecorder journal,
-      ExecutionInputBindings bindings) {}
+      ExecutionJournalRecorder journal) {
+    Call {
+      Objects.requireNonNull(prepared, "prepared must not be null");
+    }
+
+    ResolvedPlan plan() {
+      return prepared.plan();
+    }
+
+    ExecutionInputBindings bindings() {
+      return prepared.bindings();
+    }
+  }
 
   @Override
   public BackendCapabilities.Mode capabilities() {

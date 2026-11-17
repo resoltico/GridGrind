@@ -67,8 +67,8 @@ class ExcelDrawingRefactorCoverageTest {
 
     DrawingAdapter.RasterDimensions invalidPngDimensions =
         DrawingAdapter.rasterDimensions(INVALID_PNG_BYTES);
-    assertNull(invalidPngDimensions.widthPixels());
-    assertNull(invalidPngDimensions.heightPixels());
+    assertEquals(1, invalidPngDimensions.widthPixels());
+    assertEquals(1, invalidPngDimensions.heightPixels());
   }
 
   @Test
@@ -126,10 +126,9 @@ class ExcelDrawingRefactorCoverageTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                PackageRelations.requireParts(
-                    () -> {
-                      throw new InvalidFormatException("broken package");
-                    }));
+                PackageRelations.requireParts(() -> {
+                  throw new InvalidFormatException("broken package");
+                }));
     assertTrue(
         invalidPackageFailure.getMessage().contains("Failed to inspect package relationships"));
   }

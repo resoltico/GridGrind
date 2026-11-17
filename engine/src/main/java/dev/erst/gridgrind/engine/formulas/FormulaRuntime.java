@@ -130,7 +130,7 @@ public interface FormulaRuntime extends AutoCloseable {
   /** Rewrites authored `ARGn` placeholders into workbook-scoped scratch defined names. */
   public static String toScratchFormula(String formulaTemplate) {
     java.util.regex.Matcher matcher = ARGUMENT_PLACEHOLDER_PATTERN.matcher(formulaTemplate);
-    StringBuffer translated = new StringBuffer();
+    StringBuilder translated = new StringBuilder();
     while (matcher.find()) {
       matcher.appendReplacement(
           translated, scratchArgumentName(Integer.parseInt(matcher.group(1))));

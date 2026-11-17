@@ -10,17 +10,17 @@ import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 /** Request-scoped mutable facts for one full-XSSF execution; never shared beyond that execution. */
 final class FullXssfWorkflowState {
   private final WorkbookWorkflowExecutionContext executionContext;
+  private final ExecutionSession session;
   private final ResolvedPlan plan;
   private final WorkbookLocation workbookLocation;
-  private final List<AssertionResult> hostAssertions = new ArrayList<>();
-  private final List<Preservation> hostPreservation = new ArrayList<>();
+  private final List<AssertionResult> hostAssertions;
+  private final List<Preservation> hostPreservation;
   private final CollectedAssertionFailures collectedAssertionFailures =
       new CollectedAssertionFailures();
   private final FormulaOriginTracker formulaOrigins = new FormulaOriginTracker();
@@ -35,6 +35,7 @@ final class FullXssfWorkflowState {
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {
+    this.session = bindings.session();
     this.plan = Objects.requireNonNull(plan, "plan must not be null");
     WorkbookPlan request = plan.request();
     Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
@@ -43,8 +44,10 @@ final class FullXssfWorkflowState {
     Objects.requireNonNull(warnings, "warnings must not be null");
     Objects.requireNonNull(journal, "journal must not be null");
     Objects.requireNonNull(bindings, "bindings must not be null");
-    List<AssertionResult> planAssertions = new ArrayList<>();
-    List<InspectionResult> inspections = new ArrayList<>();
+    hostAssertions = bindings.session().hostAssertions;
+    hostPreservation = bindings.session().preservation;
+    List<AssertionResult> planAssertions = bindings.session().planAssertions;
+    List<InspectionResult> inspections = bindings.session().inspections;
     executionContext =
         new WorkbookWorkflowExecutionContext(
             protocolVersion,
@@ -96,6 +99,7 @@ final class FullXssfWorkflowState {
 
   void calculation(CalculationReport calculation) {
     this.calculation = Objects.requireNonNull(calculation, "calculation must not be null");
+    session.calculation = java.util.Optional.of(calculation);
   }
 
   boolean calculationExecuted() {

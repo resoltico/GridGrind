@@ -635,12 +635,11 @@ class OperationSequenceValueFactoryTest {
 
   private static void assertWrittenWorkbook(Path path) {
     assertTrue(Files.isRegularFile(path));
-    assertDoesNotThrow(
-        () -> {
-          try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(path))) {
-            assertTrue(workbook.getNumberOfSheets() > 0);
-          }
-        });
+    assertDoesNotThrow(() -> {
+      try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(path))) {
+        assertTrue(workbook.getNumberOfSheets() > 0);
+      }
+    });
   }
 
   private static void deleteRecursively(Path root) throws IOException {

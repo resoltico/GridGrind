@@ -343,7 +343,11 @@ class AssertionCoverageTest {
     return new ChartReport(
         "Revenue",
         new dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport.Absolute(
-            1L, 2L, 3L, 4L, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+            new dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport.Emu(1L),
+            new dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport.Emu(2L),
+            3L,
+            4L,
+            ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
         new ChartReport.Title.Text("Revenue"),
         new ChartReport.Legend.Visible(ExcelChartLegendPosition.RIGHT),
         ExcelChartDisplayBlanksAs.GAP,
@@ -359,14 +363,28 @@ class AssertionCoverageTest {
                     new ChartReport.Axis(
                         ExcelChartAxisKind.CATEGORY,
                         ExcelChartAxisPosition.BOTTOM,
-                        ExcelChartAxisCrosses.AUTO_ZERO,
+                        new ChartReport.AxisCrossing.Mode(ExcelChartAxisCrosses.AUTO_ZERO),
                         true)),
                 List.of(
                     new ChartReport.Series(
                         new ChartReport.Title.Text("Series 1"),
-                        new ChartReport.DataSource.StringLiteral(List.of("Jan", "Feb")),
+                        new ChartReport.DataSource.StringLiteral(
+                            new ChartReport.StringCache.Stored(
+                                Optional.of(2L),
+                                List.of(
+                                    new ChartReport.StringPoint(
+                                        Optional.of(0L), Optional.of("Jan")),
+                                    new ChartReport.StringPoint(
+                                        Optional.of(1L), Optional.of("Feb"))))),
                         new ChartReport.DataSource.NumericLiteral(
-                            Optional.of("#,##0"), List.of("1", "2")),
+                            new ChartReport.NumericCache.Stored(
+                                Optional.of(2L),
+                                Optional.of("#,##0"),
+                                List.of(
+                                    new ChartReport.NumericPoint(
+                                        Optional.of(0L), Optional.of("1"), Optional.empty()),
+                                    new ChartReport.NumericPoint(
+                                        Optional.of(1L), Optional.of("2"), Optional.empty())))),
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),

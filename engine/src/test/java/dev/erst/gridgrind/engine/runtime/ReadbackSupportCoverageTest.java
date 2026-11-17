@@ -82,35 +82,35 @@ class ReadbackSupportCoverageTest {
             Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.Blank()));
 
     assertTrue(
-        SemanticSelectorResolver.matchesKeyCell(
+        TableCellResolver.matchesKeyCell(
             textSnapshot,
             new dev.erst.gridgrind.core.model.value.CellValueSpec.Text(
                 TextSourceSpec.inline("Ada"))));
     assertTrue(
-        SemanticSelectorResolver.matchesKeyCell(
+        TableCellResolver.matchesKeyCell(
             numberSnapshot,
             new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(42.0d)));
     assertTrue(
-        SemanticSelectorResolver.matchesKeyCell(
+        TableCellResolver.matchesKeyCell(
             booleanSnapshot,
             new dev.erst.gridgrind.core.model.value.CellValueSpec.BooleanValue(true)));
     assertTrue(
-        SemanticSelectorResolver.matchesKeyCell(
+        TableCellResolver.matchesKeyCell(
             formulaSnapshot,
             new dev.erst.gridgrind.core.model.value.CellValueSpec.Formula(
                 TextSourceSpec.inline("SUM(A1:A2)"))));
     assertTrue(
-        SemanticSelectorResolver.matchesKeyCell(
+        TableCellResolver.matchesKeyCell(
             blankSnapshot, new dev.erst.gridgrind.core.model.value.CellValueSpec.Blank()));
     assertFalse(
-        SemanticSelectorResolver.matchesKeyCell(
+        TableCellResolver.matchesKeyCell(
             textSnapshot,
             new dev.erst.gridgrind.core.model.value.CellValueSpec.Text(
                 TextSourceSpec.inline("Grace"))));
     assertThrows(
         IllegalStateException.class,
         () ->
-            SemanticSelectorResolver.matchesKeyCell(
+            TableCellResolver.matchesKeyCell(
                 textSnapshot,
                 new dev.erst.gridgrind.core.model.value.CellValueSpec.Text(
                     TextSourceSpec.standardInput())));
@@ -152,7 +152,7 @@ class ReadbackSupportCoverageTest {
             java.util.Optional.of(
                 new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(42.0d)),
             java.util.Optional.empty(),
-            Optional.of(CellTemporalReport.temporal(CellTemporalKind.DATE, "2026-07-01")));
+            Optional.of(new CellTemporalReport.Interpreted(CellTemporalKind.DATE, "2026-07-01")));
     CellReport.FormulaReport booleanFormula =
         new CellReport.FormulaReport(
             new CellAddress("A4"),

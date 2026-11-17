@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.json.intake;
 
-import dev.erst.gridgrind.core.metadata.ModelGraph;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolContractSupport;
+import dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport;
 import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestExplicitNullField;
@@ -10,32 +11,22 @@ import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import dev.erst.gridgrind.core.problem.RequestUnknownTypeDiscriminator;
 import dev.erst.gridgrind.core.problem.RequestUnsupportedEnumValue;
 import dev.erst.gridgrind.core.vocabulary.WireScalar;
-import dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport;
-import dev.erst.gridgrind.json.schema.JsonSchemas;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-import tools.jackson.databind.JsonNode;
 
-/** Checks emitted schema structures on the original tree without collapsing duplicate keys. */
+/** Checks original tolerant nodes against the model's field and union declarations. */
 final class RequestSchemaStructure {
-  private static final JsonNode DOCUMENT =
-      GridGrindJsonMapperSupport.JSON_MAPPER.readTree(
-          JsonSchemas.document(JsonSchemas.Document.REQUEST));
-  private static final Map<String, Class<?>> TYPES =
-      ModelGraph.reachableTypes(WorkbookPlan.class).stream()
-          .collect(Collectors.toUnmodifiableMap(Class::getName, type -> type));
-
   private RequestSchemaStructure() {}
 
   static void validate(RequestJsonNode root, List<RequestStructuralProblem> problems) {
-    validate(root, DOCUMENT, WorkbookPlan.class, "", root.byteOffset(), problems);
+    validate(root, WorkbookPlan.class, "", root.byteOffset(), problems);
   }
 
   static void validateRecord(
@@ -44,13 +35,12 @@ final class RequestSchemaStructure {
       String path,
       long offset,
       List<RequestStructuralProblem> problems) {
-    object(node, DOCUMENT.path("$defs").path(type.getName()), type, path, offset, true, problems);
+    object(node, type, path, offset, true, problems);
   }
 
   private static void validate(
       RequestJsonNode node,
-      JsonNode schema,
-      Type javaType,
+      Type type,
       String path,
       long offset,
       List<RequestStructuralProblem> problems) {
@@ -58,38 +48,31 @@ final class RequestSchemaStructure {
       problems.add(new RequestExplicitNullField(location(path), offset));
       return;
     }
-    if (schema.has("$ref")) {
-      String name = schema.path("$ref").asString().substring("#/$defs/".length());
-      Class<?> type = TYPES.getOrDefault(name, Object.class);
-      if (type.isRecord()) {
-        validateRecord(node, type.asSubclass(Record.class), path, offset, problems);
-      } else {
-        validate(node, DOCUMENT.path("$defs").path(name), type, path, offset, problems);
+    Type unwrapped = unwrapped(type);
+    Class<?> raw = RequestJavaTypes.rawType(unwrapped);
+    if (WireScalar.isValueType(raw)) raw = WireScalar.wireType(raw);
+    if (raw == List.class) {
+      array(node, RequestJavaTypes.typeArgument(unwrapped), path, offset, problems);
+    } else if (raw.isSealed()) {
+      union(node, raw, path, offset, problems);
+    } else if (raw.isRecord()) {
+      object(node, raw.asSubclass(Record.class), path, offset, true, problems);
+    } else if (raw == String.class || raw.isEnum() || RequestJavaTypes.isTemporalType(raw)) {
+      string(node, raw, path, offset, problems);
+    } else if (raw == boolean.class || raw == Boolean.class) {
+      if (!(node instanceof RequestJsonBoolean)) {
+        problems.add(new RequestMalformedScalar(location(path), "a JSON boolean", offset));
       }
-      return;
-    }
-    if (schema.has("oneOf")) {
-      union(node, schema.path("oneOf"), javaType, path, offset, problems);
-      return;
-    }
-    switch (schema.path("type").asString()) {
-      case "object" -> object(node, schema, javaType, path, offset, true, problems);
-      case "array" -> array(node, schema, javaType, path, offset, problems);
-      case "string" -> string(node, schema, javaType, path, offset, problems);
-      case "boolean" -> {
-        if (!(node instanceof RequestJsonBoolean)) {
-          problems.add(new RequestMalformedScalar(location(path), "a JSON boolean", offset));
-        }
-      }
-      case "number", "integer" -> scalarNumber(node, javaType, path, offset, problems);
-      default -> throw new IllegalStateException("Unsupported emitted schema structure at " + path);
+    } else if (RequestJavaTypes.isNumberType(raw)) {
+      RequestScalarTokens.validate(node, raw, location(path), offset, problems);
+    } else {
+      throw new IllegalStateException("Unsupported model structure at " + path + ": " + type);
     }
   }
 
   private static void object(
       RequestJsonNode node,
-      JsonNode schema,
-      Type javaType,
+      Class<? extends Record> type,
       String path,
       long offset,
       boolean unknowns,
@@ -99,23 +82,14 @@ final class RequestSchemaStructure {
       return;
     }
     var members = RequestObjectMembers.index(object);
-    RequestObjectMembers.collectMissingRequiredFields(
-        members, path, strings(schema.path("required")), problems);
-    JsonNode properties = schema.path("properties");
-    if (unknowns) {
-      RequestObjectMembers.collectUnknownFields(members, path, fields(properties), problems);
-    }
-    for (var entry : properties.properties()) {
-      if (entry.getValue().has("const")) {
-        continue;
-      }
-      Type component = component(javaType, entry.getKey());
-      for (RequestJsonMember member : members.membersNamed(entry.getKey())) {
+    RequestObjectMembers.collectMissingRequiredFields(members, path, required(type), problems);
+    if (unknowns) RequestObjectMembers.collectUnknownFields(members, path, fields(type), problems);
+    for (RecordComponent component : components(type)) {
+      for (RequestJsonMember member : members.membersNamed(component.getName())) {
         validate(
             member.value(),
-            entry.getValue(),
-            component,
-            RequestJsonPaths.field(path, entry.getKey()),
+            component.getGenericType(),
+            RequestJsonPaths.field(path, component.getName()),
             member.nameByteOffset(),
             problems);
       }
@@ -124,8 +98,7 @@ final class RequestSchemaStructure {
 
   private static void array(
       RequestJsonNode node,
-      JsonNode schema,
-      Type javaType,
+      Type item,
       String path,
       long offset,
       List<RequestStructuralProblem> problems) {
@@ -133,23 +106,15 @@ final class RequestSchemaStructure {
       problems.add(new RequestMalformedScalar(location(path), "a JSON array", offset));
       return;
     }
-    Type item = RequestJavaTypes.typeArgument(unwrapped(javaType));
     for (int index = 0; index < array.elements().size(); index++) {
       RequestJsonNode element = array.elements().get(index);
-      validate(
-          element,
-          schema.path("items"),
-          item,
-          path + "[" + index + "]",
-          element.byteOffset(),
-          problems);
+      validate(element, item, path + "[" + index + "]", element.byteOffset(), problems);
     }
   }
 
   private static void string(
       RequestJsonNode node,
-      JsonNode schema,
-      Type javaType,
+      Class<?> raw,
       String path,
       long offset,
       List<RequestStructuralProblem> problems) {
@@ -157,37 +122,21 @@ final class RequestSchemaStructure {
       problems.add(new RequestMalformedScalar(location(path), "a JSON string", offset));
       return;
     }
-    Class<?> raw = RequestJavaTypes.rawType(unwrapped(javaType));
-    if (raw.isEnum()
-        && schema.has("enum")
-        && !strings(schema.path("enum")).contains(text.value())) {
-      problems.add(
-          new RequestUnsupportedEnumValue(
-              location(path), text.value(), strings(schema.path("enum")), offset));
-      return;
-    }
-    if (RequestJavaTypes.isTemporalType(raw)) {
+    if (raw.isEnum()) {
+      List<String> choices =
+          Arrays.stream(raw.getEnumConstants()).map(value -> ((Enum<?>) value).name()).toList();
+      if (!choices.contains(text.value())) {
+        problems.add(
+            new RequestUnsupportedEnumValue(location(path), text.value(), choices, offset));
+      }
+    } else if (RequestJavaTypes.isTemporalType(raw)) {
       RequestScalarTokens.validate(node, raw, location(path), offset, problems);
     }
   }
 
-  private static void scalarNumber(
-      RequestJsonNode node,
-      Type javaType,
-      String path,
-      long offset,
-      List<RequestStructuralProblem> problems) {
-    Class<?> raw = RequestJavaTypes.rawType(unwrapped(javaType));
-    if (WireScalar.isValueType(raw)) {
-      raw = raw.getRecordComponents()[0].getType();
-    }
-    RequestScalarTokens.validate(node, raw, location(path), offset, problems);
-  }
-
   private static void union(
       RequestJsonNode node,
-      JsonNode alternatives,
-      Type javaType,
+      Class<?> root,
       String path,
       long offset,
       List<RequestStructuralProblem> problems) {
@@ -195,31 +144,20 @@ final class RequestSchemaStructure {
       problems.add(new RequestMalformedScalar(location(path), "a JSON object", offset));
       return;
     }
-    List<JsonNode> variants = new ArrayList<>();
-    for (JsonNode alternative : alternatives) {
-      variants.add(dereference(alternative));
-    }
-    Optional<String> discriminator =
-        variants.getFirst().path("properties").properties().stream()
-            .filter(entry -> entry.getValue().has("const"))
-            .map(Map.Entry::getKey)
-            .filter(
-                name ->
-                    variants.stream()
-                        .allMatch(variant -> variant.path("properties").path(name).has("const")))
-            .findFirst();
+    List<Class<? extends Record>> variants =
+        ProtocolTypeMetadataSupport.declaredVariants(root).stream()
+            .sorted(Comparator.comparing(ProtocolTypeMetadataSupport::requiredTypeId))
+            .toList();
+    String discriminator = ProtocolTypeMetadataSupport.discriminatorField(root);
     if (discriminator.isEmpty()) {
-      structuralUnion(object, alternatives, variants, javaType, path, offset, problems);
+      structuralUnion(object, root, variants, path, offset, problems);
       return;
     }
-    String field = discriminator.orElseThrow();
-    String fieldPath = RequestJsonPaths.field(path, field);
+    String fieldPath = RequestJsonPaths.field(path, discriminator);
     var members = RequestObjectMembers.index(object);
-    List<RequestJsonMember> tags = members.membersNamed(field);
-    Set<JsonNode> viable = new LinkedHashSet<>();
-    if (tags.isEmpty()) {
-      problems.add(new RequestMissingTypeDiscriminator(fieldPath));
-    }
+    List<RequestJsonMember> tags = members.membersNamed(discriminator);
+    Set<Class<? extends Record>> viable = new LinkedHashSet<>();
+    if (tags.isEmpty()) problems.add(new RequestMissingTypeDiscriminator(fieldPath));
     for (RequestJsonMember tag : tags) {
       if (tag.value() instanceof RequestJsonNull) {
         problems.add(new RequestExplicitNullField(fieldPath, tag.nameByteOffset()));
@@ -229,16 +167,12 @@ final class RequestSchemaStructure {
       } else {
         var selected =
             variants.stream()
-                .filter(
-                    variant ->
-                        text.value()
-                            .equals(
-                                variant.path("properties").path(field).path("const").asString()))
+                .filter(variant ->
+                    text.value().equals(ProtocolTypeMetadataSupport.requiredTypeId(variant)))
                 .findFirst();
         if (selected.isPresent()) {
           viable.add(selected.orElseThrow());
         } else {
-          Class<?> root = RequestJavaTypes.rawType(javaType);
           Optional<Class<?>> similarity =
               root == Selector.class ? Optional.empty() : Optional.of(root);
           problems.add(
@@ -246,9 +180,8 @@ final class RequestSchemaStructure {
                   fieldPath,
                   text.value(),
                   similarity
-                      .map(
-                          type ->
-                              GridGrindJsonSubtypeProblemSupport.similarTypeIds(type, text.value()))
+                      .map(type ->
+                          GridGrindJsonSubtypeProblemSupport.similarTypeIds(type, text.value()))
                       .orElse(List.of()),
                   GridGrindJsonSubtypeProblemSupport.specificGuidance(
                       fieldPath, text.value(), similarity),
@@ -258,56 +191,45 @@ final class RequestSchemaStructure {
     }
     Set<String> allowed = new LinkedHashSet<>();
     if (viable.isEmpty()) {
-      variants.forEach(variant -> allowed.addAll(fields(variant.path("properties"))));
+      variants.forEach(variant -> allowed.addAll(fields(variant)));
     } else {
-      allowed.addAll(fields(viable.iterator().next().path("properties")));
-      viable.forEach(variant -> allowed.retainAll(fields(variant.path("properties"))));
+      allowed.addAll(fields(viable.iterator().next()));
+      viable.forEach(variant -> allowed.retainAll(fields(variant)));
     }
     RequestObjectMembers.collectUnknownFields(members, path, allowed, problems);
     List<RequestStructuralProblem> found = new ArrayList<>();
-    for (JsonNode variant : viable) {
+    for (Class<? extends Record> variant : viable) {
       found.clear();
-      int index = variants.indexOf(variant);
-      Type concrete = referencedType(alternatives.get(index));
-      object(object, variant, concrete, path, offset, false, found);
+      object(object, variant, path, offset, false, found);
       found.stream().filter(problem -> !problems.contains(problem)).forEach(problems::add);
     }
   }
 
   private static void structuralUnion(
       RequestJsonObject object,
-      JsonNode alternatives,
-      List<JsonNode> variants,
-      Type javaType,
+      Class<?> root,
+      List<Class<? extends Record>> variants,
       String path,
       long offset,
       List<RequestStructuralProblem> problems) {
-    Set<String> common = new LinkedHashSet<>(strings(variants.getFirst().path("required")));
-    variants.forEach(variant -> common.retainAll(strings(variant.path("required"))));
+    Set<String> common = new LinkedHashSet<>(required(variants.getFirst()));
+    variants.forEach(variant -> common.retainAll(required(variant)));
     Set<String> all = new LinkedHashSet<>();
-    variants.forEach(variant -> all.addAll(fields(variant.path("properties"))));
+    variants.forEach(variant -> all.addAll(fields(variant)));
     var members = RequestObjectMembers.index(object);
     RequestObjectMembers.collectMissingRequiredFields(members, path, List.copyOf(common), problems);
     RequestObjectMembers.collectUnknownFields(members, path, all, problems);
     List<String> payloads = new ArrayList<>();
     for (int index = 0; index < variants.size(); index++) {
-      JsonNode variant = variants.get(index);
-      Type concrete = referencedType(alternatives.get(index));
-      for (String field : strings(variant.path("required"))) {
-        if (!common.contains(field)) {
-          payloads.add(field);
-        }
-      }
-      for (var entry : variant.path("properties").properties()) {
-        if (index != 0 && common.contains(entry.getKey())) {
-          continue;
-        }
-        for (var member : members.membersNamed(entry.getKey())) {
+      Class<? extends Record> variant = variants.get(index);
+      for (String field : required(variant)) if (!common.contains(field)) payloads.add(field);
+      for (RecordComponent component : components(variant)) {
+        if (index != 0 && common.contains(component.getName())) continue;
+        for (RequestJsonMember member : members.membersNamed(component.getName())) {
           validate(
               member.value(),
-              entry.getValue(),
-              component(concrete, entry.getKey()),
-              RequestJsonPaths.field(path, entry.getKey()),
+              component.getGenericType(),
+              RequestJsonPaths.field(path, component.getName()),
               member.nameByteOffset(),
               problems);
         }
@@ -315,13 +237,8 @@ final class RequestSchemaStructure {
     }
     if (payloads.stream().filter(field -> members.member(field).isPresent()).count() != 1) {
       List<String> ordered =
-          dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport.declaredVariants(
-                  RequestJavaTypes.rawType(javaType))
-              .stream()
-              .flatMap(
-                  type ->
-                      strings(DOCUMENT.path("$defs").path(type.getName()).path("required"))
-                          .stream())
+          ProtocolTypeMetadataSupport.declaredVariants(root).stream()
+              .flatMap(type -> required(type).stream())
               .filter(payloads::contains)
               .distinct()
               .toList();
@@ -336,46 +253,29 @@ final class RequestSchemaStructure {
     }
   }
 
-  private static JsonNode dereference(JsonNode schema) {
-    return schema.has("$ref")
-        ? DOCUMENT.path("$defs").path(schema.path("$ref").asString().substring("#/$defs/".length()))
-        : schema;
+  private static List<RecordComponent> components(Class<? extends Record> type) {
+    return GridGrindProtocolContractSupport.visibleRecordComponents(type);
   }
 
-  private static Type referencedType(JsonNode schema) {
-    return TYPES.getOrDefault(
-        schema.path("$ref").asString().substring("#/$defs/".length()), Object.class);
+  private static List<String> required(Class<? extends Record> type) {
+    List<String> names = new ArrayList<>(GridGrindProtocolContractSupport.requiredFieldNames(type));
+    String discriminator = ProtocolTypeMetadataSupport.discriminatorField(type);
+    if (!discriminator.isEmpty()) names.add(discriminator);
+    return List.copyOf(names);
   }
 
-  private static Type component(Type owner, String name) {
-    Class<?> raw = RequestJavaTypes.rawType(unwrapped(owner));
-    if (!raw.isRecord()) {
-      throw new IllegalStateException("Schema object lacks its canonical record: " + owner);
-    }
-    for (RecordComponent component : raw.getRecordComponents()) {
-      if (component.getName().equals(name)) {
-        return component.getGenericType();
-      }
-    }
-    throw new IllegalStateException("Schema field lacks its canonical component: " + name);
+  private static Set<String> fields(Class<? extends Record> type) {
+    Set<String> names = new LinkedHashSet<>();
+    components(type).forEach(component -> names.add(component.getName()));
+    String discriminator = ProtocolTypeMetadataSupport.discriminatorField(type);
+    if (!discriminator.isEmpty()) names.add(discriminator);
+    return names;
   }
 
   private static Type unwrapped(Type type) {
     return RequestJavaTypes.rawType(type) == Optional.class
         ? RequestJavaTypes.typeArgument(type)
         : type;
-  }
-
-  private static List<String> strings(JsonNode array) {
-    List<String> result = new ArrayList<>();
-    array.forEach(value -> result.add(value.asString()));
-    return List.copyOf(result);
-  }
-
-  private static Set<String> fields(JsonNode properties) {
-    return properties.properties().stream()
-        .map(Map.Entry::getKey)
-        .collect(Collectors.toUnmodifiableSet());
   }
 
   private static String location(String path) {

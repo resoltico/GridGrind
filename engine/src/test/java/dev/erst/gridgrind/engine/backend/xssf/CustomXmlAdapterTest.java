@@ -83,7 +83,10 @@ class CustomXmlAdapterTest {
                       + "<PROGETTO>Parity</PROGETTO><CREDITI>10</CREDITI></CORSO>"));
 
       dev.erst.gridgrind.core.model.layout.WindowReport.Dense window =
-          workbook.sheet("Foglio1").cells().window("A1", 1, 3);
+          workbook
+              .sheet("Foglio1")
+              .cells()
+              .window(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), 1, 3);
       assertEquals("Grid", window.rows().getFirst().cells().get(0).displayValue().orElseThrow());
       assertEquals("Grind", window.rows().getFirst().cells().get(1).displayValue().orElseThrow());
       assertEquals("Agent", window.rows().getFirst().cells().get(2).displayValue().orElseThrow());

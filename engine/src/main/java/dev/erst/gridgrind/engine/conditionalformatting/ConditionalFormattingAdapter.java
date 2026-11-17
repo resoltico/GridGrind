@@ -23,9 +23,9 @@ import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.engine.formulas.ComparisonFormulas;
-import dev.erst.gridgrind.engine.poi.CellBounds;
 import dev.erst.gridgrind.engine.poi.EnumMappings;
 import dev.erst.gridgrind.engine.poi.SheetStructure;
 import dev.erst.gridgrind.engine.poi.SqrefRanges;
@@ -96,8 +96,7 @@ public final class ConditionalFormattingAdapter {
     if (targets.isEmpty()) throw new IllegalArgumentException("ranges must not be empty");
     if (new java.util.LinkedHashSet<>(targets).size() != targets.size())
       throw new IllegalArgumentException("ranges must not contain duplicates");
-    List<CellBounds> targetRanges =
-        targets.stream().map(range -> CellBounds.parse(range.value())).toList();
+    List<RangeRef> targetRanges = targets;
     XSSFConditionalFormattingRule[] rules =
         formatting.rules().stream()
             .map(rule -> createRule(sheet, rule))
@@ -149,8 +148,7 @@ public final class ConditionalFormattingAdapter {
   public void clearConditionalFormatting(
       XSSFSheet sheet, List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    removeIntersectingBlocks(
-        sheet, ranges.stream().map(range -> CellBounds.parse(range.value())).toList());
+    removeIntersectingBlocks(sheet, ranges);
     normalizePriorities(sheet);
   }
 
@@ -284,7 +282,7 @@ public final class ConditionalFormattingAdapter {
     }
   }
 
-  private void removeIntersectingBlocks(XSSFSheet sheet, List<CellBounds> cutouts) {
+  private void removeIntersectingBlocks(XSSFSheet sheet, List<RangeRef> cutouts) {
     List<Integer> wrapperIndexesToRemove = new ArrayList<>();
     for (int blockIndex = 0;
         blockIndex < sheet.getSheetConditionalFormatting().getNumConditionalFormattings();
@@ -559,17 +557,16 @@ public final class ConditionalFormattingAdapter {
 
   public static boolean matchesSelection(
       List<String> ranges, List<dev.erst.gridgrind.core.vocabulary.RangeRef> targets) {
-    return intersectsAny(
-        ranges, targets.stream().map(target -> CellBounds.parse(target.value())).toList());
+    return intersectsAny(ranges, targets);
   }
 
-  private static boolean intersectsAny(List<String> rawRanges, List<CellBounds> targetRanges) {
+  private static boolean intersectsAny(List<String> rawRanges, List<RangeRef> targetRanges) {
     for (String rawRange : rawRanges) {
-      Optional<CellBounds> existingRange = SheetStructure.parseOptionalRange(rawRange);
+      Optional<RangeRef> existingRange = SheetStructure.parseOptionalRange(rawRange);
       if (existingRange.isEmpty()) {
         continue;
       }
-      for (CellBounds targetRange : targetRanges) {
+      for (RangeRef targetRange : targetRanges) {
         if (SheetStructure.intersects(existingRange.orElseThrow(), targetRange)) {
           return true;
         }

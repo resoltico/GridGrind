@@ -14,8 +14,8 @@ import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.engine.formulas.ComparisonFormulas;
-import dev.erst.gridgrind.engine.poi.CellBounds;
 import dev.erst.gridgrind.engine.poi.SheetStructure;
 import dev.erst.gridgrind.engine.poi.SqrefRanges;
 import java.util.ArrayList;
@@ -65,11 +65,11 @@ public final class DataValidationAdapter {
   }
 
   public void setDataValidation(
-      XSSFSheet sheet, String range, ResolvedDataValidation validationDefinition) {
+      XSSFSheet sheet, RangeRef range, ResolvedDataValidation validationDefinition) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(range, "range must not be null");
     Objects.requireNonNull(validationDefinition, "validationDefinition must not be null");
-    CellBounds targetRange = CellBounds.parse(range);
+    RangeRef targetRange = range;
     DataValidationHelper helper = sheet.getDataValidationHelper();
     DataValidationConstraint constraint = toConstraint(helper, validationDefinition.rule());
     normalizeOverlappingSqref(sheet, List.of(targetRange));
@@ -110,8 +110,7 @@ public final class DataValidationAdapter {
   public void clearDataValidations(
       XSSFSheet sheet, List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    normalizeOverlappingSqref(
-        sheet, ranges.stream().map(range -> CellBounds.parse(range.value())).toList());
+    normalizeOverlappingSqref(sheet, ranges);
   }
 
   public static DataValidationConstraint toConstraint(
@@ -724,7 +723,7 @@ public final class DataValidationAdapter {
                   .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::value)
                   .toList()) {
             if (!SheetStructure.intersects(
-                CellBounds.parse(firstRange), CellBounds.parse(secondRange))) {
+                RangeRef.parse(firstRange), RangeRef.parse(secondRange))) {
               continue;
             }
             findings.add(
@@ -743,7 +742,7 @@ public final class DataValidationAdapter {
     return List.copyOf(findings);
   }
 
-  public static void normalizeOverlappingSqref(XSSFSheet sheet, List<CellBounds> cutouts) {
+  public static void normalizeOverlappingSqref(XSSFSheet sheet, List<RangeRef> cutouts) {
     if (!sheet.getCTWorksheet().isSetDataValidations()) {
       return;
     }
@@ -762,13 +761,13 @@ public final class DataValidationAdapter {
     syncValidationCount(sheet);
   }
 
-  public static List<String> retainedRanges(CTDataValidation validation, List<CellBounds> cutouts) {
-    List<CellBounds> retained =
-        SqrefRanges.normalizedSqref(validation.getSqref()).stream().map(CellBounds::parse).toList();
-    List<CellBounds> next = new ArrayList<>();
-    for (CellBounds cutout : cutouts) {
+  public static List<String> retainedRanges(CTDataValidation validation, List<RangeRef> cutouts) {
+    List<RangeRef> retained =
+        SqrefRanges.normalizedSqref(validation.getSqref()).stream().map(RangeRef::parse).toList();
+    List<RangeRef> next = new ArrayList<>();
+    for (RangeRef cutout : cutouts) {
       next.clear();
-      for (CellBounds existingRange : retained) {
+      for (RangeRef existingRange : retained) {
         next.addAll(subtract(existingRange, cutout));
       }
       retained = List.copyOf(next);
@@ -776,7 +775,7 @@ public final class DataValidationAdapter {
     return retained.stream().map(SheetStructure::formatRange).toList();
   }
 
-  public static List<CellBounds> subtract(CellBounds source, CellBounds cutout) {
+  public static List<RangeRef> subtract(RangeRef source, RangeRef cutout) {
     if (!SheetStructure.intersects(source, cutout)) {
       return List.of(source);
     }
@@ -785,10 +784,10 @@ public final class DataValidationAdapter {
     int intersectionFirstColumn = Math.max(source.firstColumn(), cutout.firstColumn());
     int intersectionLastColumn = Math.min(source.lastColumn(), cutout.lastColumn());
 
-    List<CellBounds> retained = new ArrayList<>(4);
+    List<RangeRef> retained = new ArrayList<>(4);
     if (source.firstRow() < intersectionFirstRow) {
       retained.add(
-          new CellBounds(
+          new RangeRef(
               source.firstRow(),
               intersectionFirstRow - 1,
               source.firstColumn(),
@@ -796,7 +795,7 @@ public final class DataValidationAdapter {
     }
     if (intersectionLastRow < source.lastRow()) {
       retained.add(
-          new CellBounds(
+          new RangeRef(
               intersectionLastRow + 1,
               source.lastRow(),
               source.firstColumn(),
@@ -804,7 +803,7 @@ public final class DataValidationAdapter {
     }
     if (source.firstColumn() < intersectionFirstColumn) {
       retained.add(
-          new CellBounds(
+          new RangeRef(
               intersectionFirstRow,
               intersectionLastRow,
               source.firstColumn(),
@@ -812,7 +811,7 @@ public final class DataValidationAdapter {
     }
     if (intersectionLastColumn < source.lastColumn()) {
       retained.add(
-          new CellBounds(
+          new RangeRef(
               intersectionFirstRow,
               intersectionLastRow,
               intersectionLastColumn + 1,
@@ -834,12 +833,11 @@ public final class DataValidationAdapter {
   public static boolean matchesSelection(
       List<String> ranges, List<dev.erst.gridgrind.core.vocabulary.RangeRef> targets) {
     return ranges.stream()
-        .map(CellBounds::parse)
-        .anyMatch(
-            existing ->
-                targets.stream()
-                    .map(target -> CellBounds.parse(target.value()))
-                    .anyMatch(target -> SheetStructure.intersects(existing, target)));
+        .map(RangeRef::parse)
+        .anyMatch(existing ->
+            targets.stream()
+                .map(target -> target)
+                .anyMatch(target -> SheetStructure.intersects(existing, target)));
   }
 
   public static int toPoiErrorStyle(ExcelDataValidationErrorStyle errorStyle) {
@@ -1002,7 +1000,7 @@ public final class DataValidationAdapter {
       XSSFSheet sheet, CTDataValidation validation, int rowIndex, int rowCount) {
     List<String> shifted = new ArrayList<>();
     for (String rawRange : SqrefRanges.normalizedSqref(validation.getSqref())) {
-      CellBounds range = CellBounds.parse(rawRange);
+      RangeRef range = RangeRef.parse(rawRange);
       shifted.addAll(shiftedRangesForInsertedRows(sheet, rawRange, range, rowIndex, rowCount));
     }
     return List.copyOf(shifted);
@@ -1012,7 +1010,7 @@ public final class DataValidationAdapter {
       XSSFSheet sheet, CTDataValidation validation, int columnIndex, int columnCount) {
     List<String> shifted = new ArrayList<>();
     for (String rawRange : SqrefRanges.normalizedSqref(validation.getSqref())) {
-      CellBounds range = CellBounds.parse(rawRange);
+      RangeRef range = RangeRef.parse(rawRange);
       shifted.addAll(
           shiftedRangesForInsertedColumns(sheet, rawRange, range, columnIndex, columnCount));
     }
@@ -1020,7 +1018,7 @@ public final class DataValidationAdapter {
   }
 
   private static List<String> shiftedRangesForInsertedRows(
-      XSSFSheet sheet, String rawRange, CellBounds range, int rowIndex, int rowCount) {
+      XSSFSheet sheet, String rawRange, RangeRef range, int rowIndex, int rowCount) {
     if (range.lastRow() < rowIndex) {
       return List.of(rawRange);
     }
@@ -1037,8 +1035,7 @@ public final class DataValidationAdapter {
     List<String> shifted = new ArrayList<>(2);
     shifted.add(
         SheetStructure.formatRange(
-            new CellBounds(
-                range.firstRow(), rowIndex - 1, range.firstColumn(), range.lastColumn())));
+            new RangeRef(range.firstRow(), rowIndex - 1, range.firstColumn(), range.lastColumn())));
     shifted.add(
         shiftedRangeForRows(
             sheet,
@@ -1051,7 +1048,7 @@ public final class DataValidationAdapter {
   }
 
   private static List<String> shiftedRangesForInsertedColumns(
-      XSSFSheet sheet, String rawRange, CellBounds range, int columnIndex, int columnCount) {
+      XSSFSheet sheet, String rawRange, RangeRef range, int columnIndex, int columnCount) {
     if (range.lastColumn() < columnIndex) {
       return List.of(rawRange);
     }
@@ -1068,8 +1065,7 @@ public final class DataValidationAdapter {
     List<String> shifted = new ArrayList<>(2);
     shifted.add(
         SheetStructure.formatRange(
-            new CellBounds(
-                range.firstRow(), range.lastRow(), range.firstColumn(), columnIndex - 1)));
+            new RangeRef(range.firstRow(), range.lastRow(), range.firstColumn(), columnIndex - 1)));
     shifted.add(
         shiftedRangeForColumns(
             sheet,
@@ -1097,7 +1093,7 @@ public final class DataValidationAdapter {
               + "' beyond the maximum row "
               + (Limit.MAX_ROW_INDEX + 1));
     }
-    return SheetStructure.formatRange(new CellBounds(firstRow, lastRow, firstColumn, lastColumn));
+    return SheetStructure.formatRange(new RangeRef(firstRow, lastRow, firstColumn, lastColumn));
   }
 
   private static String shiftedRangeForColumns(
@@ -1116,7 +1112,7 @@ public final class DataValidationAdapter {
               + "' beyond the maximum column "
               + org.apache.poi.ss.util.CellReference.convertNumToColString(Limit.MAX_COLUMN_INDEX));
     }
-    return SheetStructure.formatRange(new CellBounds(firstRow, lastRow, firstColumn, lastColumn));
+    return SheetStructure.formatRange(new RangeRef(firstRow, lastRow, firstColumn, lastColumn));
   }
 
   private static void shiftValidationFormulas(

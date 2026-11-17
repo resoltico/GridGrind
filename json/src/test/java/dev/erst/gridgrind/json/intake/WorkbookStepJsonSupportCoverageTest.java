@@ -1,21 +1,17 @@
 package dev.erst.gridgrind.json.intake;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.plan.WorkbookStep;
-import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
-import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.core.problem.MessageShape;
 import dev.erst.gridgrind.core.problem.MissingTypeDiscriminator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.DateTimeException;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import tools.jackson.core.JacksonException;
@@ -117,99 +113,27 @@ class WorkbookStepJsonSupportCoverageTest {
   }
 
   @Test
-  void wrapHelpersPreserveCauseMessageFallbackAndQualifiedPaths() throws IOException {
+  void fieldGrammarPreservesJacksonIdentityAndQualifiedPaths() throws IOException {
     JsonMapper mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
     JsonNode emptyObject = mapper.createObjectNode();
-    IllegalArgumentException nullMessage = new IllegalArgumentException();
-    IllegalArgumentException fieldMessage = new IllegalArgumentException("Field 'type' must exist");
-    MismatchedInputException fieldlessJackson =
-        MismatchedInputException.from(parser("{}"), NamedRecord.class, "bad");
-    MismatchedInputException nestedJackson =
-        (MismatchedInputException)
-            MismatchedInputException.from(parser("{}"), WorkbookStep.class, "bad")
-                .prependPath(new Object(), "name");
-
-    InvalidRequestException nullMessageFailure =
-        assertInstanceOf(
-            InvalidRequestException.class,
-            WorkbookStepJsonFailurePathSupport.wrapIllegalArgumentFailure("target", nullMessage));
-    InvalidRequestException fieldMessageFailure =
-        assertInstanceOf(
-            InvalidRequestException.class,
-            WorkbookStepJsonFailurePathSupport.wrapIllegalArgumentFailure("target", fieldMessage));
-    JacksonException inferredJacksonFailure =
-        WorkbookStepJsonFailurePathSupport.wrapJacksonFailure(
-            "target", emptyObject, NamedRecord.class, fieldlessJackson);
-    JacksonException nestedJacksonFailure =
-        WorkbookStepJsonFailurePathSupport.wrapJacksonFailure(
-            "target", emptyObject, Object.class, nestedJackson);
-
-    assertEquals("Invalid request", nullMessageFailure.getMessage());
-    assertSame(nullMessage, nullMessageFailure.getCause());
-    assertEquals(Optional.of("target"), nullMessageFailure.jsonPath());
-
-    assertEquals("Field 'type' must exist", fieldMessageFailure.getMessage());
-    assertEquals(Optional.of("target"), fieldMessageFailure.jsonPath());
-
-    assertEquals("target.name", renderPath(inferredJacksonFailure));
-    assertEquals("target.name", renderPath(nestedJacksonFailure));
-  }
-
-  @Test
-  void wrapValidationJacksonFailureHandlesShapeAndDateTimeValidationCauses() throws IOException {
-    JsonMapper mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
-    JsonNode emptyObject = mapper.createObjectNode();
-    MismatchedInputException shapeFailure =
-        WorkbookStepJsonFailurePathSupport.inputMismatch(
-            parser("{}"), new MissingTypeDiscriminator("type"));
-    InvalidRequestException invalidRequestCause =
-        new InvalidRequestException(
-            new MessageInvariant("owned failure", Optional.of("name")),
-            Optional.of("name"),
-            Optional.empty(),
-            Optional.empty(),
-            null);
-    MismatchedInputException invalidRequestFailure =
-        MismatchedInputException.from(parser("{}"), WorkbookStep.class, "bad");
-    invalidRequestFailure.initCause(new RuntimeException(invalidRequestCause));
-
-    MismatchedInputException illegalArgumentFailure =
-        MismatchedInputException.from(parser("{}"), WorkbookStep.class, "bad");
-    illegalArgumentFailure.initCause(
-        new RuntimeException(new IllegalArgumentException("unsupported literal")));
-
-    MismatchedInputException dateTimeFailure =
-        MismatchedInputException.from(parser("{}"), WorkbookStep.class, "bad");
-    dateTimeFailure.initCause(new RuntimeException(new DateTimeException("unsupported date")));
-
-    assertTrue(
-        WorkbookStepJsonFailurePathSupport.wrapValidationJacksonFailure(
-                "action", emptyObject, NamedRecord.class, shapeFailure)
-            .isEmpty());
-
-    InvalidRequestException wrappedInvalidRequestFailure =
-        WorkbookStepJsonFailurePathSupport.wrapValidationJacksonFailure(
-                "action", emptyObject, NamedRecord.class, invalidRequestFailure)
-            .orElseThrow();
-    assertEquals("owned failure", wrappedInvalidRequestFailure.getMessage());
-    assertEquals(Optional.of("action.name"), wrappedInvalidRequestFailure.jsonPath());
-    assertSame(invalidRequestFailure, wrappedInvalidRequestFailure.getCause());
-
-    InvalidRequestException wrappedIllegalArgumentFailure =
-        WorkbookStepJsonFailurePathSupport.wrapValidationJacksonFailure(
-                "action", emptyObject, NamedRecord.class, illegalArgumentFailure)
-            .orElseThrow();
-    assertEquals("unsupported literal", wrappedIllegalArgumentFailure.getMessage());
-    assertEquals(Optional.of("action"), wrappedIllegalArgumentFailure.jsonPath());
-    assertSame(illegalArgumentFailure, wrappedIllegalArgumentFailure.getCause());
-
-    InvalidRequestException wrappedDateTimeFailure =
-        WorkbookStepJsonFailurePathSupport.wrapValidationJacksonFailure(
-                "action", emptyObject, NamedRecord.class, dateTimeFailure)
-            .orElseThrow();
-    assertEquals("unsupported date", wrappedDateTimeFailure.getMessage());
-    assertEquals(Optional.of("action"), wrappedDateTimeFailure.jsonPath());
-    assertSame(dateTimeFailure, wrappedDateTimeFailure.getCause());
+    try (JsonParser missingParser = parser("{}");
+        JsonParser nestedParser = parser("{}")) {
+      MismatchedInputException missing =
+          MismatchedInputException.from(missingParser, NamedRecord.class, "bad");
+      MismatchedInputException nested =
+          MismatchedInputException.from(nestedParser, WorkbookStep.class, "bad");
+      nested.prependPath(new Object(), "name");
+      assertSame(
+          missing,
+          WorkbookStepJsonFailurePathSupport.wrapJacksonFailure(
+              "target", emptyObject, NamedRecord.class, missing));
+      assertSame(
+          nested,
+          WorkbookStepJsonFailurePathSupport.wrapJacksonFailure(
+              "target", emptyObject, Object.class, nested));
+      assertEquals("target.name", renderPath(missing));
+      assertEquals("target.name", renderPath(nested));
+    }
   }
 
   @Test
@@ -227,20 +151,18 @@ class WorkbookStepJsonSupportCoverageTest {
   }
 
   @Test
-  void deserializeFieldWrapsBareIllegalArgumentFailuresAgainstTheOwningField() throws IOException {
+  void deserializeFieldPreservesAnUnclassifiedCustomDeserializerFailure() throws IOException {
     JsonMapper mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
     var node = mapper.readTree("{\"anything\":true}");
     try (JsonParser parser = mapper.createParser("{}")) {
-      InvalidRequestException failure =
+      IllegalArgumentException failure =
           assertThrows(
-              InvalidRequestException.class,
+              IllegalArgumentException.class,
               () ->
                   WorkbookStepJsonDeserializer.deserializeField(
                       node, parser, AlwaysInvalidPayload.class, "action"));
-
       assertEquals("zoomPercent must be between 10 and 400", failure.getMessage());
-      assertEquals(Optional.of("action"), failure.jsonPath());
-      assertEquals("zoomPercent must be between 10 and 400", failure.getCause().getMessage());
+      assertFalse(failure instanceof dev.erst.gridgrind.core.problem.RequestProblemSource);
     }
   }
 
@@ -272,7 +194,7 @@ class WorkbookStepJsonSupportCoverageTest {
   @JsonDeserialize(using = AlwaysInvalidPayloadDeserializer.class)
   private static final class AlwaysInvalidPayload {}
 
-  /** Minimal deserializer used to exercise the explicit IllegalArgumentException wrapper path. */
+  /** Minimal unowned deserializer whose raw failure must not acquire an input-refusal meaning. */
   private static final class AlwaysInvalidPayloadDeserializer
       extends ValueDeserializer<AlwaysInvalidPayload> {
     @Override

@@ -18,12 +18,14 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.semantics.ExecutionConventions;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
+import dev.erst.gridgrind.engine.runtime.NativeInvocationContext;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -69,10 +71,8 @@ final class XlsxParityTest {
         corpus.scenarios().stream().map(XlsxParityLedger.Scenario::id).toList());
     assertTrue(
         ledger.rows().stream()
-            .allMatch(
-                row ->
-                    row.scenarioIds().stream()
-                        .allMatch(id -> corpus.scenariosById().containsKey(id))));
+            .allMatch(row ->
+                row.scenarioIds().stream().allMatch(id -> corpus.scenariosById().containsKey(id))));
   }
 
   @Test
@@ -178,21 +178,20 @@ final class XlsxParityTest {
     try {
       XlsxParityScenarios.MaterializedScenario scenario =
           XlsxParityScenarios.materialize(XlsxParityScenarios.EXTERNAL_FORMULA, temporaryRoot);
-      assertDoesNotThrow(
-          () -> {
-            try (XssfWorkbook workbook =
-                XssfWorkbooks.open(
-                    scenario.workbookPath(),
-                    new ResolvedFormulaEnvironment(
-                        List.of(
-                            new ResolvedExternalWorkbook(
-                                "referenced.xlsx", scenario.attachment("referencedWorkbook"))),
-                        FormulaMissingWorkbookPolicy.ERROR,
-                        List.of()),
-                    XlsxParitySupport.tempFileFactory(temporaryRoot))) {
-              workbook.formulas().evaluateAll();
-            }
-          });
+      assertDoesNotThrow(() -> {
+        try (XssfWorkbook workbook =
+            XssfWorkbooks.open(
+                scenario.workbookPath(),
+                new ResolvedFormulaEnvironment(
+                    List.of(
+                        new ResolvedExternalWorkbook(
+                            "referenced.xlsx", scenario.attachment("referencedWorkbook"))),
+                    FormulaMissingWorkbookPolicy.ERROR,
+                    List.of()),
+                XlsxParitySupport.tempFileFactory(temporaryRoot))) {
+          workbook.formulas().evaluateAll();
+        }
+      });
     } finally {
       deleteRecursively(temporaryRoot);
     }
@@ -231,7 +230,8 @@ final class XlsxParityTest {
                           new SheetName("Ops"), List.of(new CellAddress("B1"))),
                       XlsxParityProbeRegistry.allFacetCellsQuery())));
       WorkbookResult response =
-          new DefaultGridGrindRequestExecutor()
+          new DefaultGridGrindRequestExecutor(
+                  NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD))
               .execute(
                   request,
                   XlsxParitySupport.bindings(temporaryRoot, request),
@@ -272,13 +272,12 @@ final class XlsxParityTest {
         .filter(entry -> entry.probeId().equals(probeId))
         .findFirst()
         .map(ProbeOutcomeEntry::result)
-        .orElseGet(
-            () -> {
-              XlsxParityProbeRegistry.ProbeResult result =
-                  XlsxParityProbeRegistry.runProbe(probeId, context);
-              outcomes.add(new ProbeOutcomeEntry(probeId, result));
-              return result;
-            });
+        .orElseGet(() -> {
+          XlsxParityProbeRegistry.ProbeResult result =
+              XlsxParityProbeRegistry.runProbe(probeId, context);
+          outcomes.add(new ProbeOutcomeEntry(probeId, result));
+          return result;
+        });
   }
 
   private record ProbeOutcomeEntry(String probeId, XlsxParityProbeRegistry.ProbeResult result) {}

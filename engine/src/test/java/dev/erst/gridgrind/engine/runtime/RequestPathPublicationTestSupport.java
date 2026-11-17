@@ -9,7 +9,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.stream.Stream;
 
@@ -61,18 +60,10 @@ final class RequestPathPublicationTestSupport {
     }
   }
 
-  static void moveAtomically(
+  static void commitAtomically(
       Path source, Path destination, WorkbookArtifactWriteDisposition disposition)
       throws IOException {
-    switch (disposition) {
-      case CREATE_NEW -> Files.move(source, destination, StandardCopyOption.ATOMIC_MOVE);
-      case REPLACE_EXISTING ->
-          Files.move(
-              source,
-              destination,
-              StandardCopyOption.ATOMIC_MOVE,
-              StandardCopyOption.REPLACE_EXISTING);
-    }
+    RequestPathPublication.commitAtomically(source, destination, disposition);
   }
 
   static void assertNoPrivatePublicationSibling(Path root) throws IOException {

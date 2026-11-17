@@ -210,7 +210,10 @@ class CatalogEdgeCoverageTest {
         List.of(new CatalogNote("sharedRule", "Shared rule text.")),
         CatalogNoteResolutionSupport.referencedNotes(
             catalog, new TopLevelTypeGroup("workbookSourceTypes", List.of(directNoted))));
-    assertTrue(CatalogNoteResolutionSupport.referencedNotes(catalog, new Object()).isEmpty());
+    assertTrue(
+        CatalogNoteResolutionSupport.referencedNotes(
+                catalog, new TypeEntry("EMPTY", "summary", List.of()))
+            .isEmpty());
     assertEquals(
         "Shared rule text.",
         CatalogNoteResolutionSupport.referencedNoteText(

@@ -40,6 +40,7 @@ final class ExecutionGrantTestSupport {
             .<ExecutionGrant.ReadAuthority>map(ExecutionGrant.ReadAuthority.File::new)
             .toList();
     return new ExecutionGrant(
+        16L * 1024 * 1024,
         readableResources,
         plan.steps().stream().map(ExecutionGrantPlanOperationIds::forStep).distinct().toList(),
         new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -51,6 +52,7 @@ final class ExecutionGrantTestSupport {
 
   static ExecutionGrant overwriteSource(List<String> operationIds, List<Path> readableFiles) {
     return new ExecutionGrant(
+        16L * 1024 * 1024,
         readableFiles.stream()
             .<ExecutionGrant.ReadAuthority>map(ExecutionGrant.ReadAuthority.File::new)
             .toList(),
@@ -67,6 +69,7 @@ final class ExecutionGrantTestSupport {
       Path output,
       WorkbookPlan.WorkbookPersistence.IfExists ifExists) {
     return new ExecutionGrant(
+        16L * 1024 * 1024,
         readableFiles.stream()
             .<ExecutionGrant.ReadAuthority>map(ExecutionGrant.ReadAuthority.File::new)
             .toList(),
@@ -80,6 +83,7 @@ final class ExecutionGrantTestSupport {
   private static ExecutionGrant grant(
       List<String> operationIds, List<ExecutionGrant.ReadAuthority> readableResources) {
     return new ExecutionGrant(
+        16L * 1024 * 1024,
         readableResources,
         operationIds,
         new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),

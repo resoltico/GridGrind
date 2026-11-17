@@ -1004,14 +1004,26 @@ Targets: [TargetSelectorEntry[family=ChartSelector, typeIds=[CHART_ALL_ON_SHEET,
             "from" : {
               "columnIndex" : 0,
               "rowIndex" : 0,
-              "dx" : 0,
-              "dy" : 0
+              "dx" : {
+                "type" : "EMU",
+                "value" : 1
+              },
+              "dy" : {
+                "type" : "EMU",
+                "value" : 1
+              }
             },
             "to" : {
               "columnIndex" : 0,
               "rowIndex" : 0,
-              "dx" : 0,
-              "dy" : 0
+              "dx" : {
+                "type" : "EMU",
+                "value" : 1
+              },
+              "dy" : {
+                "type" : "EMU",
+                "value" : 1
+              }
             },
             "behavior" : "MOVE_AND_RESIZE"
           },
@@ -1031,7 +1043,9 @@ Targets: [TargetSelectorEntry[family=ChartSelector, typeIds=[CHART_ALL_ON_SHEET,
             "axes" : [ {
               "kind" : "CATEGORY",
               "position" : "BOTTOM",
-              "crosses" : "AUTO_ZERO",
+              "crosses" : {
+                "type" : "MISSING"
+              },
               "visible" : true
             } ],
             "series" : [ {
@@ -1041,13 +1055,15 @@ Targets: [TargetSelectorEntry[family=ChartSelector, typeIds=[CHART_ALL_ON_SHEET,
               },
               "categories" : {
                 "type" : "STRING_REFERENCE",
-                "formula" : "1",
-                "cachedValues" : [ "sample-cachedValues" ]
+                "cache" : {
+                  "type" : "MISSING"
+                }
               },
               "values" : {
                 "type" : "STRING_REFERENCE",
-                "formula" : "1",
-                "cachedValues" : [ "sample-cachedValues" ]
+                "cache" : {
+                  "type" : "MISSING"
+                }
               }
             } ]
           } ]

@@ -111,14 +111,14 @@ class GridGrindRequestDecoderTest {
 
   private static byte[] requestWith(String replacement) {
     return """
-        {
-          "protocolVersion": 1,
-          "source": {"type": "NEW"},
-          "persistence": {"type": "NONE"},
-          %s,
-          "steps": []
-        }
-        """
+    {
+      "protocolVersion": 1,
+      "source": {"type": "NEW"},
+      "persistence": {"type": "NONE"},
+      %s,
+      "steps": []
+    }
+    """
         .formatted(replacement)
         .getBytes(StandardCharsets.UTF_8);
   }

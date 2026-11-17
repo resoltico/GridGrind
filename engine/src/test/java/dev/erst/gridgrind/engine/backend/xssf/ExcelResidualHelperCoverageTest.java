@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.backend.xssf;
 
 import static dev.erst.gridgrind.engine.backend.xssf.WorkbookSampleFixtures.deleteNamedRangeStep;
 import static dev.erst.gridgrind.engine.backend.xssf.WorkbookSampleFixtures.setNamedRangeStep;
+import static dev.erst.gridgrind.engine.media.MediaFixtures.validPng;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.microsoft.schemas.office.excel.CTClientData;
@@ -26,7 +27,6 @@ import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
@@ -52,7 +52,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
-import dev.erst.gridgrind.engine.cells.CellsAdapter;
 import dev.erst.gridgrind.engine.charts.ChartAdapter;
 import dev.erst.gridgrind.engine.charts.ChartAdapter.AxisRegistry;
 import dev.erst.gridgrind.engine.charts.ChartAdapter.ResolvedChartSource;
@@ -67,7 +66,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xddf.usermodel.chart.AxisPosition;
@@ -75,7 +73,6 @@ import org.apache.poi.xddf.usermodel.chart.ChartTypes;
 import org.apache.poi.xddf.usermodel.chart.XDDFArea3DChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFBar3DChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFBarChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFChartAxis;
 import org.apache.poi.xddf.usermodel.chart.XDDFChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory;
 import org.apache.poi.xddf.usermodel.chart.XDDFLine3DChartData;
@@ -83,7 +80,6 @@ import org.apache.poi.xddf.usermodel.chart.XDDFLineChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFPie3DChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFPieChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFScatterChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
 import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFGraphicFrame;
@@ -95,7 +91,6 @@ import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlObject;
 import org.junit.jupiter.api.Test;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTMarker;
-import org.openxmlformats.schemas.drawingml.x2006.chart.CTUnsignedInt;
 import org.openxmlformats.schemas.drawingml.x2006.chart.STMarkerStyle;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTLegacyDrawing;
 
@@ -134,7 +129,10 @@ class ExcelResidualHelperCoverageTest {
           ChartAdapter.snapshotPlots(
               emptyChart, List.of(unplottedBarData, new UnsupportedChartData()));
       assertEquals(2, unsupportedPlots.size());
-      assertTrue(unsupportedPlots.stream().allMatch(ChartReport.Unsupported.class::isInstance));
+      var emptyBar = assertInstanceOf(ChartReport.Bar.class, unsupportedPlots.getFirst());
+      assertEquals(List.of(), emptyBar.series());
+      assertEquals(2, emptyBar.axes().size());
+      assertInstanceOf(ChartReport.Unsupported.class, unsupportedPlots.get(1));
 
       XSSFChart lineChart = drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 8, 1, 14, 10));
       XDDFLineChartData lineData =
@@ -212,7 +210,7 @@ class ExcelResidualHelperCoverageTest {
       Name sparseNumbers = workbook.createName();
       sparseNumbers.setNameName("SparseNums");
       sparseNumbers.setRefersToFormula("B20:B21");
-      XDDFValueAxis scratchAxis = lineChart.createValueAxis(AxisPosition.RIGHT);
+      lineChart.createValueAxis(AxisPosition.RIGHT);
       assertEquals(
           2,
           ChartAdapter.toValueDataSource(sheet, new ChartDataSourceSpec.Reference("LocalNums"))
@@ -232,23 +230,6 @@ class ExcelResidualHelperCoverageTest {
           () ->
               ChartAdapter.toValueDataSource(
                   sheet, new ChartDataSourceSpec.StringLiteral(List.of("Jan"))));
-
-      CTUnsignedInt knownAxisId = CTUnsignedInt.Factory.newInstance();
-      knownAxisId.setVal(scratchAxis.getId());
-      CTUnsignedInt missingAxisId = CTUnsignedInt.Factory.newInstance();
-      missingAxisId.setVal(Long.MAX_VALUE);
-      List<?> snapshotAxes =
-          ChartAdapter.snapshotAxes(
-              java.util.Map.of(scratchAxis.getId(), (XDDFChartAxis) scratchAxis),
-              List.of(knownAxisId, missingAxisId));
-      assertEquals(1, snapshotAxes.size());
-
-      assertThrows(
-          IllegalStateException.class, () -> ChartAdapter.snapshotDataSource(sheet, null, null));
-      assertInstanceOf(
-          ChartReport.DataSource.NumericLiteral.class,
-          ChartAdapter.snapshotDataSource(
-              sheet, XDDFDataSourcesFactory.fromArray(new Double[] {1d, 2d}), null));
 
       ChartAdapter.createChart(
           sheet,
@@ -400,7 +381,9 @@ class ExcelResidualHelperCoverageTest {
 
       XSSFSheet annotationSheet = workbook.createSheet("Annotations");
       CommentAdapter annotationSupport = new CommentAdapter(annotationSheet);
-      annotationSupport.setComment("A1", new ResolvedComment("Review", "GridGrind", false));
+      annotationSupport.setComment(
+          new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+          new ResolvedComment("Review", "GridGrind", false));
       String vmlRelationId = CommentAdapter.vmlDrawingRelationId(annotationSheet).orElseThrow();
       assertEquals(
           java.util.Optional.of(vmlRelationId),
@@ -413,7 +396,7 @@ class ExcelResidualHelperCoverageTest {
       assertEquals(
           java.util.Optional.of(vmlRelationId),
           CommentAdapter.legacyDrawingRelationId(annotationSheet));
-      annotationSupport.clearComment("A1");
+      annotationSupport.clearComment(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       annotationSheet.createRow(5).createCell(5);
       CommentAdapter.clearCellComment(annotationSheet.getRow(5).getCell(5));
       try (HSSFWorkbook legacyWorkbook = new HSSFWorkbook()) {
@@ -452,12 +435,21 @@ class ExcelResidualHelperCoverageTest {
       sheet
           .cells()
           .setRange(
-              "B2:C4",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("B2:C4"),
               List.of(
-                  List.of(new CellValue.NumberValue(2d), new CellValue.NumberValue(3d)),
-                  List.of(new CellValue.NumberValue(4d), new CellValue.NumberValue(5d)),
-                  List.of(new CellValue.NumberValue(6d), new CellValue.NumberValue(7d))));
-      sheet.cells().setCell("A1", new ResolvedFormula("1+1"));
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(2d),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(3d)),
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(4d),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(5d)),
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(6d),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(7d))));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), new ResolvedFormula("1+1"));
       assertEquals(List.of(), sheet.cells().arrayFormulas());
 
       ResolvedMutationExecutor.apply(
@@ -476,31 +468,25 @@ class ExcelResidualHelperCoverageTest {
 
       assertThrows(
           InvalidFormulaException.class,
-          () -> sheet.cells().setArrayFormula("E2:E4", new ResolvedArrayFormula("SUM(")));
-      assertThrows(CellNotFoundException.class, () -> sheet.cells().clearArrayFormula("Z99"));
+          () ->
+              sheet
+                  .cells()
+                  .setArrayFormula(
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("E2:E4"),
+                      new ResolvedArrayFormula("SUM(")));
+      assertThrows(
+          CellNotFoundException.class,
+          () ->
+              sheet
+                  .cells()
+                  .clearArrayFormula(new dev.erst.gridgrind.core.vocabulary.CellAddress("Z99")));
       sheet.xssfSheet().createRow(0);
-      assertThrows(CellNotFoundException.class, () -> sheet.cells().clearArrayFormula("B1"));
       assertThrows(
-          InvalidCellAddressException.class, () -> sheet.cells().clearArrayFormula("XFE1048577"));
-      assertThrows(
-          InvalidCellAddressException.class,
-          () -> CellsAdapter.requireValidCellReference("A0", new CellReference(-1, 0)));
-      assertThrows(
-          InvalidCellAddressException.class,
-          () -> CellsAdapter.requireValidCellReference("A0", new CellReference(0, -1)));
-      assertThrows(
-          InvalidCellAddressException.class,
+          CellNotFoundException.class,
           () ->
-              CellsAdapter.requireValidCellReference(
-                  "A0",
-                  new CellReference(0, SpreadsheetVersion.EXCEL2007.getLastColumnIndex() + 1)));
-      assertThrows(
-          InvalidCellAddressException.class,
-          () ->
-              CellsAdapter.requireValidCellReference(
-                  "A1048577",
-                  new CellReference(SpreadsheetVersion.EXCEL2007.getLastRowIndex() + 1, 0)));
-
+              sheet
+                  .cells()
+                  .clearArrayFormula(new dev.erst.gridgrind.core.vocabulary.CellAddress("B1")));
       ResolvedMutationExecutor.apply(
           workbook,
           new ResolvedStep(
@@ -558,7 +544,7 @@ class ExcelResidualHelperCoverageTest {
           workbook
               .sheet("Foglio1")
               .cells()
-              .window("A1", 1, 1)
+              .window(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), 1, 1)
               .rows()
               .getFirst()
               .cells()
@@ -595,7 +581,11 @@ class ExcelResidualHelperCoverageTest {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Source");
       workbook.getOrCreateSheet("Target");
-      workbook.sheet("Target").cells().setCell("A1", new ResolvedFormula("1+1"));
+      workbook
+          .sheet("Target")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), new ResolvedFormula("1+1"));
       workbook
           .names()
           .setNamedRange(
@@ -780,7 +770,7 @@ class ExcelResidualHelperCoverageTest {
   }
 
   private static ResolvedSignatureLine signatureDefinition(
-      String name, DrawingAnchorSpec.TwoCell anchor) {
+      String name, DrawingAnchorSpec.TwoCell anchor) throws java.io.IOException {
     return new ResolvedSignatureLine(
         name,
         anchor,
@@ -792,7 +782,7 @@ class ExcelResidualHelperCoverageTest {
         Optional.empty(),
         Optional.of("invalid"),
         Optional.of(ExcelPictureFormat.PNG),
-        Optional.of(new BinaryContent(new byte[] {1})));
+        Optional.of(new BinaryContent(validPng())));
   }
 
   private static ChartAxisSpec axis(ExcelChartAxisKind kind) {

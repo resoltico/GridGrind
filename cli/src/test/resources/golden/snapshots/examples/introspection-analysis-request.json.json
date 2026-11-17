@@ -423,7 +423,7 @@
           }
         },
         "temporal" : {
-          "isDate" : false
+          "type" : "NOT_TEMPORAL"
         },
         "type" : "NUMBER",
         "value" : {
@@ -591,7 +591,7 @@
           }
         },
         "temporal" : {
-          "isDate" : false
+          "type" : "NOT_TEMPORAL"
         },
         "type" : "NUMBER",
         "value" : {
@@ -771,7 +771,7 @@
           }
         },
         "temporal" : {
-          "isDate" : false
+          "type" : "NOT_TEMPORAL"
         },
         "type" : "FORMULA",
         "value" : {
@@ -896,6 +896,10 @@
     },
     "evidence" : {
       "admission" : {
+        "executionStrategy" : {
+          "backend" : "FULL_XSSF",
+          "fullWorkbookMaterializationRequired" : true
+        },
         "materializedInputs" : [ ],
         "operations" : [ {
           "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS", "WORKBOOK_STRUCTURE", "SHEET_STRUCTURE", "ROWS", "COLUMNS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "WORKBOOK_METADATA", "WORKBOOK_SECURITY" ],

@@ -10,10 +10,9 @@ class ExcelNamedRangeScopeTest {
   @Test
   void validatesSheetScopeInput() {
     assertDoesNotThrow(() -> new NamedRangeScopeReport.Workbook());
-    assertDoesNotThrow(
-        () ->
-            new NamedRangeScopeReport.Sheet(
-                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")));
+    assertDoesNotThrow(() ->
+        new NamedRangeScopeReport.Sheet(
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")));
     assertThrows(
         NullPointerException.class,
         () ->

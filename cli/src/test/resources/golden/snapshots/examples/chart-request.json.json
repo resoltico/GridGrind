@@ -143,14 +143,26 @@
           "behavior" : "MOVE_AND_RESIZE",
           "from" : {
             "columnIndex" : 4,
-            "dx" : 0,
-            "dy" : 0,
+            "dx" : {
+              "type" : "EMU",
+              "value" : 0
+            },
+            "dy" : {
+              "type" : "EMU",
+              "value" : 0
+            },
             "rowIndex" : 0
           },
           "to" : {
             "columnIndex" : 8,
-            "dx" : 0,
-            "dy" : 0,
+            "dx" : {
+              "type" : "EMU",
+              "value" : 0
+            },
+            "dy" : {
+              "type" : "EMU",
+              "value" : 0
+            },
             "rowIndex" : 12
           },
           "type" : "TWO_CELL"
@@ -164,12 +176,18 @@
         "plotOnlyVisibleCells" : false,
         "plots" : [ {
           "axes" : [ {
-            "crosses" : "AUTO_ZERO",
+            "crosses" : {
+              "mode" : "AUTO_ZERO",
+              "type" : "MODE"
+            },
             "kind" : "CATEGORY",
             "position" : "BOTTOM",
             "visible" : true
           }, {
-            "crosses" : "AUTO_ZERO",
+            "crosses" : {
+              "mode" : "AUTO_ZERO",
+              "type" : "MODE"
+            },
             "kind" : "VALUE",
             "position" : "LEFT",
             "visible" : true
@@ -180,7 +198,20 @@
           "overlap" : 0,
           "series" : [ {
             "categories" : {
-              "cachedValues" : [ "Jan", "Feb", "Mar" ],
+              "cache" : {
+                "declaredCount" : 3,
+                "points" : [ {
+                  "index" : 0,
+                  "valueText" : "Jan"
+                }, {
+                  "index" : 1,
+                  "valueText" : "Feb"
+                }, {
+                  "index" : 2,
+                  "valueText" : "Mar"
+                } ],
+                "type" : "STORED"
+              },
               "formula" : "ChartCategories",
               "type" : "STRING_REFERENCE"
             },
@@ -189,13 +220,39 @@
               "type" : "TEXT"
             },
             "values" : {
-              "cachedValues" : [ "10.0", "18.0", "15.0" ],
+              "cache" : {
+                "declaredCount" : 3,
+                "points" : [ {
+                  "index" : 0,
+                  "valueText" : "10.0"
+                }, {
+                  "index" : 1,
+                  "valueText" : "18.0"
+                }, {
+                  "index" : 2,
+                  "valueText" : "15.0"
+                } ],
+                "type" : "STORED"
+              },
               "formula" : "Ops!$B$2:$B$4",
               "type" : "NUMERIC_REFERENCE"
             }
           }, {
             "categories" : {
-              "cachedValues" : [ "Jan", "Feb", "Mar" ],
+              "cache" : {
+                "declaredCount" : 3,
+                "points" : [ {
+                  "index" : 0,
+                  "valueText" : "Jan"
+                }, {
+                  "index" : 1,
+                  "valueText" : "Feb"
+                }, {
+                  "index" : 2,
+                  "valueText" : "Mar"
+                } ],
+                "type" : "STORED"
+              },
               "formula" : "ChartCategories",
               "type" : "STRING_REFERENCE"
             },
@@ -204,7 +261,20 @@
               "type" : "TEXT"
             },
             "values" : {
-              "cachedValues" : [ "12.0", "17.0", "16.0" ],
+              "cache" : {
+                "declaredCount" : 3,
+                "points" : [ {
+                  "index" : 0,
+                  "valueText" : "12.0"
+                }, {
+                  "index" : 1,
+                  "valueText" : "17.0"
+                }, {
+                  "index" : 2,
+                  "valueText" : "16.0"
+                } ],
+                "type" : "STORED"
+              },
               "formula" : "ChartActual",
               "type" : "NUMERIC_REFERENCE"
             }
@@ -226,14 +296,26 @@
           "behavior" : "MOVE_AND_RESIZE",
           "from" : {
             "columnIndex" : 4,
-            "dx" : 0,
-            "dy" : 0,
+            "dx" : {
+              "type" : "EMU",
+              "value" : 0
+            },
+            "dy" : {
+              "type" : "EMU",
+              "value" : 0
+            },
             "rowIndex" : 0
           },
           "to" : {
             "columnIndex" : 8,
-            "dx" : 0,
-            "dy" : 0,
+            "dx" : {
+              "type" : "EMU",
+              "value" : 0
+            },
+            "dy" : {
+              "type" : "EMU",
+              "value" : 0
+            },
             "rowIndex" : 12
           },
           "type" : "TWO_CELL"
@@ -241,7 +323,10 @@
         "name" : "OpsChart",
         "plotTypeTokens" : [ "BAR" ],
         "supported" : true,
-        "title" : "Roadmap",
+        "title" : {
+          "text" : "Roadmap",
+          "type" : "TEXT"
+        },
         "type" : "CHART"
       } ],
       "sheetName" : "Ops",
@@ -519,7 +604,7 @@
           }
         },
         "temporal" : {
-          "isDate" : false
+          "type" : "NOT_TEMPORAL"
         },
         "type" : "NUMBER",
         "value" : {
@@ -577,7 +662,7 @@
           }
         },
         "temporal" : {
-          "isDate" : false
+          "type" : "NOT_TEMPORAL"
         },
         "type" : "NUMBER",
         "value" : {
@@ -690,7 +775,7 @@
           }
         },
         "temporal" : {
-          "isDate" : false
+          "type" : "NOT_TEMPORAL"
         },
         "type" : "NUMBER",
         "value" : {
@@ -748,7 +833,7 @@
           }
         },
         "temporal" : {
-          "isDate" : false
+          "type" : "NOT_TEMPORAL"
         },
         "type" : "NUMBER",
         "value" : {
@@ -861,7 +946,7 @@
           }
         },
         "temporal" : {
-          "isDate" : false
+          "type" : "NOT_TEMPORAL"
         },
         "type" : "NUMBER",
         "value" : {
@@ -919,7 +1004,7 @@
           }
         },
         "temporal" : {
-          "isDate" : false
+          "type" : "NOT_TEMPORAL"
         },
         "type" : "NUMBER",
         "value" : {
@@ -993,6 +1078,10 @@
     },
     "evidence" : {
       "admission" : {
+        "executionStrategy" : {
+          "backend" : "FULL_XSSF",
+          "fullWorkbookMaterializationRequired" : true
+        },
         "materializedInputs" : [ ],
         "operations" : [ {
           "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS", "WORKBOOK_STRUCTURE", "SHEET_STRUCTURE", "ROWS", "COLUMNS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "WORKBOOK_METADATA", "WORKBOOK_SECURITY" ],
@@ -1054,14 +1143,26 @@
           "behavior" : "MOVE_AND_RESIZE",
           "from" : {
             "columnIndex" : 4,
-            "dx" : 0,
-            "dy" : 0,
+            "dx" : {
+              "type" : "EMU",
+              "value" : 0
+            },
+            "dy" : {
+              "type" : "EMU",
+              "value" : 0
+            },
             "rowIndex" : 0
           },
           "to" : {
             "columnIndex" : 8,
-            "dx" : 0,
-            "dy" : 0,
+            "dx" : {
+              "type" : "EMU",
+              "value" : 0
+            },
+            "dy" : {
+              "type" : "EMU",
+              "value" : 0
+            },
             "rowIndex" : 12
           },
           "type" : "TWO_CELL"
@@ -1075,12 +1176,18 @@
         "plotOnlyVisibleCells" : false,
         "plots" : [ {
           "axes" : [ {
-            "crosses" : "AUTO_ZERO",
+            "crosses" : {
+              "mode" : "AUTO_ZERO",
+              "type" : "MODE"
+            },
             "kind" : "CATEGORY",
             "position" : "BOTTOM",
             "visible" : true
           }, {
-            "crosses" : "AUTO_ZERO",
+            "crosses" : {
+              "mode" : "AUTO_ZERO",
+              "type" : "MODE"
+            },
             "kind" : "VALUE",
             "position" : "LEFT",
             "visible" : true
@@ -1091,7 +1198,20 @@
           "overlap" : 0,
           "series" : [ {
             "categories" : {
-              "cachedValues" : [ "Jan", "Feb", "Mar" ],
+              "cache" : {
+                "declaredCount" : 3,
+                "points" : [ {
+                  "index" : 0,
+                  "valueText" : "Jan"
+                }, {
+                  "index" : 1,
+                  "valueText" : "Feb"
+                }, {
+                  "index" : 2,
+                  "valueText" : "Mar"
+                } ],
+                "type" : "STORED"
+              },
               "formula" : "ChartCategories",
               "type" : "STRING_REFERENCE"
             },
@@ -1100,13 +1220,39 @@
               "type" : "TEXT"
             },
             "values" : {
-              "cachedValues" : [ "10.0", "18.0", "15.0" ],
+              "cache" : {
+                "declaredCount" : 3,
+                "points" : [ {
+                  "index" : 0,
+                  "valueText" : "10.0"
+                }, {
+                  "index" : 1,
+                  "valueText" : "18.0"
+                }, {
+                  "index" : 2,
+                  "valueText" : "15.0"
+                } ],
+                "type" : "STORED"
+              },
               "formula" : "Ops!$B$2:$B$4",
               "type" : "NUMERIC_REFERENCE"
             }
           }, {
             "categories" : {
-              "cachedValues" : [ "Jan", "Feb", "Mar" ],
+              "cache" : {
+                "declaredCount" : 3,
+                "points" : [ {
+                  "index" : 0,
+                  "valueText" : "Jan"
+                }, {
+                  "index" : 1,
+                  "valueText" : "Feb"
+                }, {
+                  "index" : 2,
+                  "valueText" : "Mar"
+                } ],
+                "type" : "STORED"
+              },
               "formula" : "ChartCategories",
               "type" : "STRING_REFERENCE"
             },
@@ -1115,7 +1261,20 @@
               "type" : "TEXT"
             },
             "values" : {
-              "cachedValues" : [ "12.0", "17.0", "16.0" ],
+              "cache" : {
+                "declaredCount" : 3,
+                "points" : [ {
+                  "index" : 0,
+                  "valueText" : "12.0"
+                }, {
+                  "index" : 1,
+                  "valueText" : "17.0"
+                }, {
+                  "index" : 2,
+                  "valueText" : "16.0"
+                } ],
+                "type" : "STORED"
+              },
               "formula" : "ChartActual",
               "type" : "NUMERIC_REFERENCE"
             }

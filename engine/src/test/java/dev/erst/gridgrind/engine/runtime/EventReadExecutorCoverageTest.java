@@ -29,7 +29,9 @@ class EventReadExecutorCoverageTest {
         assertInstanceOf(
             WorkbookResult.Failure.class,
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -59,7 +61,9 @@ class EventReadExecutorCoverageTest {
         assertInstanceOf(
             WorkbookResult.Success.class,
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -92,7 +96,9 @@ class EventReadExecutorCoverageTest {
                           throw new IOException("close failed");
                         },
                         dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter
-                            ::markRecalculateOnOpen)),
+                            ::markRecalculateOnOpen),
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -125,7 +131,9 @@ class EventReadExecutorCoverageTest {
                           throw new IOException("close failed");
                         },
                         dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter
-                            ::markRecalculateOnOpen)),
+                            ::markRecalculateOnOpen),
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -153,7 +161,9 @@ class EventReadExecutorCoverageTest {
         assertInstanceOf(
             WorkbookResult.Failure.class,
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(missingWorkbook.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),

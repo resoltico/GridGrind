@@ -25,7 +25,7 @@ class ResolvedRangeClearTest {
       sheet
           .metadata()
           .setDataValidation(
-              "A1:B3",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3"),
               new ResolvedDataValidation(
                   new DataValidationRuleSpec.ExplicitList(List.of("yes", "no")),
                   true,

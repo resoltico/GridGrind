@@ -151,32 +151,28 @@ final class CatalogSearchAggregationSupport {
   private static CatalogSearchMatch requireOwnerMatchForQualifiedId(
       Catalog catalog, String qualifiedId) {
     return ownerMatchForQualifiedId(catalog, qualifiedId)
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "Catalog related entry id did not resolve: " + qualifiedId));
+        .orElseThrow(() ->
+            new IllegalStateException("Catalog related entry id did not resolve: " + qualifiedId));
   }
 
   private static Optional<CatalogSearchMatch> ownerMatchForQualifiedId(
       Catalog catalog, String qualifiedId) {
     return CatalogRefResolutionSupport.allLookupRefs(catalog).stream()
-        .filter(
-            ref ->
-                ref.qualifiedId().equals(qualifiedId)
-                    && ref.value() instanceof CatalogEntryLookupValue
-                    && CatalogSearchRankingSupport.isTopLevelPublishedGroup(ref.catalogGroup()))
+        .filter(ref ->
+            ref.qualifiedId().equals(qualifiedId)
+                && ref.value() instanceof TypeEntry
+                && CatalogSearchRankingSupport.isTopLevelPublishedGroup(ref.catalogGroup()))
         .findFirst()
-        .map(
-            ref ->
-                new CatalogSearchMatch(
-                    ref.catalogGroup(),
-                    ref.lookupId(),
-                    ref.qualifiedId(),
-                    CatalogLookupValueSupport.kind(ref.value()),
-                    CatalogLookupValueSupport.summary(ref.value()),
-                    CatalogSearchRankingSupport.stepTemplateFor(ref, ref.value()),
-                    List.of(),
-                    List.of()));
+        .map(ref ->
+            new CatalogSearchMatch(
+                ref.catalogGroup(),
+                ref.lookupId(),
+                ref.qualifiedId(),
+                CatalogLookupValueSupport.kind(ref.value()),
+                CatalogLookupValueSupport.summary(ref.value()),
+                CatalogSearchRankingSupport.stepTemplateFor(ref, ref.value()),
+                List.of(),
+                List.of()));
   }
 
   private static Optional<CatalogSearchMatch> groupLookupMatchFor(
@@ -184,17 +180,16 @@ final class CatalogSearchAggregationSupport {
     return CatalogRefResolutionSupport.allLookupRefs(catalog).stream()
         .filter(ref -> ref.catalogGroup().equals(catalogGroup) && ref.lookupId().equals(lookupId))
         .findFirst()
-        .map(
-            ref ->
-                new CatalogSearchMatch(
-                    ref.catalogGroup(),
-                    ref.lookupId(),
-                    ref.qualifiedId(),
-                    CatalogLookupValueSupport.kind(ref.value()),
-                    CatalogLookupValueSupport.summary(ref.value()),
-                    CatalogSearchRankingSupport.stepTemplateFor(ref, ref.value()),
-                    CatalogShapeTextSupport.relatedEntryIdsFor(catalog, ref, ref.value()),
-                    List.of()));
+        .map(ref ->
+            new CatalogSearchMatch(
+                ref.catalogGroup(),
+                ref.lookupId(),
+                ref.qualifiedId(),
+                CatalogLookupValueSupport.kind(ref.value()),
+                CatalogLookupValueSupport.summary(ref.value()),
+                CatalogSearchRankingSupport.stepTemplateFor(ref, ref.value()),
+                CatalogShapeTextSupport.relatedEntryIdsFor(catalog, ref, ref.value()),
+                List.of()));
   }
 
   /** Aggregates grouped search state for one top-level published catalog owner. */

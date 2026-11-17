@@ -98,7 +98,6 @@ import org.openxmlformats.schemas.drawingml.x2006.chart.CTSurface3DChart;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTSurfaceChart;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTTitle;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTTx;
-import org.openxmlformats.schemas.drawingml.x2006.chart.CTUnsignedInt;
 import org.openxmlformats.schemas.drawingml.x2006.chart.STDispBlanksAs;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -233,23 +232,14 @@ public final class ChartAdapter {
     }
   }
 
-  public static ChartReport.Title prepareSeriesTitle(XSSFSheet sheet, ResolvedChartTitle title) {
-    return prepareSeriesTitle(sheet, title, null);
-  }
-
-  public static ChartReport.Title prepareSeriesTitle(
+  private static void validateSeriesTitle(
       XSSFSheet sheet, ResolvedChartTitle title, @Nullable FormulaRuntime formulaRuntime) {
-    return switch (title) {
-      case ChartTitleSpec.None _ -> new ChartReport.Title.None();
-      case ResolvedChartTitle.Text text -> new ChartReport.Title.Text(text.text());
-      case ChartTitleSpec.Formula formula -> {
-        CellReference reference =
-            resolveSingleCellReference(
-                sheet, normalizeFormula(formula.formula()), "Series title formula");
-        yield new ChartReport.Title.Formula(
-            reference.formatAsString(), scalarText(sheet, reference, formulaRuntime));
-      }
-    };
+    if (title instanceof ChartTitleSpec.Formula formula) {
+      CellReference reference =
+          resolveSingleCellReference(
+              sheet, normalizeFormula(formula.formula()), "Series title formula");
+      scalarText(sheet, reference, formulaRuntime);
+    }
   }
 
   private static void validateChartTitle(
@@ -267,7 +257,7 @@ public final class ChartAdapter {
     for (ResolvedChart.Series series : plotSeries(plot)) {
       toCategoryDataSource(sheet, series.categories(), formulaRuntime);
       toValueDataSource(sheet, series.values(), formulaRuntime);
-      prepareSeriesTitle(sheet, series.title(), formulaRuntime);
+      validateSeriesTitle(sheet, series.title(), formulaRuntime);
     }
   }
 
@@ -615,13 +605,17 @@ public final class ChartAdapter {
       XDDFChartData.Series series,
       ResolvedChartTitle title,
       @Nullable FormulaRuntime formulaRuntime) {
-    switch (prepareSeriesTitle(sheet, title, formulaRuntime)) {
-      case ChartReport.Title.None _ -> {
-        // Leave the series title unset.
+    switch (title) {
+      case ChartTitleSpec.None _ -> {
+        // Leave the authored series title unset.
       }
-      case ChartReport.Title.Text text -> series.setTitle(text.text());
-      case ChartReport.Title.Formula formula ->
-          series.setTitle(formula.cachedText(), new CellReference(formula.formula()));
+      case ResolvedChartTitle.Text text -> series.setTitle(text.text());
+      case ChartTitleSpec.Formula formula -> {
+        CellReference reference =
+            resolveSingleCellReference(
+                sheet, normalizeFormula(formula.formula()), "Series title formula");
+        series.setTitle(scalarText(sheet, reference, formulaRuntime), reference);
+      }
     }
   }
 
@@ -663,48 +657,31 @@ public final class ChartAdapter {
 
   public static List<ChartReport.Plot> snapshotPlots(
       XSSFChart chart, List<XDDFChartData> chartData) {
-    return snapshotPlots(chart, chart.getGraphicFrame(), chartData, null);
+    StoredChartReader reader = storedReader(chart);
+    return reader.read(
+        "chart.plotArea",
+        () -> {
+          reader.requireReadPreconditions(chart.getCTChart().getPlotArea());
+          return snapshotPlots(chart, chartData, reader);
+        });
   }
 
-  public static List<ChartReport.Plot> snapshotPlots(
-      XSSFChart chart, List<XDDFChartData> chartData, @Nullable FormulaRuntime formulaRuntime) {
-    return snapshotPlots(chart, chart.getGraphicFrame(), chartData, formulaRuntime);
-  }
-
-  public static List<ChartReport.Plot> snapshotPlots(
-      XSSFChart chart,
-      XSSFGraphicFrame graphicFrame,
-      List<XDDFChartData> chartData,
-      @Nullable FormulaRuntime formulaRuntime) {
+  private static List<ChartReport.Plot> snapshotPlots(
+      XSSFChart chart, List<XDDFChartData> chartData, StoredChartReader reader) {
     if (chartData.isEmpty()) {
       return List.of(new ChartReport.Unsupported("UNKNOWN", "Chart contains no parsed plots"));
     }
-
     List<ChartReport.Plot> plots = new ArrayList<>();
-    PlotAreaState state = new PlotAreaState(chart);
+    PlotAreaState state = new PlotAreaState(chart, reader);
     PlotCursor cursor = new PlotCursor();
-    XSSFSheet contextSheet = contextSheet(chart, graphicFrame);
     for (XDDFChartData data : chartData) {
-      try {
-        plots.add(snapshotPlot(contextSheet, state, cursor, data, formulaRuntime));
-      } catch (RuntimeException exception) {
-        plots.add(
-            new ChartReport.Unsupported(
-                plotTypeToken(data),
-                Objects.requireNonNullElse(
-                    exception.getMessage(),
-                    "Chart plot family is outside the current modeled chart contract.")));
-      }
+      plots.add(snapshotPlot(state, cursor, data, reader));
     }
     return List.copyOf(plots);
   }
 
   private static ChartReport.Plot snapshotPlot(
-      @Nullable XSSFSheet contextSheet,
-      PlotAreaState state,
-      PlotCursor cursor,
-      XDDFChartData data,
-      @Nullable FormulaRuntime formulaRuntime) {
+      PlotAreaState state, PlotCursor cursor, XDDFChartData data, StoredChartReader reader) {
     return switch (data) {
       case org.apache.poi.xddf.usermodel.chart.XDDFAreaChartData areaData -> {
         CTAreaChart areaChart = state.plotArea().getAreaChartArray(cursor.nextArea());
@@ -712,21 +689,23 @@ public final class ChartAdapter {
             truthy(areaChart.getVaryColors()),
             fromGroupingTokenOrDefault(
                 areaChart.isSetGrouping() ? areaChart.getGrouping().getVal().toString() : null),
-            snapshotAxes(state.axesById(), areaChart.getAxIdList()),
-            snapshotAreaSeries(contextSheet, areaData, formulaRuntime));
+            state.axes().selected(areaChart.getAxIdList()),
+            snapshotAreaSeries(areaData, reader));
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFArea3DChartData areaData -> {
         CTArea3DChart areaChart = state.plotArea().getArea3DChartArray(cursor.nextArea3D());
+        reader.requireFields(areaChart, "gapDepth");
         yield new ChartReport.Area3D(
             truthy(areaChart.getVaryColors()),
             fromGroupingTokenOrDefault(
                 areaChart.isSetGrouping() ? areaChart.getGrouping().getVal().toString() : null),
             Optional.ofNullable(areaData.getGapDepth()),
-            snapshotAxes(state.axesById(), areaChart.getAxIdList()),
-            snapshotArea3DSeries(contextSheet, areaData, formulaRuntime));
+            state.axes().selected(areaChart.getAxIdList()),
+            snapshotArea3DSeries(areaData, reader));
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFBarChartData barData -> {
         CTBarChart barChart = state.plotArea().getBarChartArray(cursor.nextBar());
+        reader.requireFields(barChart, "gapWidth", "overlap");
         yield new ChartReport.Bar(
             truthy(barChart.getVaryColors()),
             fromPoiBarDirection(barData.getBarDirection()),
@@ -734,11 +713,12 @@ public final class ChartAdapter {
                 barChart.isSetGrouping() ? barChart.getGrouping().getVal().toString() : null),
             Optional.ofNullable(barData.getGapWidth()),
             Optional.ofNullable(barData.getOverlap()).map(Integer::valueOf),
-            snapshotAxes(state.axesById(), barChart.getAxIdList()),
-            snapshotBarSeries(contextSheet, barData, formulaRuntime));
+            state.axes().selected(barChart.getAxIdList()),
+            snapshotBarSeries(barData, reader));
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFBar3DChartData barData -> {
         CTBar3DChart barChart = state.plotArea().getBar3DChartArray(cursor.nextBar3D());
+        reader.requireFields(barChart, "gapDepth", "gapWidth");
         yield new ChartReport.Bar3D(
             truthy(barChart.getVaryColors()),
             fromPoiBarDirection(barData.getBarDirection()),
@@ -747,17 +727,18 @@ public final class ChartAdapter {
             Optional.ofNullable(barData.getGapDepth()),
             Optional.ofNullable(barData.getGapWidth()),
             barChart.isSetShape() ? fromPoiBarShape(barData.getShape()) : Optional.empty(),
-            snapshotAxes(state.axesById(), barChart.getAxIdList()),
-            snapshotBar3DSeries(contextSheet, barData, formulaRuntime));
+            state.axes().selected(barChart.getAxIdList()),
+            snapshotBar3DSeries(barData, reader));
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFDoughnutChartData doughnutData -> {
         CTDoughnutChart doughnutChart =
             state.plotArea().getDoughnutChartArray(cursor.nextDoughnut());
+        reader.requireFields(doughnutChart, "firstSliceAng", "holeSize");
         yield new ChartReport.Doughnut(
             truthy(doughnutChart.getVaryColors()),
             Optional.ofNullable(doughnutData.getFirstSliceAngle()),
             Optional.ofNullable(doughnutData.getHoleSize()),
-            snapshotDoughnutSeries(contextSheet, doughnutData, formulaRuntime));
+            snapshotDoughnutSeries(doughnutData, reader));
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFLineChartData lineData -> {
         CTLineChart lineChart = state.plotArea().getLineChartArray(cursor.nextLine());
@@ -767,11 +748,12 @@ public final class ChartAdapter {
                 lineChart.getGrouping() == null
                     ? null
                     : lineChart.getGrouping().getVal().toString()),
-            snapshotAxes(state.axesById(), lineChart.getAxIdList()),
-            snapshotLineSeries(contextSheet, lineData, formulaRuntime));
+            state.axes().selected(lineChart.getAxIdList()),
+            snapshotLineSeries(lineData, reader));
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFLine3DChartData lineData -> {
         CTLine3DChart lineChart = state.plotArea().getLine3DChartArray(cursor.nextLine3D());
+        reader.requireFields(lineChart, "gapDepth");
         yield new ChartReport.Line3D(
             truthy(lineChart.getVaryColors()),
             fromGroupingTokenOrDefault(
@@ -779,45 +761,45 @@ public final class ChartAdapter {
                     ? null
                     : lineChart.getGrouping().getVal().toString()),
             Optional.ofNullable(lineData.getGapDepth()),
-            snapshotAxes(state.axesById(), lineChart.getAxIdList()),
-            snapshotLine3DSeries(contextSheet, lineData, formulaRuntime));
+            state.axes().selected(lineChart.getAxIdList()),
+            snapshotLine3DSeries(lineData, reader));
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFPieChartData pieData -> {
         CTPieChart pieChart = state.plotArea().getPieChartArray(cursor.nextPie());
+        reader.requireFields(pieChart, "firstSliceAng");
         yield new ChartReport.Pie(
             truthy(pieChart.getVaryColors()),
             Optional.ofNullable(pieData.getFirstSliceAngle()),
-            snapshotPieSeries(contextSheet, pieData, formulaRuntime));
+            snapshotPieSeries(pieData, reader));
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFPie3DChartData pie3DData -> {
         CTPie3DChart pie3DChart = state.plotArea().getPie3DChartArray(cursor.nextPie3D());
         yield new ChartReport.Pie3D(
-            truthy(pie3DChart.getVaryColors()),
-            snapshotPie3DSeries(contextSheet, pie3DData, formulaRuntime));
+            truthy(pie3DChart.getVaryColors()), snapshotPie3DSeries(pie3DData, reader));
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFRadarChartData radarData -> {
         CTRadarChart radarChart = state.plotArea().getRadarChartArray(cursor.nextRadar());
         yield new ChartReport.Radar(
             truthy(radarChart.getVaryColors()),
             fromPoiRadarStyle(radarData.getStyle()),
-            snapshotAxes(state.axesById(), radarChart.getAxIdList()),
-            snapshotRadarSeries(contextSheet, radarData, formulaRuntime));
+            state.axes().selected(radarChart.getAxIdList()),
+            snapshotRadarSeries(radarData, reader));
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFScatterChartData scatterData -> {
         CTScatterChart scatterChart = state.plotArea().getScatterChartArray(cursor.nextScatter());
         yield new ChartReport.Scatter(
             truthy(scatterChart.getVaryColors()),
             fromPoiScatterStyle(scatterData.getStyle()),
-            snapshotAxes(state.axesById(), scatterChart.getAxIdList()),
-            snapshotScatterSeries(contextSheet, scatterData, formulaRuntime));
+            state.axes().selected(scatterChart.getAxIdList()),
+            snapshotScatterSeries(scatterData, reader));
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFSurfaceChartData surfaceData -> {
         CTSurfaceChart surfaceChart = state.plotArea().getSurfaceChartArray(cursor.nextSurface());
         yield new ChartReport.Surface(
             false,
             Boolean.TRUE.equals(surfaceData.isWireframe()),
-            snapshotAxes(state.axesById(), surfaceChart.getAxIdList()),
-            snapshotSurfaceSeries(contextSheet, surfaceData, formulaRuntime));
+            state.axes().selected(surfaceChart.getAxIdList()),
+            snapshotSurfaceSeries(surfaceData, reader));
       }
       case org.apache.poi.xddf.usermodel.chart.XDDFSurface3DChartData surface3DData -> {
         CTSurface3DChart surface3DChart =
@@ -825,8 +807,8 @@ public final class ChartAdapter {
         yield new ChartReport.Surface3D(
             false,
             Boolean.TRUE.equals(surface3DData.isWireframe()),
-            snapshotAxes(state.axesById(), surface3DChart.getAxIdList()),
-            snapshotSurface3DSeries(contextSheet, surface3DData, formulaRuntime));
+            state.axes().selected(surface3DChart.getAxIdList()),
+            snapshotSurface3DSeries(surface3DData, reader));
       }
       default ->
           new ChartReport.Unsupported(
@@ -835,40 +817,17 @@ public final class ChartAdapter {
     };
   }
 
-  public static List<ChartReport.Axis> snapshotAxes(
-      Map<Long, XDDFChartAxis> axesById, List<CTUnsignedInt> axisIds) {
-    List<ChartReport.Axis> axes = new ArrayList<>();
-    for (CTUnsignedInt axisId : axisIds) {
-      XDDFChartAxis axis = axesById.get(axisId.getVal());
-      if (axis != null) {
-        axes.add(
-            new ChartReport.Axis(
-                axisKind(axis),
-                fromPoiAxisPosition(axis.getPosition()),
-                fromPoiAxisCrosses(axis.getCrosses()),
-                axis.isVisible()));
-      }
-    }
-    return List.copyOf(axes);
-  }
-
   private static boolean truthy(CTBoolean value) {
     return value != null && value.getVal();
   }
 
   /** Immutable view of the parsed plot area and its indexed axes. */
-  private record PlotAreaState(CTPlotArea plotArea, Map<Long, XDDFChartAxis> axesById) {
-    private PlotAreaState(XSSFChart chart) {
-      this(chart.getCTChart().getPlotArea(), indexAxes(chart.getAxes()));
+  private record PlotAreaState(CTPlotArea plotArea, StoredChartAxes axes) {
+    private PlotAreaState(XSSFChart chart, StoredChartReader reader) {
+      this(
+          chart.getCTChart().getPlotArea(),
+          new StoredChartAxes(chart.getCTChart().getPlotArea(), reader));
     }
-  }
-
-  private static Map<Long, XDDFChartAxis> indexAxes(List<? extends XDDFChartAxis> axes) {
-    Map<Long, XDDFChartAxis> axesById = new ConcurrentHashMap<>();
-    for (XDDFChartAxis axis : axes) {
-      axesById.put(axis.getId(), axis);
-    }
-    return Map.copyOf(axesById);
   }
 
   /** Cursor that tracks per-plot-family array indexes while reading the OOXML plot area. */
@@ -1304,282 +1263,300 @@ public final class ChartAdapter {
   }
 
   private static List<ChartReport.Series> snapshotAreaSeries(
-      @Nullable XSSFSheet contextSheet,
-      org.apache.poi.xddf.usermodel.chart.XDDFAreaChartData data,
-      @Nullable FormulaRuntime formulaRuntime) {
+      org.apache.poi.xddf.usermodel.chart.XDDFAreaChartData data, StoredChartReader reader) {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFAreaChartData.Series) data.getSeries(index);
+      var stored = value.getCTAreaSer();
       series.add(
           snapshotSeries(
-              contextSheet, value, value.getCTAreaSer().getTx(), null, null, null, formulaRuntime));
+              reader,
+              stored.getTx(),
+              reader.source(stored.getCat()),
+              reader.source(stored.getVal()),
+              null,
+              null,
+              null,
+              null));
     }
     return List.copyOf(series);
   }
 
   private static List<ChartReport.Series> snapshotArea3DSeries(
-      @Nullable XSSFSheet contextSheet,
-      org.apache.poi.xddf.usermodel.chart.XDDFArea3DChartData data,
-      @Nullable FormulaRuntime formulaRuntime) {
+      org.apache.poi.xddf.usermodel.chart.XDDFArea3DChartData data, StoredChartReader reader) {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFArea3DChartData.Series) data.getSeries(index);
+      var stored = value.getCTAreaSer();
       series.add(
           snapshotSeries(
-              contextSheet, value, value.getCTAreaSer().getTx(), null, null, null, formulaRuntime));
+              reader,
+              stored.getTx(),
+              reader.source(stored.getCat()),
+              reader.source(stored.getVal()),
+              null,
+              null,
+              null,
+              null));
     }
     return List.copyOf(series);
   }
 
   private static List<ChartReport.Series> snapshotBarSeries(
-      @Nullable XSSFSheet contextSheet,
-      org.apache.poi.xddf.usermodel.chart.XDDFBarChartData data,
-      @Nullable FormulaRuntime formulaRuntime) {
+      org.apache.poi.xddf.usermodel.chart.XDDFBarChartData data, StoredChartReader reader) {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFBarChartData.Series) data.getSeries(index);
+      var stored = value.getCTBarSer();
       series.add(
           snapshotSeries(
-              contextSheet, value, value.getCTBarSer().getTx(), null, null, null, formulaRuntime));
+              reader,
+              stored.getTx(),
+              reader.source(stored.getCat()),
+              reader.source(stored.getVal()),
+              null,
+              null,
+              null,
+              null));
     }
     return List.copyOf(series);
   }
 
   private static List<ChartReport.Series> snapshotBar3DSeries(
-      @Nullable XSSFSheet contextSheet,
-      org.apache.poi.xddf.usermodel.chart.XDDFBar3DChartData data,
-      @Nullable FormulaRuntime formulaRuntime) {
+      org.apache.poi.xddf.usermodel.chart.XDDFBar3DChartData data, StoredChartReader reader) {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFBar3DChartData.Series) data.getSeries(index);
+      var stored = value.getCTBarSer();
       series.add(
           snapshotSeries(
-              contextSheet, value, value.getCTBarSer().getTx(), null, null, null, formulaRuntime));
+              reader,
+              stored.getTx(),
+              reader.source(stored.getCat()),
+              reader.source(stored.getVal()),
+              null,
+              null,
+              null,
+              null));
     }
     return List.copyOf(series);
   }
 
   private static List<ChartReport.Series> snapshotDoughnutSeries(
-      @Nullable XSSFSheet contextSheet,
-      org.apache.poi.xddf.usermodel.chart.XDDFDoughnutChartData data,
-      @Nullable FormulaRuntime formulaRuntime) {
+      org.apache.poi.xddf.usermodel.chart.XDDFDoughnutChartData data, StoredChartReader reader) {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFDoughnutChartData.Series) data.getSeries(index);
+      var stored = value.getCTPieSer();
+      reader.requireFields(stored, "explosion");
       series.add(
           snapshotSeries(
-              contextSheet,
-              value,
-              value.getCTPieSer().getTx(),
+              reader,
+              stored.getTx(),
+              reader.source(stored.getCat()),
+              reader.source(stored.getVal()),
               null,
               null,
               null,
-              value.getExplosion(),
-              formulaRuntime));
+              value.getExplosion()));
     }
     return List.copyOf(series);
   }
 
   private static List<ChartReport.Series> snapshotLineSeries(
-      @Nullable XSSFSheet contextSheet,
-      org.apache.poi.xddf.usermodel.chart.XDDFLineChartData data,
-      @Nullable FormulaRuntime formulaRuntime) {
+      org.apache.poi.xddf.usermodel.chart.XDDFLineChartData data, StoredChartReader reader) {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFLineChartData.Series) data.getSeries(index);
+      var stored = value.getCTLineSer();
+      reader.requireFields(stored, "smooth");
+      reader.requireMarker(stored);
       series.add(
           snapshotSeries(
-              contextSheet,
-              value,
-              value.getCTLineSer().getTx(),
-              smooth(value.getCTLineSer().isSetSmooth(), value.isSmooth()),
-              markerStyle(value.getCTLineSer().getMarker()).orElse(null),
-              markerSize(value.getCTLineSer().getMarker()),
-              formulaRuntime));
+              reader,
+              stored.getTx(),
+              reader.source(stored.getCat()),
+              reader.source(stored.getVal()),
+              smooth(stored.isSetSmooth(), value.isSmooth()),
+              markerStyle(stored.getMarker()).orElse(null),
+              markerSize(stored.getMarker()),
+              null));
     }
     return List.copyOf(series);
   }
 
   private static List<ChartReport.Series> snapshotLine3DSeries(
-      @Nullable XSSFSheet contextSheet,
-      org.apache.poi.xddf.usermodel.chart.XDDFLine3DChartData data,
-      @Nullable FormulaRuntime formulaRuntime) {
+      org.apache.poi.xddf.usermodel.chart.XDDFLine3DChartData data, StoredChartReader reader) {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFLine3DChartData.Series) data.getSeries(index);
+      var stored = value.getCTLineSer();
+      reader.requireFields(stored, "smooth");
+      reader.requireMarker(stored);
       series.add(
           snapshotSeries(
-              contextSheet,
-              value,
-              value.getCTLineSer().getTx(),
-              smooth(value.getCTLineSer().isSetSmooth(), value.isSmooth()),
-              markerStyle(value.getCTLineSer().getMarker()).orElse(null),
-              markerSize(value.getCTLineSer().getMarker()),
-              formulaRuntime));
+              reader,
+              stored.getTx(),
+              reader.source(stored.getCat()),
+              reader.source(stored.getVal()),
+              smooth(stored.isSetSmooth(), value.isSmooth()),
+              markerStyle(stored.getMarker()).orElse(null),
+              markerSize(stored.getMarker()),
+              null));
     }
     return List.copyOf(series);
   }
 
   private static List<ChartReport.Series> snapshotPieSeries(
-      @Nullable XSSFSheet contextSheet,
-      org.apache.poi.xddf.usermodel.chart.XDDFPieChartData data,
-      @Nullable FormulaRuntime formulaRuntime) {
+      org.apache.poi.xddf.usermodel.chart.XDDFPieChartData data, StoredChartReader reader) {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFPieChartData.Series) data.getSeries(index);
+      var stored = value.getCTPieSer();
+      reader.requireFields(stored, "explosion");
       series.add(
           snapshotSeries(
-              contextSheet,
-              value,
-              value.getCTPieSer().getTx(),
+              reader,
+              stored.getTx(),
+              reader.source(stored.getCat()),
+              reader.source(stored.getVal()),
               null,
               null,
               null,
-              value.getExplosion(),
-              formulaRuntime));
+              value.getExplosion()));
     }
     return List.copyOf(series);
   }
 
   private static List<ChartReport.Series> snapshotPie3DSeries(
-      @Nullable XSSFSheet contextSheet,
-      org.apache.poi.xddf.usermodel.chart.XDDFPie3DChartData data,
-      @Nullable FormulaRuntime formulaRuntime) {
+      org.apache.poi.xddf.usermodel.chart.XDDFPie3DChartData data, StoredChartReader reader) {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFPie3DChartData.Series) data.getSeries(index);
+      var stored = value.getCTPieSer();
+      reader.requireFields(stored, "explosion");
       series.add(
           snapshotSeries(
-              contextSheet,
-              value,
-              value.getCTPieSer().getTx(),
+              reader,
+              stored.getTx(),
+              reader.source(stored.getCat()),
+              reader.source(stored.getVal()),
               null,
               null,
               null,
-              value.getExplosion(),
-              formulaRuntime));
+              value.getExplosion()));
     }
     return List.copyOf(series);
   }
 
   private static List<ChartReport.Series> snapshotRadarSeries(
-      @Nullable XSSFSheet contextSheet,
-      org.apache.poi.xddf.usermodel.chart.XDDFRadarChartData data,
-      @Nullable FormulaRuntime formulaRuntime) {
+      org.apache.poi.xddf.usermodel.chart.XDDFRadarChartData data, StoredChartReader reader) {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFRadarChartData.Series) data.getSeries(index);
+      var stored = value.getCTRadarSer();
       series.add(
           snapshotSeries(
-              contextSheet,
-              value,
-              value.getCTRadarSer().getTx(),
+              reader,
+              stored.getTx(),
+              reader.source(stored.getCat()),
+              reader.source(stored.getVal()),
               null,
               null,
               null,
-              formulaRuntime));
+              null));
     }
     return List.copyOf(series);
   }
 
   private static List<ChartReport.Series> snapshotScatterSeries(
-      @Nullable XSSFSheet contextSheet,
-      org.apache.poi.xddf.usermodel.chart.XDDFScatterChartData data,
-      @Nullable FormulaRuntime formulaRuntime) {
+      org.apache.poi.xddf.usermodel.chart.XDDFScatterChartData data, StoredChartReader reader) {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFScatterChartData.Series) data.getSeries(index);
+      var stored = value.getCTScatterSer();
+      reader.requireFields(stored, "smooth");
+      reader.requireMarker(stored);
       series.add(
           snapshotSeries(
-              contextSheet,
-              value,
-              value.getCTScatterSer().getTx(),
-              smooth(value.getCTScatterSer().isSetSmooth(), value.isSmooth()),
-              markerStyle(value.getCTScatterSer().getMarker()).orElse(null),
-              markerSize(value.getCTScatterSer().getMarker()),
-              formulaRuntime));
+              reader,
+              stored.getTx(),
+              reader.source(stored.getXVal()),
+              reader.source(stored.getYVal()),
+              smooth(stored.isSetSmooth(), value.isSmooth()),
+              markerStyle(stored.getMarker()).orElse(null),
+              markerSize(stored.getMarker()),
+              null));
     }
     return List.copyOf(series);
   }
 
   private static List<ChartReport.Series> snapshotSurfaceSeries(
-      @Nullable XSSFSheet contextSheet,
-      org.apache.poi.xddf.usermodel.chart.XDDFSurfaceChartData data,
-      @Nullable FormulaRuntime formulaRuntime) {
+      org.apache.poi.xddf.usermodel.chart.XDDFSurfaceChartData data, StoredChartReader reader) {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFSurfaceChartData.Series) data.getSeries(index);
+      var stored = value.getCTSurfaceSer();
       series.add(
           snapshotSeries(
-              contextSheet,
-              value,
-              value.getCTSurfaceSer().getTx(),
+              reader,
+              stored.getTx(),
+              reader.source(stored.getCat()),
+              reader.source(stored.getVal()),
               null,
               null,
               null,
-              formulaRuntime));
+              null));
     }
     return List.copyOf(series);
   }
 
   private static List<ChartReport.Series> snapshotSurface3DSeries(
-      @Nullable XSSFSheet contextSheet,
-      org.apache.poi.xddf.usermodel.chart.XDDFSurface3DChartData data,
-      @Nullable FormulaRuntime formulaRuntime) {
+      org.apache.poi.xddf.usermodel.chart.XDDFSurface3DChartData data, StoredChartReader reader) {
     List<ChartReport.Series> series = new ArrayList<>();
     for (int index = 0; index < data.getSeriesCount(); index++) {
       var value =
           (org.apache.poi.xddf.usermodel.chart.XDDFSurface3DChartData.Series) data.getSeries(index);
+      var stored = value.getCTSurfaceSer();
       series.add(
           snapshotSeries(
-              contextSheet,
-              value,
-              value.getCTSurfaceSer().getTx(),
+              reader,
+              stored.getTx(),
+              reader.source(stored.getCat()),
+              reader.source(stored.getVal()),
               null,
               null,
               null,
-              formulaRuntime));
+              null));
     }
     return List.copyOf(series);
   }
 
   private static ChartReport.Series snapshotSeries(
-      @Nullable XSSFSheet contextSheet,
-      XDDFChartData.Series series,
-      CTSerTx title,
+      StoredChartReader reader,
+      @Nullable CTSerTx title,
+      ChartReport.DataSource categories,
+      ChartReport.DataSource values,
       @Nullable Boolean smooth,
       @Nullable ExcelChartMarkerStyle markerStyle,
       @Nullable Short markerSize,
-      @Nullable FormulaRuntime formulaRuntime) {
-    return snapshotSeries(
-        contextSheet, series, title, smooth, markerStyle, markerSize, null, formulaRuntime);
-  }
-
-  private static ChartReport.Series snapshotSeries(
-      @Nullable XSSFSheet contextSheet,
-      XDDFChartData.Series series,
-      CTSerTx title,
-      @Nullable Boolean smooth,
-      @Nullable ExcelChartMarkerStyle markerStyle,
-      @Nullable Short markerSize,
-      @Nullable Long explosion,
-      @Nullable FormulaRuntime formulaRuntime) {
+      @Nullable Long explosion) {
     return new ChartReport.Series(
-        snapshotSeriesTitle(contextSheet, title, formulaRuntime),
-        snapshotDataSource(contextSheet, series.getCategoryData(), formulaRuntime),
-        snapshotDataSource(contextSheet, series.getValuesData(), formulaRuntime),
+        reader.title(title),
+        categories,
+        values,
         Optional.ofNullable(smooth),
         Optional.ofNullable(markerStyle),
         Optional.ofNullable(markerSize),
@@ -1588,59 +1565,6 @@ public final class ChartAdapter {
 
   private static @Nullable Boolean smooth(boolean present, boolean value) {
     return present ? value : null;
-  }
-
-  public static ChartReport.DataSource snapshotDataSource(
-      @Nullable XSSFSheet contextSheet,
-      org.apache.poi.xddf.usermodel.chart.XDDFDataSource<?> source,
-      @Nullable FormulaRuntime formulaRuntime) {
-    if (source == null) {
-      throw new IllegalStateException("Chart series is missing its data source");
-    }
-    if (source.isReference()) {
-      String referenceFormula = source.getDataRangeReference();
-      List<String> values =
-          resolvedOrCachedReferenceValues(contextSheet, referenceFormula, source, formulaRuntime);
-      return source.isNumeric()
-          ? new ChartReport.DataSource.NumericReference(
-              referenceFormula, Optional.ofNullable(source.getFormatCode()), values)
-          : new ChartReport.DataSource.StringReference(referenceFormula, values);
-    }
-    List<String> values = cachedPointValues(source);
-    return source.isNumeric()
-        ? new ChartReport.DataSource.NumericLiteral(
-            Optional.ofNullable(source.getFormatCode()), values)
-        : new ChartReport.DataSource.StringLiteral(values);
-  }
-
-  public static List<String> resolvedOrCachedReferenceValues(
-      @Nullable XSSFSheet contextSheet,
-      String referenceFormula,
-      org.apache.poi.xddf.usermodel.chart.XDDFDataSource<?> source,
-      @Nullable FormulaRuntime formulaRuntime) {
-    if (contextSheet != null && referenceFormula != null && !referenceFormula.isBlank()) {
-      try {
-        return resolveChartSource(contextSheet, referenceFormula, formulaRuntime).stringValues();
-      } catch (RuntimeException ignored) {
-        // Fall back to the embedded chart cache when the reference cannot be resolved.
-      }
-    }
-    return cachedPointValues(source);
-  }
-
-  private static List<String> cachedPointValues(
-      org.apache.poi.xddf.usermodel.chart.XDDFDataSource<?> source) {
-    List<String> values = new ArrayList<>();
-    for (int index = 0; index < source.getPointCount(); index++) {
-      Object point;
-      try {
-        point = source.getPointAt(index);
-      } catch (IndexOutOfBoundsException exception) {
-        point = null;
-      }
-      values.add(point == null ? "" : point.toString());
-    }
-    return List.copyOf(values);
   }
 
   public static Optional<ExcelChartMarkerStyle> markerStyle(CTMarker marker) {
@@ -1655,42 +1579,47 @@ public final class ChartAdapter {
   }
 
   public static DrawingObjectReport.Chart snapshotChartDrawingObject(
-      XSSFChart chart, org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame) {
-    return snapshotChartDrawingObject(chart, graphicFrame, null);
+      XSSFChart chart, XSSFGraphicFrame graphicFrame) {
+    StoredChartReader reader = storedReader(chart);
+    return reader.read(
+        "chart.drawing",
+        () -> {
+          ChartReport snapshot = snapshotChart(chart, graphicFrame);
+          boolean supported =
+              snapshot.plots().stream().noneMatch(ChartReport.Unsupported.class::isInstance);
+          return new DrawingObjectReport.Chart(
+              reader.name(graphicFrame),
+              DrawingAdapter.snapshotAnchor(DrawingAdapter.shapeXml(graphicFrame)),
+              supported,
+              chartPlotTypeTokens(chart),
+              snapshot.title());
+        });
   }
 
-  public static DrawingObjectReport.Chart snapshotChartDrawingObject(
-      XSSFChart chart,
-      org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame,
-      @Nullable FormulaRuntime formulaRuntime) {
-    ChartReport snapshot = snapshotChart(chart, graphicFrame, formulaRuntime);
-    boolean supported =
-        snapshot.plots().stream().noneMatch(ChartReport.Unsupported.class::isInstance);
-    return new DrawingObjectReport.Chart(
-        resolvedChartName(graphicFrame),
-        DrawingAdapter.snapshotAnchor(DrawingAdapter.shapeXml(graphicFrame)),
-        supported,
-        chartPlotTypeTokens(chart),
-        titleSummary(snapshot.title()));
+  public static ChartReport snapshotChart(XSSFChart chart, XSSFGraphicFrame graphicFrame) {
+    StoredChartReader reader = storedReader(chart);
+    return reader.read(
+        "chart",
+        () -> {
+          List<XDDFChartData> chartData = parsedChartData(chart, reader);
+          return new ChartReport(
+              reader.name(graphicFrame),
+              DrawingAdapter.snapshotAnchor(DrawingAdapter.shapeXml(graphicFrame)),
+              reader.title(chart),
+              snapshotLegend(chart, reader),
+              snapshotDisplayBlanks(chart),
+              chart.isPlotOnlyVisibleCells(),
+              snapshotPlots(chart, chartData, reader));
+        });
   }
 
-  public static ChartReport snapshotChart(
-      XSSFChart chart, org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame) {
-    return snapshotChart(chart, graphicFrame, null);
+  private static List<XDDFChartData> parsedChartData(XSSFChart chart, StoredChartReader reader) {
+    reader.requireReadPreconditions(chart.getCTChart().getPlotArea());
+    return chart.getChartSeries();
   }
 
-  public static ChartReport snapshotChart(
-      XSSFChart chart, XSSFGraphicFrame graphicFrame, @Nullable FormulaRuntime formulaRuntime) {
-    List<XDDFChartData> chartData = chart.getChartSeries();
-    List<ChartReport.Plot> plots = snapshotPlots(chart, graphicFrame, chartData, formulaRuntime);
-    return new ChartReport(
-        resolvedChartName(graphicFrame),
-        DrawingAdapter.snapshotAnchor(DrawingAdapter.shapeXml(graphicFrame)),
-        snapshotTitle(chart, graphicFrame, formulaRuntime),
-        snapshotLegend(chart),
-        snapshotDisplayBlanks(chart),
-        chart.isPlotOnlyVisibleCells(),
-        plots);
+  private static StoredChartReader storedReader(XSSFChart chart) {
+    return new StoredChartReader(Optional.of(chart.getPackagePart().getPartName().getName()));
   }
 
   public static boolean barVaryColors(XSSFChart chart) {
@@ -1708,15 +1637,10 @@ public final class ChartAdapter {
         && truthy(chart.getCTChart().getPlotArea().getPieChartArray(0).getVaryColors());
   }
 
-  public static List<String> resolvedOrCachedReferenceValues(
-      XSSFSheet sheet,
-      String formula,
-      org.apache.poi.xddf.usermodel.chart.XDDFDataSource<?> source) {
-    return resolvedOrCachedReferenceValues(sheet, formula, source, null);
-  }
-
   private static List<String> chartPlotTypeTokens(XSSFChart chart) {
-    return chartPlotTypeTokens(chart.getChartSeries());
+    StoredChartReader reader = storedReader(chart);
+    return reader.read(
+        "chart.plotTypes", () -> chartPlotTypeTokens(parsedChartData(chart, reader)));
   }
 
   private static List<String> chartPlotTypeTokens(List<XDDFChartData> chartData) {
@@ -1727,14 +1651,22 @@ public final class ChartAdapter {
     return List.copyOf(tokens);
   }
 
-  private static ChartReport.Legend snapshotLegend(XSSFChart chart) {
-    if (!chart.getCTChart().isSetLegend()) {
-      return new ChartReport.Legend.Hidden();
+  private static ChartReport.Legend snapshotLegend(XSSFChart chart, StoredChartReader reader) {
+    if (!chart.getCTChart().isSetLegend()) return new ChartReport.Legend.Hidden();
+    var legend = chart.getCTChart().getLegend();
+    if (!legend.isSetLegendPos()) {
+      return new ChartReport.Legend.Visible(ExcelChartLegendPosition.RIGHT);
     }
+    reader.requireValid(legend.getLegendPos().xgetVal(), "chart.legend.position");
     return new ChartReport.Legend.Visible(
-        fromPoiLegendPosition(
-            new org.apache.poi.xddf.usermodel.chart.XDDFChartLegend(chart.getCTChart())
-                .getPosition()));
+        switch (legend.getLegendPos().getVal().toString()) {
+          case "b" -> ExcelChartLegendPosition.BOTTOM;
+          case "l" -> ExcelChartLegendPosition.LEFT;
+          case "r" -> ExcelChartLegendPosition.RIGHT;
+          case "t" -> ExcelChartLegendPosition.TOP;
+          case "tr" -> ExcelChartLegendPosition.TOP_RIGHT;
+          default -> throw new IllegalStateException("Unsupported native legend position");
+        });
   }
 
   private static ExcelChartDisplayBlanksAs snapshotDisplayBlanks(XSSFChart chart) {
@@ -2029,151 +1961,6 @@ public final class ChartAdapter {
     };
   }
 
-  private static final System.Logger LOGGER = System.getLogger(ChartAdapter.class.getName());
-
-  public static ChartReport.Title snapshotTitle(XSSFChart chart) {
-    return snapshotTitle(chart, null);
-  }
-
-  public static ChartReport.Title snapshotTitle(
-      XSSFChart chart, @Nullable FormulaRuntime formulaRuntime) {
-    return snapshotTitle(chart, chart.getGraphicFrame(), formulaRuntime);
-  }
-
-  public static ChartReport.Title snapshotTitle(
-      XSSFChart chart,
-      @Nullable XSSFGraphicFrame graphicFrame,
-      @Nullable FormulaRuntime formulaRuntime) {
-    if (!chart.getCTChart().isSetTitle()) {
-      return new ChartReport.Title.None();
-    }
-    String formula = chart.getTitleFormula();
-    if (formula != null) {
-      return new ChartReport.Title.Formula(
-          formula, cachedTitleText(chart, graphicFrame, formula, formulaRuntime));
-    }
-    String text = chart.getTitleText().getString();
-    return text.isBlank() ? new ChartReport.Title.None() : new ChartReport.Title.Text(text);
-  }
-
-  public static String cachedTitleText(XSSFChart chart, String formula) {
-    return cachedTitleText(chart, formula, null);
-  }
-
-  public static String cachedTitleText(
-      XSSFChart chart, String formula, @Nullable FormulaRuntime formulaRuntime) {
-    return cachedTitleText(chart, chart.getGraphicFrame(), formula, formulaRuntime);
-  }
-
-  public static String cachedTitleText(
-      XSSFChart chart,
-      @Nullable XSSFGraphicFrame graphicFrame,
-      String formula,
-      @Nullable FormulaRuntime formulaRuntime) {
-    Optional<String> resolvedText =
-        optionalResolvedTitleFormulaText(chart, graphicFrame, formula, formulaRuntime);
-    if (resolvedText.isPresent()) {
-      return resolvedText.orElseThrow();
-    }
-    if (!chart.getCTChart().isSetTitle()
-        || !chart.getCTChart().getTitle().isSetTx()
-        || !chart.getCTChart().getTitle().getTx().isSetStrRef()
-        || !chart.getCTChart().getTitle().getTx().getStrRef().isSetStrCache()
-        || chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().sizeOfPtArray() == 0) {
-      return "";
-    }
-    return chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().getPtArray(0).getV();
-  }
-
-  public static String resolvedTitleFormulaText(XSSFChart chart, String formula) {
-    return resolvedTitleFormulaText(chart, formula, null);
-  }
-
-  public static String resolvedTitleFormulaText(
-      XSSFChart chart, String formula, @Nullable FormulaRuntime formulaRuntime) {
-    return optionalResolvedTitleFormulaText(chart, chart.getGraphicFrame(), formula, formulaRuntime)
-        .orElse("");
-  }
-
-  public static Optional<String> optionalResolvedTitleFormulaText(
-      XSSFChart chart,
-      @Nullable XSSFGraphicFrame graphicFrame,
-      String formula,
-      @Nullable FormulaRuntime formulaRuntime) {
-    try {
-      XSSFSheet contextSheet = contextSheet(chart, graphicFrame);
-      return contextSheet == null
-          ? Optional.empty()
-          : Optional.of(
-              scalarText(
-                  contextSheet,
-                  resolveSingleCellReference(contextSheet, formula, "Chart title formula"),
-                  formulaRuntime));
-    } catch (IllegalArgumentException exception) {
-      if (recoverableTitleFormulaResolutionFailure(exception)) {
-        return Optional.empty();
-      }
-      LOGGER.log(
-          System.Logger.Level.WARNING,
-          "Failed to resolve chart title formula '" + formula + "'; using cached or empty title",
-          exception);
-      return Optional.empty();
-    }
-  }
-
-  public static ChartReport.Title snapshotSeriesTitle(CTSerTx title) {
-    return snapshotSeriesTitle(null, title, null);
-  }
-
-  public static ChartReport.Title snapshotSeriesTitle(
-      @Nullable XSSFSheet contextSheet,
-      @Nullable CTSerTx title,
-      @Nullable FormulaRuntime formulaRuntime) {
-    if (title == null) {
-      return new ChartReport.Title.None();
-    }
-    if (title.isSetStrRef()) {
-      if (contextSheet != null) {
-        try {
-          return new ChartReport.Title.Formula(
-              title.getStrRef().getF(),
-              scalarText(
-                  contextSheet,
-                  resolveSingleCellReference(
-                      contextSheet, title.getStrRef().getF(), "Series title formula"),
-                  formulaRuntime));
-        } catch (IllegalArgumentException ignored) {
-          // Fall back to the embedded chart cache when the formula cannot be resolved live.
-        }
-      }
-      String cachedText =
-          title.getStrRef().isSetStrCache() && title.getStrRef().getStrCache().sizeOfPtArray() > 0
-              ? title.getStrRef().getStrCache().getPtArray(0).getV()
-              : "";
-      return new ChartReport.Title.Formula(title.getStrRef().getF(), cachedText);
-    }
-    return title.isSetV() ? new ChartReport.Title.Text(title.getV()) : new ChartReport.Title.None();
-  }
-
-  public static String titleSummary(ChartReport.Title title) {
-    return switch (title) {
-      case ChartReport.Title.None _ -> "";
-      case ChartReport.Title.Text text -> text.text();
-      case ChartReport.Title.Formula formula ->
-          formula.cachedText().isEmpty() ? formula.formula() : formula.cachedText();
-    };
-  }
-
-  public static String resolvedChartName(XSSFGraphicFrame graphicFrame) {
-    String name = blankAsOptional(graphicFrame.getName()).orElse(null);
-    return name != null ? name : "Chart-" + graphicFrame.getId();
-  }
-
-  private static boolean recoverableTitleFormulaResolutionFailure(
-      IllegalArgumentException exception) {
-    return "Chart source formulas must not cache error values".equals(exception.getMessage());
-  }
-
   public static final class AxisRegistry {
     private final XDDFChart chart;
     private final Map<ChartAxisSpec, XDDFChartAxis> axesByDefinition = new ConcurrentHashMap<>();
@@ -2233,7 +2020,8 @@ public final class ChartAdapter {
       }
       if (categoryAxis == null || valueAxis == null || seriesAxis == null) {
         throw new IllegalArgumentException(
-            "Surface plots must declare one category/date axis, one value axis, and one series axis");
+            "Surface plots must declare one category/date axis, one value axis, and one series"
+                + " axis");
       }
       crossAxes(List.of(categoryAxis, valueAxis, seriesAxis));
       return new SurfaceAxes(categoryAxis, valueAxis, seriesAxis);

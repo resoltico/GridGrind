@@ -24,18 +24,17 @@ final class GridGrindJsonExecutionPolicySerializationTest {
   @Test
   void requestAcceptsEmptyExecutionBlocksAndDefaultsEveryAxis() {
     WorkbookPlan request =
-        assertDoesNotThrow(
-            () ->
-                GridGrindJson.readRequest(
-                    """
-                    {
-                      "protocolVersion": 1,
-                      "source": { "type": "NEW" },
-                      "persistence": { "type": "NONE" },
-                      "execution": {},
-                      "steps": []
-                    }
-                    """));
+        assertDoesNotThrow(() ->
+            GridGrindJson.readRequest(
+                """
+                {
+                  "protocolVersion": 1,
+                  "source": { "type": "NEW" },
+                  "persistence": { "type": "NONE" },
+                  "execution": {},
+                  "steps": []
+                }
+                """));
 
     assertEquals(ExecutionModeSpec.defaults(), request.execution().mode());
     assertEquals(ExecutionJournalSpec.defaults(), request.execution().journal());
@@ -45,20 +44,19 @@ final class GridGrindJsonExecutionPolicySerializationTest {
   @Test
   void requestAcceptsModeOnlyExecutionBlocksAndDefaultsRemainingAxes() {
     WorkbookPlan request =
-        assertDoesNotThrow(
-            () ->
-                GridGrindJson.readRequest(
-                    """
-                    {
-                      "protocolVersion": 1,
-                      "source": { "type": "NEW" },
-                      "persistence": { "type": "NONE" },
-                      "execution": {
-                        "mode": { "type": "EVENT_READ" }
-                      },
-                      "steps": []
-                    }
-                    """));
+        assertDoesNotThrow(() ->
+            GridGrindJson.readRequest(
+                """
+                {
+                  "protocolVersion": 1,
+                  "source": { "type": "NEW" },
+                  "persistence": { "type": "NONE" },
+                  "execution": {
+                    "mode": { "type": "EVENT_READ" }
+                  },
+                  "steps": []
+                }
+                """));
 
     assertEquals(ExecutionModeSpec.eventRead(), request.execution().mode());
     assertEquals(ExecutionJournalSpec.defaults(), request.execution().journal());
@@ -68,20 +66,19 @@ final class GridGrindJsonExecutionPolicySerializationTest {
   @Test
   void requestAcceptsJournalOnlyExecutionBlocksAndDefaultsOtherAxes() {
     WorkbookPlan request =
-        assertDoesNotThrow(
-            () ->
-                GridGrindJson.readRequest(
-                    """
-                    {
-                      "protocolVersion": 1,
-                      "source": { "type": "NEW" },
-                      "persistence": { "type": "NONE" },
-                      "execution": {
-                        "journal": { "level": "VERBOSE" }
-                      },
-                      "steps": []
-                    }
-                    """));
+        assertDoesNotThrow(() ->
+            GridGrindJson.readRequest(
+                """
+                {
+                  "protocolVersion": 1,
+                  "source": { "type": "NEW" },
+                  "persistence": { "type": "NONE" },
+                  "execution": {
+                    "journal": { "level": "VERBOSE" }
+                  },
+                  "steps": []
+                }
+                """));
 
     assertEquals(ExecutionModeSpec.defaults(), request.execution().mode());
     assertEquals(ExecutionJournalLevel.VERBOSE, request.execution().journal().level());
@@ -91,22 +88,21 @@ final class GridGrindJsonExecutionPolicySerializationTest {
   @Test
   void requestAcceptsCalculationOnlyExecutionBlocksAndDefaultsRemainingAxes() {
     WorkbookPlan request =
-        assertDoesNotThrow(
-            () ->
-                GridGrindJson.readRequest(
-                    """
-                    {
-                      "protocolVersion": 1,
-                      "source": { "type": "NEW" },
-                      "persistence": { "type": "NONE" },
-                      "execution": {
-                        "calculation": {
-                          "markRecalculateOnOpen": true
-                        }
-                      },
-                      "steps": []
+        assertDoesNotThrow(() ->
+            GridGrindJson.readRequest(
+                """
+                {
+                  "protocolVersion": 1,
+                  "source": { "type": "NEW" },
+                  "persistence": { "type": "NONE" },
+                  "execution": {
+                    "calculation": {
+                      "markRecalculateOnOpen": true
                     }
-                    """));
+                  },
+                  "steps": []
+                }
+                """));
 
     assertEquals(ExecutionModeSpec.defaults(), request.execution().mode());
     assertEquals(ExecutionJournalSpec.defaults(), request.execution().journal());
@@ -118,20 +114,19 @@ final class GridGrindJsonExecutionPolicySerializationTest {
   @Test
   void requestAcceptsEmptyCalculationBlocksAndDefaultsNestedCalculationFields() {
     WorkbookPlan request =
-        assertDoesNotThrow(
-            () ->
-                GridGrindJson.readRequest(
-                    """
-                    {
-                      "protocolVersion": 1,
-                      "source": { "type": "NEW" },
-                      "persistence": { "type": "NONE" },
-                      "execution": {
-                        "calculation": {}
-                      },
-                      "steps": []
-                    }
-                    """));
+        assertDoesNotThrow(() ->
+            GridGrindJson.readRequest(
+                """
+                {
+                  "protocolVersion": 1,
+                  "source": { "type": "NEW" },
+                  "persistence": { "type": "NONE" },
+                  "execution": {
+                    "calculation": {}
+                  },
+                  "steps": []
+                }
+                """));
 
     assertEquals(ExecutionModeSpec.defaults(), request.execution().mode());
     assertEquals(ExecutionJournalSpec.defaults(), request.execution().journal());

@@ -44,6 +44,44 @@ public final class BackendCapabilities {
 
   private BackendCapabilities() {}
 
+  /** Selects the concrete backend and its required full-workbook views, including host policy. */
+  public static dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.ExecutionStrategy
+      executionStrategy(WorkbookPlan request, dev.erst.gridgrind.core.grant.ExecutionGrant grant) {
+    Objects.requireNonNull(request, "request must not be null");
+    Objects.requireNonNull(grant, "grant must not be null");
+    var backend =
+        EVENT_READ.accepts(request)
+            ? dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Backend.EVENT_READ
+            : STREAMING_WRITE.accepts(request)
+                ? dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Backend.STREAMING_WRITE
+                : dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Backend.FULL_XSSF;
+    boolean fullMaterialization =
+        backend == dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Backend.FULL_XSSF
+            || grant.acceptancePolicy()
+                instanceof dev.erst.gridgrind.core.grant.AcceptancePolicy.RequireAll
+            || (backend
+                    == dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Backend
+                        .STREAMING_WRITE
+                && (!(request.persistence() instanceof WorkbookPlan.WorkbookPersistence.None)
+                    || request.steps().stream()
+                        .anyMatch(
+                            step -> !(step instanceof dev.erst.gridgrind.core.plan.MutationStep))));
+    return new dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.ExecutionStrategy(
+        backend, fullMaterialization);
+  }
+
+  private static boolean hasMutationAfterObservation(WorkbookPlan request) {
+    boolean observed = false;
+    for (var step : request.steps()) {
+      if (step instanceof dev.erst.gridgrind.core.plan.MutationStep) {
+        if (observed) return true;
+      } else {
+        observed = true;
+      }
+    }
+    return false;
+  }
+
   /** The pure capability declaration exposed by an execution backend. */
   public sealed interface Mode permits FullXssfMode, EventReadMode, StreamingWriteMode {
     /** Returns the authored execution-mode record represented by this capability declaration. */
@@ -87,7 +125,9 @@ public final class BackendCapabilities {
     public boolean accepts(WorkbookPlan request) {
       return modeClass.isInstance(request.effectiveExecutionMode())
           || (EVENT_READ.modeClass().isInstance(request.effectiveExecutionMode())
-              && !EVENT_READ.accepts(request));
+              && !EVENT_READ.accepts(request))
+          || (STREAMING_WRITE.modeClass().isInstance(request.effectiveExecutionMode())
+              && !STREAMING_WRITE.accepts(request));
     }
 
     public FullXssfMode {
@@ -205,7 +245,7 @@ public final class BackendCapabilities {
           + requiredCalculationStrategyId()
           + " and markRecalculateOnOpen="
           + markRecalculateOnOpenAllowed
-          + ".";
+          + ". Host acceptance can require a full workbook view.";
     }
   }
 
@@ -239,7 +279,8 @@ public final class BackendCapabilities {
 
     @Override
     public boolean accepts(WorkbookPlan request) {
-      return modeClass.isInstance(request.effectiveExecutionMode());
+      return modeClass.isInstance(request.effectiveExecutionMode())
+          && !hasMutationAfterObservation(request);
     }
 
     /** Returns the canonical mutation ids accepted by STREAMING_WRITE. */
@@ -361,7 +402,9 @@ public final class BackendCapabilities {
           + requiredCalculationStrategyId()
           + " and may set markRecalculateOnOpen="
           + markRecalculateOnOpenAllowed
-          + ".";
+          + ". Mutation after an observation selects the full workbook backend. Terminal"
+          + " observations, host acceptance and persisted-artifact verification can require full"
+          + " workbook materialization.";
     }
   }
 }

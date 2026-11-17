@@ -63,7 +63,9 @@ final class AssertionSupport {
   static InspectionQuery.Analysis requireAnalysisQuery(InspectionQuery query, String fieldName) {
     Objects.requireNonNull(query, fieldName + " must not be null");
     if (!(query instanceof InspectionQuery.Analysis analysis)) {
-      throw new IllegalArgumentException(fieldName + " must be an analysis query");
+      throw new dev.erst.gridgrind.core.problem.ValueInvariantException(
+          new dev.erst.gridgrind.core.problem.MessageInvariant(
+              fieldName + " must be an analysis query", java.util.Optional.of(fieldName)));
     }
     return analysis;
   }

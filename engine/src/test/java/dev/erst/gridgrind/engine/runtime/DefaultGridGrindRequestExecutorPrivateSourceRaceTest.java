@@ -31,12 +31,13 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Proves a private-source race remains a structured open-workbook failure. */
+/** Verifies retained-source semantics and publication rejection after actual topology changes. */
 class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
   @TempDir Path root;
 
   @Test
-  void reportsAnOpenWorkbookProblemWhenTheVerifiedPrivateSourceDisappears() throws Exception {
+  void retainedFullWorkbookUsesAdmittedBytesAfterPrivateUnlinkAndOriginalReplacement()
+      throws Exception {
     Path source = root.resolve("source.xlsx");
     try (XSSFWorkbook workbook = new XSSFWorkbook();
         var output = Files.newOutputStream(source)) {
@@ -54,30 +55,57 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
                 CalculationPolicySpec.defaults(),
                 dev.erst.gridgrind.core.plan.AssertionModeSpec.defaults()),
             FormulaEnvironmentSpec.empty(),
-            List.of());
+            List.of(
+                new InspectionStep(
+                    new StepId("summary"),
+                    new WorkbookSelector.Current(),
+                    new WorkbookIntrospectionQuery.GetWorkbookSummary())));
     AtomicBoolean removedPrivateSource = new AtomicBoolean();
 
     WorkbookResult response =
-        new DefaultGridGrindRequestExecutor()
+        new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .execute(
                 request,
                 new ExecutionInputBindings(
                     root,
                     tempRoot,
                     ExecutionGrantTestSupport.noPublication(
-                        List.of(), List.of(root.resolve("source.xlsx")))),
-                event ->
-                    removeMaterializedSourceAfterPreflight(event, tempRoot, removedPrivateSource));
+                        List.of("GET_WORKBOOK_SUMMARY"), List.of(root.resolve("source.xlsx")))),
+                event -> {
+                  removeMaterializedSourceAfterPreflight(event, tempRoot, removedPrivateSource);
+                  if (event.category()
+                          == dev.erst.gridgrind.core.result.ExecutionProgressEvent.Category
+                              .RESOLVE_INPUTS
+                      && event.status()
+                          == dev.erst.gridgrind.core.result.ExecutionProgressEvent.Status
+                              .SUCCEEDED) {
+                    try {
+                      createWorkbook(source, "Changed");
+                    } catch (java.io.IOException failure) {
+                      throw new AssertionError(failure);
+                    }
+                  }
+                });
 
-    WorkbookResult.Failure failure = assertInstanceOf(WorkbookResult.Failure.class, response);
+    WorkbookResult.Success success = assertInstanceOf(WorkbookResult.Success.class, response);
     assertTrue(removedPrivateSource.get());
-    assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, failure.problem().code());
-    assertInstanceOf(ProblemContext.OpenWorkbook.class, failure.problem().context());
+    var summary =
+        assertInstanceOf(
+                dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult.class,
+                success.inspections().getFirst())
+            .workbook();
+    assertEquals(
+        List.of(new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")), summary.sheetNames());
+    try (var changed = new XSSFWorkbook(Files.newInputStream(source))) {
+      assertEquals("Changed", changed.getSheetName(0));
+    }
   }
 
   @Test
   void failsClosedWhenTheDirectReadMaterializationDisappearsAfterPreflight() throws Exception {
-    createWorkbook(root.resolve("source.xlsx"));
+    createWorkbook(root.resolve("source.xlsx"), "Budget");
     Path tempRoot = Files.createDirectory(root.resolve("private-temp"));
     WorkbookPlan request =
         WorkbookPlan.standard(
@@ -93,7 +121,9 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
     AtomicBoolean removedPrivateSource = new AtomicBoolean();
 
     WorkbookResult response =
-        new DefaultGridGrindRequestExecutor()
+        new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .execute(
                 request,
                 new ExecutionInputBindings(
@@ -106,7 +136,7 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
 
     WorkbookResult.Failure failure = assertInstanceOf(WorkbookResult.Failure.class, response);
     assertTrue(removedPrivateSource.get());
-    assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, failure.problem().code());
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertInstanceOf(ProblemContext.OpenWorkbook.class, failure.problem().context());
   }
 
@@ -129,7 +159,9 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
     AtomicBoolean replacedOutputDirectory = new AtomicBoolean();
 
     WorkbookResult response =
-        new DefaultGridGrindRequestExecutor()
+        new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .execute(
                 request,
                 new ExecutionInputBindings(
@@ -145,8 +177,19 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
 
     WorkbookResult.Failure failure = assertInstanceOf(WorkbookResult.Failure.class, response);
     assertTrue(replacedOutputDirectory.get());
-    assertEquals(GridGrindProblemCode.PUBLICATION_UNCERTAIN, failure.problem().code());
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertInstanceOf(ProblemContext.PersistWorkbook.class, failure.problem().context());
+    assertInstanceOf(
+        dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome.NotAttempted
+            .class,
+        assertInstanceOf(
+                dev.erst.gridgrind.core.result.WorkbookResultPersistence.PersistenceOutcome.SavedAs
+                    .class,
+                failure.persistence())
+            .publication());
+    assertTrue(Files.notExists(outputDirectory.resolve("result.xlsx")));
+    assertTrue(Files.notExists(root.resolve("output-replaced/result.xlsx")));
+    assertEquals("competitor", Files.readString(outputDirectory.resolve("marker.txt")));
   }
 
   @Test
@@ -168,7 +211,9 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
     AtomicBoolean replacedOutputDirectory = new AtomicBoolean();
 
     WorkbookResult response =
-        new DefaultGridGrindRequestExecutor()
+        new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .execute(
                 request,
                 new ExecutionInputBindings(
@@ -184,8 +229,19 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
 
     WorkbookResult.Failure failure = assertInstanceOf(WorkbookResult.Failure.class, response);
     assertTrue(replacedOutputDirectory.get());
-    assertEquals(GridGrindProblemCode.PUBLICATION_UNCERTAIN, failure.problem().code());
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertInstanceOf(ProblemContext.PersistWorkbook.class, failure.problem().context());
+    assertInstanceOf(
+        dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome.NotAttempted
+            .class,
+        assertInstanceOf(
+                dev.erst.gridgrind.core.result.WorkbookResultPersistence.PersistenceOutcome.SavedAs
+                    .class,
+                failure.persistence())
+            .publication());
+    assertTrue(Files.notExists(outputDirectory.resolve("result.xlsx")));
+    assertTrue(Files.notExists(root.resolve("output-replaced/result.xlsx")));
+    assertEquals("competitor", Files.readString(outputDirectory.resolve("marker.txt")));
   }
 
   private static ExecutionPolicySpec verbosePolicy(ExecutionModeSpec mode) {
@@ -196,10 +252,10 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
         dev.erst.gridgrind.core.plan.AssertionModeSpec.defaults());
   }
 
-  private static void createWorkbook(Path source) throws java.io.IOException {
+  private static void createWorkbook(Path source, String sheetName) throws java.io.IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook();
         var output = Files.newOutputStream(source)) {
-      workbook.createSheet("Budget");
+      workbook.createSheet(sheetName);
       workbook.write(output);
     }
   }
@@ -214,20 +270,18 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
             != dev.erst.gridgrind.core.result.ExecutionProgressEvent.Status.SUCCEEDED) {
       return;
     }
-    try (Stream<Path> files = Files.list(tempRoot)) {
+    try (Stream<Path> files = Files.walk(tempRoot)) {
       files
           .filter(path -> path.getFileName().toString().startsWith("gridgrind-source-workbook-"))
           .findFirst()
-          .ifPresent(
-              source -> {
-                try {
-                  Files.delete(source);
-                  removedPrivateSource.set(true);
-                } catch (java.io.IOException exception) {
-                  throw new IllegalStateException(
-                      "test could not remove private source", exception);
-                }
-              });
+          .ifPresent(source -> {
+            try {
+              Files.delete(source);
+              removedPrivateSource.set(true);
+            } catch (java.io.IOException exception) {
+              throw new IllegalStateException("test could not remove private source", exception);
+            }
+          });
     } catch (java.io.IOException exception) {
       throw new IllegalStateException("test could not inspect private source", exception);
     }
@@ -246,6 +300,7 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
     try {
       Files.move(outputDirectory, outputDirectory.resolveSibling("output-replaced"));
       Files.createDirectory(outputDirectory);
+      Files.writeString(outputDirectory.resolve("marker.txt"), "competitor");
       replacedOutputDirectory.set(true);
     } catch (java.io.IOException exception) {
       throw new IllegalStateException("test could not replace bound output directory", exception);

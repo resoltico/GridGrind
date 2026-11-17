@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.problem.InvalidAuthorityException;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
@@ -22,14 +23,37 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import tools.jackson.core.JacksonException;
 
 /** Verifies the authority document binds directly to the canonical core model. */
 class GrantCodecTest {
+  @Test
+  void rejectsDuplicateMembersAndTrailingRootsThroughoutAuthorityDocument() {
+    String valid = grant("[]", WORKBOOK, NONE, MINIMUM);
+    for (String invalid :
+        List.of(
+            valid.replace("\"operationIds\":[]", "\"operationIds\":[],\"operationIds\":[]"),
+            valid.replace(WORKBOOK, "{\"type\":\"WORKBOOK_WIDE\",\"type\":\"WORKBOOK_WIDE\"}"),
+            valid + " {}",
+            valid + " null")) {
+      assertThrows(InvalidAuthorityException.class, () -> read(invalid));
+    }
+  }
+
   private static final Path ROOT = Path.of("/work/gridgrind").toAbsolutePath().normalize();
   private static final String WORKBOOK = "{\"type\":\"WORKBOOK_WIDE\"}";
   private static final String NONE = "{\"type\":\"NONE\"}";
   private static final String MINIMUM = "{\"type\":\"MINIMUM_ONLY\"}";
+
+  @Test
+  void snapshotBudgetIsRequiredWhileExplicitZeroRemainsValidAuthority() throws IOException {
+    String zero =
+        grant("[]", WORKBOOK, NONE, MINIMUM)
+            .replace("\"maxInputSnapshotBytes\":16777216", "\"maxInputSnapshotBytes\":0");
+    assertEquals(0, read(zero).maxInputSnapshotBytes());
+    String missing = zero.replace("\"maxInputSnapshotBytes\":0,", "");
+    var failure = assertThrows(InvalidAuthorityException.class, () -> read(missing));
+    assertEquals(dev.erst.gridgrind.core.problem.AuthorityDocumentIssue.SHAPE, failure.issue());
+  }
 
   @Test
   void acceptanceCannotBindAnInspectionAsATerminalAssertion() {
@@ -37,7 +61,7 @@ class GrantCodecTest {
         """
         {"type":"REQUIRE_ALL","requirements":[{"type":"TERMINAL_ASSERTIONS","assertions":[{"stepId":"wrong-kind","target":{"type":"WORKBOOK_CURRENT"},"query":{"type":"GET_WORKBOOK_SUMMARY"}}]}]}
         """;
-    assertThrows(JacksonException.class, () -> read(grant("[]", WORKBOOK, NONE, policy)));
+    assertThrows(InvalidAuthorityException.class, () -> read(grant("[]", WORKBOOK, NONE, policy)));
   }
 
   @Test
@@ -59,6 +83,7 @@ class GrantCodecTest {
                 new AcceptancePolicy.Requirement.PreserveInspectionFacts(List.of(inspection))));
     var authority =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of(),
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -104,9 +129,6 @@ class GrantCodecTest {
   void relativePathsDoNotSilentlyUseTheProcessWorkingDirectory() throws IOException {
     String document =
         grant("[{\"type\":\"FILE\",\"path\":\"input.xlsx\"}]", WORKBOOK, NONE, MINIMUM);
-    assertThrows(
-        JacksonException.class,
-        () -> GridGrindJsonMapperSupport.JSON_MAPPER.readValue(document, ExecutionGrant.class));
     var otherRoot = ROOT.resolve("other");
     var authority = GridGrindJson.readGrant(document.getBytes(StandardCharsets.UTF_8), otherRoot);
     assertEquals(
@@ -121,7 +143,7 @@ class GrantCodecTest {
     String document = grant("[]", WORKBOOK, NONE, MINIMUM);
     String unknown =
         document.substring(0, document.lastIndexOf('}')) + ",\"authority\":\"agent-authored\"}";
-    assertThrows(JacksonException.class, () -> read(unknown));
+    assertThrows(InvalidAuthorityException.class, () -> read(unknown));
   }
 
   @Test
@@ -184,13 +206,13 @@ class GrantCodecTest {
   void rejectsInvalidPathLiterals(String literal) {
     String document =
         grant("[{\"type\":\"FILE\",\"path\":" + literal + "}]", WORKBOOK, NONE, MINIMUM);
-    assertThrows(JacksonException.class, () -> read(document));
+    assertThrows(InvalidAuthorityException.class, () -> read(document));
   }
 
   @Test
   void rejectsBlankSelectedSheetNames() {
     assertThrows(
-        JacksonException.class,
+        InvalidAuthorityException.class,
         () ->
             read(
                 grant(
@@ -212,8 +234,8 @@ class GrantCodecTest {
   private static String grant(
       String resources, String target, String publication, String acceptance) {
     return """
-        {"readableResources":%s,"operationIds":[],"targetAuthority":%s,"publicationAuthority":%s,"allowedSecretReferences":[],"acceptancePolicy":%s}
-        """
+    {"maxInputSnapshotBytes":16777216,"readableResources":%s,"operationIds":[],"targetAuthority":%s,"publicationAuthority":%s,"allowedSecretReferences":[],"acceptancePolicy":%s}
+    """
         .formatted(resources, target, publication, acceptance);
   }
 }

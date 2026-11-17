@@ -133,7 +133,9 @@ class ProblemContextCoverageTest {
             requestShape, ProblemContextWorkbookSurfaces.InputReference.kind("comment"));
     ProblemContext.OpenWorkbook openWorkbook =
         new ProblemContext.OpenWorkbook(
-            requestShape, ProblemContextWorkbookSurfaces.WorkbookReference.newWorkbook());
+            requestShape,
+            ProblemContextWorkbookSurfaces.WorkbookReference.newWorkbook(),
+            java.util.Optional.empty());
     ProblemContext.ExecuteCalculation.Preflight preflight =
         new ProblemContext.ExecuteCalculation.Preflight(
             requestShape,

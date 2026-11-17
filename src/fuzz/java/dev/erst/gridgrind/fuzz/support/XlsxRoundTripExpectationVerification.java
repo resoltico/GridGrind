@@ -268,7 +268,12 @@ final class XlsxRoundTripExpectationVerification {
         for (Map.Entry<XlsxRoundTripExpectedStateSupport.CellCoordinate, List<RichTextRunReport>>
             cellEntry : entry.getValue().entrySet()) {
           CellReport actualSnapshot =
-              workbook.sheet(entry.getKey()).cells().snapshotCell(cellEntry.getKey().a1Address());
+              workbook
+                  .sheet(entry.getKey())
+                  .cells()
+                  .snapshotCell(
+                      new dev.erst.gridgrind.core.vocabulary.CellAddress(
+                          cellEntry.getKey().rowIndex(), cellEntry.getKey().columnIndex()));
           if (!(actualSnapshot instanceof CellReport.TextReport textSnapshot)) {
             throw new IllegalStateException(
                 "rich text cell must reopen as a text snapshot for "

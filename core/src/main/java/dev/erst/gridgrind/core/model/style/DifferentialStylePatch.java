@@ -9,7 +9,8 @@ import java.util.Optional;
 @CatalogType(
     id = "DifferentialStylePatch",
     summary =
-        "Differential style payload used by authored conditional-formatting rules. At least one field must be set. Colors preserve RGB, theme, indexed, and tint semantics.",
+        "Differential style payload used by authored conditional-formatting rules. At least one"
+            + " field must be set. Colors preserve RGB, theme, indexed, and tint semantics.",
     displayOrder = 60)
 public record DifferentialStylePatch(
     Optional<String> numberFormat,
@@ -32,11 +33,10 @@ public record DifferentialStylePatch(
     Objects.requireNonNull(fillColor, "fillColor must not be null");
     Objects.requireNonNull(border, "border must not be null");
     numberFormat =
-        numberFormat.map(
-            value -> {
-              TextValidation.requireNonBlank(value, "numberFormat");
-              return value;
-            });
+        numberFormat.map(value -> {
+          TextValidation.requireNonBlank(value, "numberFormat");
+          return value;
+        });
     if (hasNoStyleAttributes(
         numberFormat,
         bold,

@@ -8,7 +8,6 @@ import dev.erst.gridgrind.core.problem.PayloadLocation;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.RequestProblemSource;
 import java.nio.file.FileAlreadyExistsException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
@@ -102,19 +101,7 @@ public final class GridGrindProblems {
   /** Appends an extra structured cause while preserving the primary classified problem. */
   public static GridGrindProblemDetail.Problem appendCause(
       GridGrindProblemDetail.Problem problem, GridGrindProblemDetail.ProblemCause cause) {
-    Objects.requireNonNull(problem, "problem must not be null");
-    Objects.requireNonNull(cause, "cause must not be null");
-    List<GridGrindProblemDetail.ProblemCause> causes = new ArrayList<>(problem.causes());
-    causes.add(cause);
-    return new GridGrindProblemDetail.Problem(
-        problem.code(),
-        problem.category(),
-        problem.recovery(),
-        problem.title(),
-        problem.message(),
-        problem.resolution(),
-        problem.context(),
-        List.copyOf(causes));
+    return Objects.requireNonNull(problem, "problem must not be null").withCause(cause);
   }
 
   /** Converts an exception into one supplemental cause entry for secondary-failure reporting. */
@@ -134,9 +121,7 @@ public final class GridGrindProblems {
   /** Converts an already-built problem into a synthetic cause entry for fallback reporting. */
   public static GridGrindProblemDetail.ProblemCause problemCause(
       GridGrindProblemDetail.Problem problem) {
-    Objects.requireNonNull(problem, "problem must not be null");
-    return new GridGrindProblemDetail.ProblemCause(
-        problem.code(), problem.title() + ": " + problem.message(), problem.context().type());
+    return Objects.requireNonNull(problem, "problem must not be null").asCause();
   }
 
   static GridGrindProblemCode codeFor(Throwable exception) {
@@ -157,13 +142,12 @@ public final class GridGrindProblems {
       if (context instanceof ProblemContext.PersistWorkbook persistWorkbook) {
         return persistWorkbook
             .persistencePath()
-            .map(
-                persistencePath ->
-                    "Could not write workbook to "
-                        + persistencePath
-                        + ": already exists; SAVE_AS.ifExists=REJECT requires a new"
-                        + " destination path. Use ifExists=REPLACE to allow"
-                        + " create-or-replace.")
+            .map(persistencePath ->
+                "Could not write workbook to "
+                    + persistencePath
+                    + ": already exists; SAVE_AS.ifExists=REJECT requires a new"
+                    + " destination path. Use ifExists=REPLACE to allow"
+                    + " create-or-replace.")
             .orElseGet(() -> messageFor(exception));
       }
       return messageFor(exception);
@@ -176,6 +160,7 @@ public final class GridGrindProblems {
       Throwable exception,
       dev.erst.gridgrind.core.problem.ProblemContext context) {
     return code == GridGrindProblemCode.INTERNAL_ERROR
+            || code == GridGrindProblemCode.WORKBOOK_NOT_OPENABLE
         ? code.title()
         : messageFor(exception, context);
   }
@@ -223,6 +208,11 @@ public final class GridGrindProblems {
         }
         yield context;
       }
+      case dev.erst.gridgrind.core.problem.ProblemContext.ReadAuthority authority ->
+          exception instanceof dev.erst.gridgrind.core.problem.InvalidAuthorityException refusal
+              ? new ProblemContext.ReadAuthority(
+                  authority.authorityPath(), refusal.documentLocation())
+              : context;
       case dev.erst.gridgrind.core.problem.ProblemContext.BindRequest bc -> {
         if (exception instanceof PayloadException pe) {
           yield bc.withJson(jsonLocationFor(pe));
@@ -241,7 +231,12 @@ public final class GridGrindProblems {
       case dev.erst.gridgrind.core.problem.HostContext _ -> context;
       case dev.erst.gridgrind.core.problem.ProblemContext.ValidateRequest _ -> context;
       case dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs _ -> context;
-      case dev.erst.gridgrind.core.problem.ProblemContext.OpenWorkbook _ -> context;
+      case dev.erst.gridgrind.core.problem.ProblemContext.OpenWorkbook open ->
+          exception
+                  instanceof
+                  dev.erst.gridgrind.engine.backend.xssf.WorkbookContentRefusalException refusal
+              ? refusal.location().map(open::withContent).orElse(open)
+              : context;
       case dev.erst.gridgrind.core.problem.ProblemContext.PersistWorkbook _ -> context;
       case dev.erst.gridgrind.core.problem.ProblemContext.ExecuteRequest _ -> context;
       case dev.erst.gridgrind.core.problem.ProblemContext.WriteResponse _ -> context;

@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.plan.AssertionResult;
-import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionResult;
-import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.PreparedAssertionStep;
+import dev.erst.gridgrind.core.plan.PreparedInspectionStep;
 import dev.erst.gridgrind.core.semantics.BackendCapabilities;
 import dev.erst.gridgrind.engine.backend.eventread.EventWorkbookReader;
 import dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter;
@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Executes workbook steps and materialized-read seams for the request executor. */
 final class StepExecution {
@@ -26,6 +27,8 @@ final class StepExecution {
   private final AssertionExecutor assertionExecutor;
   private final TempFileFactory tempFileFactory;
   private final FormulaAwareMutationStepExecutor mutationStepExecutor;
+  private final ExecutionInputBindings bindings;
+  private final MaterializedWorkbookOpener materializedOpener;
 
   StepExecution(
       WorkbookExecutionEngine workbookEngine,
@@ -33,6 +36,28 @@ final class StepExecution {
       AssertionExecutor assertionExecutor,
       TempFileFactory tempFileFactory,
       ExecutionInputBindings bindings) {
+    this(
+        workbookEngine,
+        selectorResolver,
+        assertionExecutor,
+        tempFileFactory,
+        bindings,
+        path ->
+            XssfWorkbooks.open(
+                path,
+                dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment.defaults(),
+                tempFileFactory::createTempFile));
+  }
+
+  StepExecution(
+      WorkbookExecutionEngine workbookEngine,
+      SemanticSelectorResolver selectorResolver,
+      AssertionExecutor assertionExecutor,
+      TempFileFactory tempFileFactory,
+      ExecutionInputBindings bindings,
+      MaterializedWorkbookOpener materializedOpener) {
+    this.bindings = Objects.requireNonNull(bindings);
+    this.materializedOpener = Objects.requireNonNull(materializedOpener);
     this.workbookEngine = Objects.requireNonNull(workbookEngine, "workbookEngine must not be null");
     this.selectorResolver =
         Objects.requireNonNull(selectorResolver, "selectorResolver must not be null");
@@ -49,7 +74,7 @@ final class StepExecution {
   }
 
   InspectionResult executeInspectionStep(
-      InspectionStep inspectionStep,
+      PreparedInspectionStep inspectionStep,
       XssfWorkbook workbook,
       WorkbookLocation workbookLocation,
       ExecutionModeSpec executionMode)
@@ -61,7 +86,7 @@ final class StepExecution {
   }
 
   AssertionResult executeAssertionStep(
-      AssertionStep assertionStep,
+      PreparedAssertionStep assertionStep,
       XssfWorkbook workbook,
       WorkbookLocation workbookLocation,
       ExecutionModeSpec executionMode)
@@ -74,7 +99,7 @@ final class StepExecution {
   }
 
   AssertionStepExecution executeAssertionStepCollecting(
-      AssertionStep assertionStep,
+      PreparedAssertionStep assertionStep,
       XssfWorkbook workbook,
       WorkbookLocation workbookLocation,
       ExecutionModeSpec executionMode)
@@ -86,24 +111,16 @@ final class StepExecution {
         "execution.mode.type=EVENT_READ does not support assertion steps");
   }
 
-  InspectionResult executeInspectionAgainstMaterializedPath(
-      InspectionStep inspectionStep,
-      WorkbookLocation workbookLocation,
-      ExecutionModeSpec executionMode,
-      Path materializedPath)
-      throws IOException {
-    if (!(executionMode instanceof ExecutionModeSpec.EventRead)) {
-      return executeFullInspectionAgainstMaterializedPath(
-          inspectionStep, workbookLocation, materializedPath);
-    }
-    return executeEventInspection(materializedPath, inspectionStep);
-  }
-
   private InspectionResult executeFullInspectionStep(
-      InspectionStep inspectionStep, XssfWorkbook workbook, WorkbookLocation workbookLocation) {
+      PreparedInspectionStep inspectionStep,
+      XssfWorkbook workbook,
+      WorkbookLocation workbookLocation) {
     SemanticSelectorResolver.ResolvedInspectionTarget resolvedTarget =
         selectorResolver.resolveInspectionTarget(
-            inspectionStep.stepId(), workbook, inspectionStep.target(), inspectionStep.query());
+            inspectionStep.authoredStep().stepId(),
+            workbook,
+            inspectionStep.target(),
+            inspectionStep.authoredStep().query());
     if (resolvedTarget.isShortCircuit()) {
       return Objects.requireNonNull(
           resolvedTarget.shortCircuitResult(), "short-circuit inspection result must be present");
@@ -114,16 +131,16 @@ final class StepExecution {
                 workbook,
                 workbookLocation,
                 resolvedInspection(
-                    inspectionStep.stepId(),
+                    inspectionStep.authoredStep().stepId(),
                     Objects.requireNonNull(
                         resolvedTarget.selector(), "resolved selector must be present"),
-                    inspectionStep.query()))
+                    inspectionStep.authoredStep().query()))
             .getFirst();
     return result;
   }
 
   private InspectionResult executeEventInspectionAgainstWorkbook(
-      InspectionStep inspectionStep, XssfWorkbook workbook) throws IOException {
+      PreparedInspectionStep inspectionStep, XssfWorkbook workbook) throws IOException {
     Path tempPath = null;
     try {
       tempPath =
@@ -138,101 +155,118 @@ final class StepExecution {
     }
   }
 
-  InspectionResult executeStreamingInspectionStep(
-      StreamingWorkbookWriter writer,
-      InspectionStep inspectionStep,
-      WorkbookLocation workbookLocation,
-      ExecutionModeSpec executionMode)
-      throws IOException {
-    Path tempPath =
-        WorkbookTempFileFactory.prepareCreateNewTarget(
-            tempFileFactory.createTempFile("gridgrind-streaming-step-", ".xlsx"));
-    try {
-      writer.save(tempPath, WorkbookArtifactWriteDisposition.CREATE_NEW);
-      return executeInspectionAgainstMaterializedPath(
-          inspectionStep, workbookLocation, executionMode, tempPath);
-    } finally {
-      WorkbookLifecycle.deleteIfExists(tempPath);
+  MaterializedReadView openReadView(Path path, WorkbookLocation location) throws IOException {
+    return new MaterializedReadView(materializedOpener.open(path), location);
+  }
+
+  StreamingReadView streamingReadView(StreamingWorkbookWriter writer, WorkbookLocation location) {
+    var view = new StreamingReadView(writer, location);
+    bindings.own(view::close);
+    return view;
+  }
+
+  /** One XSSF view shared only by observations of the same authored workbook state. */
+  final class MaterializedReadView implements AutoCloseable {
+    private final XssfWorkbook workbook;
+    private final WorkbookLocation location;
+
+    private MaterializedReadView(XssfWorkbook workbook, WorkbookLocation location) {
+      this.workbook = workbook;
+      this.location = location;
+    }
+
+    InspectionResult inspect(PreparedInspectionStep step) {
+      return executeFullInspectionStep(step, workbook, location);
+    }
+
+    AssertionResult assertThat(PreparedAssertionStep step) throws AssertionFailedException {
+      return assertionExecutor.execute(step, workbook, location);
+    }
+
+    AssertionStepExecution collect(PreparedAssertionStep step) {
+      return assertionExecutor.executeCollecting(step, workbook, location);
+    }
+
+    @Override
+    public void close() throws IOException {
+      workbook.close();
     }
   }
 
-  AssertionResult executeStreamingAssertionStep(
-      StreamingWorkbookWriter writer,
-      AssertionStep assertionStep,
-      WorkbookLocation workbookLocation)
-      throws IOException, AssertionFailedException {
-    Path tempPath =
-        WorkbookTempFileFactory.prepareCreateNewTarget(
-            tempFileFactory.createTempFile("gridgrind-streaming-step-", ".xlsx"));
-    try {
-      writer.save(tempPath, WorkbookArtifactWriteDisposition.CREATE_NEW);
-      return executeFullAssertionAgainstMaterializedPath(assertionStep, workbookLocation, tempPath);
-    } finally {
-      WorkbookLifecycle.deleteIfExists(tempPath);
+  /** Lazily snapshots the completed streaming state for its terminal observations. */
+  final class StreamingReadView implements AutoCloseable {
+    private final StreamingWorkbookWriter writer;
+    private final WorkbookLocation location;
+    private @Nullable Path path;
+    private @Nullable MaterializedReadView view;
+
+    private StreamingReadView(StreamingWorkbookWriter writer, WorkbookLocation location) {
+      this.writer = writer;
+      this.location = location;
+    }
+
+    InspectionResult inspect(PreparedInspectionStep step) throws IOException {
+      return view().inspect(step);
+    }
+
+    AssertionResult assertThat(PreparedAssertionStep step)
+        throws IOException, AssertionFailedException {
+      return view().assertThat(step);
+    }
+
+    AssertionStepExecution collect(PreparedAssertionStep step) throws IOException {
+      return view().collect(step);
+    }
+
+    private MaterializedReadView view() throws IOException {
+      if (view == null) {
+        Path created =
+            WorkbookTempFileFactory.prepareCreateNewTarget(
+                tempFileFactory.createTempFile("gridgrind-streaming-step-", ".xlsx"));
+        path = created;
+        writer.save(created, WorkbookArtifactWriteDisposition.CREATE_NEW);
+        view = openReadView(created, location);
+      }
+      return view;
+    }
+
+    @SuppressWarnings(
+        "PMD.CloseResource") // The drained nullable handle is explicitly closed below on every
+    // nonnull path.
+    @Override
+    public void close() throws IOException {
+      MaterializedReadView opened = view;
+      view = null;
+      Path owned = path;
+      path = null;
+      IOException failure = null;
+      if (opened != null) {
+        try {
+          opened.close();
+        } catch (IOException exception) {
+          failure = exception;
+        }
+      }
+      if (owned != null) {
+        try {
+          java.nio.file.Files.deleteIfExists(owned);
+        } catch (IOException exception) {
+          if (failure == null) failure = exception;
+          else failure.addSuppressed(exception);
+        }
+      }
+      if (failure != null) throw failure;
     }
   }
 
-  AssertionResult executeAssertionAgainstMaterializedPath(
-      AssertionStep assertionStep, WorkbookLocation workbookLocation, Path materializedPath)
-      throws IOException, AssertionFailedException {
-    return executeFullAssertionAgainstMaterializedPath(
-        assertionStep, workbookLocation, materializedPath);
+  /** Native opening boundary for immutable materialized workbook views. */
+  @FunctionalInterface
+  interface MaterializedWorkbookOpener {
+    /** Opens one native resource whose close obligation transfers to the receiving read view. */
+    XssfWorkbook open(Path path) throws IOException;
   }
 
-  AssertionStepExecution executeStreamingAssertionStepCollecting(
-      StreamingWorkbookWriter writer,
-      AssertionStep assertionStep,
-      WorkbookLocation workbookLocation)
-      throws IOException {
-    Path tempPath =
-        WorkbookTempFileFactory.prepareCreateNewTarget(
-            tempFileFactory.createTempFile("gridgrind-streaming-step-", ".xlsx"));
-    try {
-      writer.save(tempPath, WorkbookArtifactWriteDisposition.CREATE_NEW);
-      return executeFullAssertionCollectingAgainstMaterializedPath(
-          assertionStep, workbookLocation, tempPath);
-    } finally {
-      WorkbookLifecycle.deleteIfExists(tempPath);
-    }
-  }
-
-  private InspectionResult executeFullInspectionAgainstMaterializedPath(
-      InspectionStep inspectionStep, WorkbookLocation workbookLocation, Path materializedPath)
-      throws IOException {
-    try (XssfWorkbook workbook =
-        XssfWorkbooks.open(
-            materializedPath,
-            dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment.defaults(),
-            tempFileFactory::createTempFile)) {
-      return executeFullInspectionStep(inspectionStep, workbook, workbookLocation);
-    }
-  }
-
-  private AssertionResult executeFullAssertionAgainstMaterializedPath(
-      AssertionStep assertionStep, WorkbookLocation workbookLocation, Path materializedPath)
-      throws IOException, AssertionFailedException {
-    try (XssfWorkbook workbook =
-        XssfWorkbooks.open(
-            materializedPath,
-            dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment.defaults(),
-            tempFileFactory::createTempFile)) {
-      return assertionExecutor.execute(assertionStep, workbook, workbookLocation);
-    }
-  }
-
-  private AssertionStepExecution executeFullAssertionCollectingAgainstMaterializedPath(
-      AssertionStep assertionStep, WorkbookLocation workbookLocation, Path materializedPath)
-      throws IOException {
-    try (XssfWorkbook workbook =
-        XssfWorkbooks.open(
-            materializedPath,
-            dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment.defaults(),
-            tempFileFactory::createTempFile)) {
-      return assertionExecutor.executeCollecting(assertionStep, workbook, workbookLocation);
-    }
-  }
-
-  InspectionResult executeEventInspection(Path workbookPath, InspectionStep inspectionStep)
+  InspectionResult executeEventInspection(Path workbookPath, PreparedInspectionStep inspectionStep)
       throws IOException {
     EventWorkbookReader eventWorkbookReader = new EventWorkbookReader();
     dev.erst.gridgrind.core.plan.ResolvedInspectionStep command =
@@ -240,7 +274,7 @@ final class StepExecution {
     if (!(command.query() instanceof dev.erst.gridgrind.core.plan.InspectionQuery.Introspection)) {
       throw new IllegalArgumentException(
           BackendCapabilities.eventRead()
-              .unsupportedQueryMessage(inspectionStep.query().queryType()));
+              .unsupportedQueryMessage(inspectionStep.authoredStep().query().queryType()));
     }
     dev.erst.gridgrind.core.plan.InspectionResult result =
         eventWorkbookReader.apply(workbookPath, List.of(command)).getFirst();
@@ -256,7 +290,8 @@ final class StepExecution {
   }
 
   private static dev.erst.gridgrind.core.plan.ResolvedInspectionStep resolvedInspection(
-      dev.erst.gridgrind.core.plan.InspectionStep step) {
-    return resolvedInspection(step.stepId(), step.target(), step.query());
+      dev.erst.gridgrind.core.plan.PreparedInspectionStep step) {
+    return resolvedInspection(
+        step.authoredStep().stepId(), step.target(), step.authoredStep().query());
   }
 }

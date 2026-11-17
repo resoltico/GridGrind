@@ -49,7 +49,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(
                         encryptedWorkbook.workbookPath().toString(),
@@ -96,7 +98,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Failure missingPassword =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(
                         encryptedWorkbook.workbookPath().toString()),
@@ -110,7 +114,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Failure wrongPassword =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(
                         encryptedWorkbook.workbookPath().toString(),
@@ -155,7 +161,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(malformedSource.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -182,7 +190,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(
                         signedWorkbook.workbookPath().toString()),
@@ -207,7 +217,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Success persisted =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(
                         signedWorkbook.workbookPath().toString()),
@@ -226,7 +238,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Success reopened =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(output.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -250,7 +264,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Success persisted =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -265,7 +281,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Success reopened =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(output.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -296,7 +314,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(source.toString()),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -353,7 +373,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
             inspections());
 
     RequestDoctorReport report =
-        new GridGrindRequestDoctor()
+        new GridGrindRequestDoctor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .diagnose(request, ExecutionInputBindingsFixtureSupport.bindings(directory, request));
 
     assertFalse(report.valid());
@@ -402,11 +424,17 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
             inspections());
 
     RequestDoctorReport report =
-        new GridGrindRequestDoctor()
+        new GridGrindRequestDoctor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .diagnose(request, ExecutionInputBindingsFixtureSupport.bindings(directory, request));
     WorkbookResult.Failure execution =
         failure(
-            ExecutionContextFixtureSupport.execute(new DefaultGridGrindRequestExecutor(), request));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
+                request));
 
     assertFalse(report.valid());
     assertEquals(
@@ -430,7 +458,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(
                         standardEncryptedWorkbook.workbookPath().toString(),
@@ -468,7 +498,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(
                         signedWorkbook.workbookPath().toString()),
@@ -496,7 +528,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Success persisted =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -538,7 +572,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Success reopened =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(
                         securedWorkbook.toString(),
@@ -600,7 +636,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -646,7 +684,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -683,7 +723,9 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(tamperedWorkbook.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),

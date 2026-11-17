@@ -1,0 +1,31 @@
+--- vendor/native-context-sources/poi-ooxml/org/apache/poi/xssf/usermodel/XSSFWorkbook.java
++++ isolated-provider/org/apache/poi/xssf/usermodel/XSSFWorkbook.java
+@@ -96,6 +96,7 @@
+ import org.apache.poi.xssf.model.CalculationChain;
+ import org.apache.poi.xssf.model.ExternalLinksTable;
+ import org.apache.poi.xssf.model.MapInfo;
++import org.apache.poi.xssf.model.Comments;
+ import org.apache.poi.xssf.model.SharedStringsTable;
+ import org.apache.poi.xssf.model.StylesTable;
+ import org.apache.poi.xssf.model.ThemesTable;
+@@ -695,8 +696,20 @@
+         List<RelationPart> rels = srcSheet.getRelationParts();
+         // if the sheet being cloned has a drawing then remember it and re-create it too
+         XSSFDrawing dg = null;
++        String normalVmlId = srcSheet.getCTWorksheet().isSetLegacyDrawing()
++                ? srcSheet.getCTWorksheet().getLegacyDrawing().getId() : null;
++        POIXMLDocumentPart normalVml = normalVmlId == null ? null : srcSheet.getRelationById(normalVmlId);
++        String headerFooterVmlId = srcSheet.getCTWorksheet().isSetLegacyDrawingHF()
++                ? srcSheet.getCTWorksheet().getLegacyDrawingHF().getId() : null;
+         for(RelationPart rp : rels) {
+             POIXMLDocumentPart r = rp.getDocumentPart();
++            // Sheet-local annotation owners must not become shared objects before target.read.
++            // Header/footer VML is a distinct role and keeps its existing relationship.
++            if (r instanceof Comments || (r instanceof XSSFVMLDrawing && normalVml != null
++                    && r.getPackagePart().getPartName().equals(normalVml.getPackagePart().getPartName())
++                    && !rp.getRelationship().getId().equals(headerFooterVmlId))) {
++                continue;
++            }
+             // do not copy the drawing relationship, it will be re-created
+             if(r instanceof XSSFDrawing drawing) {
+                 dg = drawing;

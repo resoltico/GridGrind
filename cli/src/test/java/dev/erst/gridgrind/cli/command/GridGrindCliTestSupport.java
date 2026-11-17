@@ -35,13 +35,13 @@ public abstract class GridGrindCliTestSupport {
   protected static String minimalRequestJson(
       String sourceJson, String persistenceJson, String stepsJson) {
     return """
-        {
-          "protocolVersion": 1,
-          "source": %s,
-          "persistence": %s,
-          "steps": %s
-        }
-        """
+    {
+      "protocolVersion": 1,
+      "source": %s,
+      "persistence": %s,
+      "steps": %s
+    }
+    """
         .formatted(sourceJson, persistenceJson, stepsJson);
   }
 
@@ -52,15 +52,15 @@ public abstract class GridGrindCliTestSupport {
       String formulaEnvironmentJson,
       String stepsJson) {
     return """
-        {
-          "protocolVersion": 1,
-          "source": %s,
-          "persistence": %s,
-          "execution": %s,
-          "formulaEnvironment": %s,
-          "steps": %s
-        }
-        """
+    {
+      "protocolVersion": 1,
+      "source": %s,
+      "persistence": %s,
+      "execution": %s,
+      "formulaEnvironment": %s,
+      "steps": %s
+    }
+    """
         .formatted(sourceJson, persistenceJson, executionJson, formulaEnvironmentJson, stepsJson);
   }
 
@@ -72,16 +72,16 @@ public abstract class GridGrindCliTestSupport {
       String formulaEnvironmentJson,
       String stepsJson) {
     return """
-        {
-          "protocolVersion": 1,
-          "planId": "%s",
-          "source": %s,
-          "persistence": %s,
-          "execution": %s,
-          "formulaEnvironment": %s,
-          "steps": %s
-        }
-        """
+    {
+      "protocolVersion": 1,
+      "planId": "%s",
+      "source": %s,
+      "persistence": %s,
+      "execution": %s,
+      "formulaEnvironment": %s,
+      "steps": %s
+    }
+    """
         .formatted(
             planId, sourceJson, persistenceJson, executionJson, formulaEnvironmentJson, stepsJson);
   }
@@ -101,26 +101,26 @@ public abstract class GridGrindCliTestSupport {
   protected static String executionJson(
       String journalLevel, String calculationStrategy, boolean markRecalculateOnOpen) {
     return """
-        {
-          "mode": {"type": "FULL_XSSF"},
-          "journal": { "level": "%s" },
-          "calculation": {
-            "strategy": { "type": "%s" },
-            "markRecalculateOnOpen": %s
-          }
-        }
-        """
+    {
+      "mode": {"type": "FULL_XSSF"},
+      "journal": { "level": "%s" },
+      "calculation": {
+        "strategy": { "type": "%s" },
+        "markRecalculateOnOpen": %s
+      }
+    }
+    """
         .formatted(journalLevel, calculationStrategy, markRecalculateOnOpen);
   }
 
   protected static String emptyFormulaEnvironmentJson() {
     return """
-        {
-          "externalWorkbooks": [],
-          "missingWorkbookPolicy": "ERROR",
-          "udfToolpacks": []
-        }
-        """;
+    {
+      "externalWorkbooks": [],
+      "missingWorkbookPolicy": "ERROR",
+      "udfToolpacks": []
+    }
+    """;
   }
 
   protected static String[] stdinExecutionArguments(String... trailingArguments)

@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.json.codec;
 
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolContractSupport;
-import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
@@ -64,7 +63,9 @@ final class JsonReadFailures {
     if (failure instanceof InvalidTypeIdException subtype) {
       Class<?> base =
           subtype.getBaseType() == null ? fallback : subtype.getBaseType().getRawClass();
-      String discriminator = discriminator(base).orElse("type");
+      String discriminator =
+          dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport.discriminatorField(base);
+      if (discriminator.isEmpty()) discriminator = "type";
       String location = path.orElse("");
       if (!location.equals(discriminator) && !location.endsWith("." + discriminator))
         location = child(location, discriminator);
@@ -168,17 +169,6 @@ final class JsonReadFailures {
 
   private static String child(String parent, String field) {
     return parent.isEmpty() ? field : parent + "." + field;
-  }
-
-  private static Optional<String> discriminator(Class<?> type) {
-    Union union = type.getAnnotation(Union.class);
-    if (union != null && !union.discriminator().isEmpty())
-      return Optional.of(union.discriminator());
-    for (Class<?> parent : type.getInterfaces()) {
-      Optional<String> value = discriminator(parent);
-      if (value.isPresent()) return value;
-    }
-    return Optional.empty();
   }
 
   private static JsonNode at(JsonNode root, JacksonException failure) {

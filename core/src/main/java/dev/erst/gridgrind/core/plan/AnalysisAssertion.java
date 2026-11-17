@@ -19,7 +19,8 @@ public sealed interface AnalysisAssertion extends Assertion
   @Variant(
       id = "EXPECT_ANALYSIS_MAX_SEVERITY",
       summary =
-          "Run one analysis query and require its highest severity to be no higher than maximumSeverity.",
+          "Run one analysis query and require its highest severity to be no higher than"
+              + " maximumSeverity.",
       targetingMode = ProtocolTargetingMode.ANALYSIS_QUERY,
       targetSelectorRule = ANALYSIS_RULE,
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
@@ -49,11 +50,10 @@ public sealed interface AnalysisAssertion extends Assertion
       Objects.requireNonNull(severity, "severity must not be null");
       Objects.requireNonNull(messageContains, "messageContains must not be null");
       messageContains =
-          messageContains.map(
-              value -> {
-                TextValidation.requireNonBlank(value, "messageContains");
-                return value;
-              });
+          messageContains.map(value -> {
+            TextValidation.requireNonBlank(value, "messageContains");
+            return value;
+          });
     }
   }
 
@@ -75,11 +75,10 @@ public sealed interface AnalysisAssertion extends Assertion
       Objects.requireNonNull(severity, "severity must not be null");
       Objects.requireNonNull(messageContains, "messageContains must not be null");
       messageContains =
-          messageContains.map(
-              value -> {
-                TextValidation.requireNonBlank(value, "messageContains");
-                return value;
-              });
+          messageContains.map(value -> {
+            TextValidation.requireNonBlank(value, "messageContains");
+            return value;
+          });
     }
   }
 

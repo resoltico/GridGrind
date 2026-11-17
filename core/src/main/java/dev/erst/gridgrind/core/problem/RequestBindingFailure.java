@@ -13,12 +13,11 @@ public record RequestBindingFailure(
     Objects.requireNonNull(exception, "exception must not be null");
     jsonPath = TextValidation.requireNonBlank(jsonPath, "jsonPath");
     byteOffset = Objects.requireNonNullElseGet(byteOffset, Optional::empty);
-    byteOffset.ifPresent(
-        offset -> {
-          if (offset < 0) {
-            throw new IllegalArgumentException("byteOffset must not be negative");
-          }
-        });
+    byteOffset.ifPresent(offset -> {
+      if (offset < 0) {
+        throw new IllegalArgumentException("byteOffset must not be negative");
+      }
+    });
   }
 
   /** Returns this failure with its exact request-token location when the raw tree retains one. */

@@ -280,29 +280,25 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
       XSSFSheet rowLimitSheet = workbook.createSheet("RowLimit");
       rowLimitSheet.createRow(Limit.MAX_ROW_INDEX).createCell(0).setCellValue("Edge");
 
-      assertDoesNotThrow(
-          () ->
-              StructuralEdits.groupRows(
-                  rowLimitSheet, new ExcelRowSpan(Limit.MAX_ROW_INDEX, Limit.MAX_ROW_INDEX), true));
-      assertDoesNotThrow(
-          () ->
-              StructuralEdits.ungroupRows(
-                  rowLimitSheet, new ExcelRowSpan(Limit.MAX_ROW_INDEX, Limit.MAX_ROW_INDEX)));
+      assertDoesNotThrow(() ->
+          StructuralEdits.groupRows(
+              rowLimitSheet, new ExcelRowSpan(Limit.MAX_ROW_INDEX, Limit.MAX_ROW_INDEX), true));
+      assertDoesNotThrow(() ->
+          StructuralEdits.ungroupRows(
+              rowLimitSheet, new ExcelRowSpan(Limit.MAX_ROW_INDEX, Limit.MAX_ROW_INDEX)));
 
       XSSFSheet columnLimitSheet = workbook.createSheet("ColumnLimit");
       setString(columnLimitSheet, "XFD1", "Edge");
 
-      assertDoesNotThrow(
-          () ->
-              StructuralEdits.groupColumns(
-                  columnLimitSheet,
-                  new ExcelColumnSpan(Limit.MAX_COLUMN_INDEX, Limit.MAX_COLUMN_INDEX),
-                  false));
-      assertDoesNotThrow(
-          () ->
-              StructuralEdits.ungroupColumns(
-                  columnLimitSheet,
-                  new ExcelColumnSpan(Limit.MAX_COLUMN_INDEX, Limit.MAX_COLUMN_INDEX)));
+      assertDoesNotThrow(() ->
+          StructuralEdits.groupColumns(
+              columnLimitSheet,
+              new ExcelColumnSpan(Limit.MAX_COLUMN_INDEX, Limit.MAX_COLUMN_INDEX),
+              false));
+      assertDoesNotThrow(() ->
+          StructuralEdits.ungroupColumns(
+              columnLimitSheet,
+              new ExcelColumnSpan(Limit.MAX_COLUMN_INDEX, Limit.MAX_COLUMN_INDEX)));
     }
   }
 

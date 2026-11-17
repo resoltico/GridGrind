@@ -70,13 +70,12 @@ class CliArgumentEdgeCoverageTest {
                 Optional.of(Path.of("workspace")),
                 Optional.empty(),
                 Optional.empty()));
-    assertDoesNotThrow(
-        () ->
-            CliExecutionArgumentValidation.validateTerminalArguments(
-                Optional.of(Path.of("-")),
-                Optional.of(Path.of("workspace")),
-                Optional.empty(),
-                Optional.empty()));
+    assertDoesNotThrow(() ->
+        CliExecutionArgumentValidation.validateTerminalArguments(
+            Optional.of(Path.of("-")),
+            Optional.of(Path.of("workspace")),
+            Optional.empty(),
+            Optional.empty()));
   }
 
   @Test

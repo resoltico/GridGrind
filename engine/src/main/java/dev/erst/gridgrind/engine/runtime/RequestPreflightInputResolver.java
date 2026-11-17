@@ -21,9 +21,16 @@ final class RequestPreflightInputResolver {
       List<GridGrindProblemDetail.Problem> problems) {
     List<PreparedStep> resolvedSteps = new ArrayList<>(request.steps().size());
     boolean failed = false;
-    for (WorkbookStep step : request.steps()) {
+    for (int index = 0; index < request.steps().size(); index++) {
+      WorkbookStep step = request.steps().get(index);
+      ExecutionInputBindings occurrence =
+          bindings.withInputResolutionScope("steps[" + index + "]").withNewMediaUse();
       try {
-        resolvedSteps.add(MutationResolution.prepareStep(stepResolver.resolve(step, bindings)));
+        WorkbookStep bound = stepResolver.resolve(step, occurrence);
+        occurrence.mediaUse().reserveBound(step, bound, occurrence, index);
+        PreparedStep prepared = PreparedStep.prepare(step, bound);
+        occurrence.mediaUse().inspect(prepared);
+        resolvedSteps.add(prepared);
       } catch (InputResolutionBatchException exception) {
         addBatchFailures(request, exception, problems);
         failed = true;
@@ -32,24 +39,14 @@ final class RequestPreflightInputResolver {
             GridGrindProblems.fromException(
                 exception,
                 RequestPreflight.resolveInputsContext(
-                    request, InputResolutionFailure.unlocated(exception))));
+                    request, occurrence.mediaUse().failure(exception))));
         failed = true;
       }
     }
     if (failed) {
       return Optional.empty();
     }
-    return Optional.of(
-        new ResolvedPlan(
-            new WorkbookPlan(
-                request.protocolVersion(),
-                request.planId(),
-                request.source(),
-                request.persistence(),
-                request.execution(),
-                request.formulaEnvironment(),
-                resolvedSteps.stream().map(PreparedStep::authoredStep).toList()),
-            resolvedSteps));
+    return Optional.of(new ResolvedPlan(request, resolvedSteps));
   }
 
   private static void addBatchFailures(

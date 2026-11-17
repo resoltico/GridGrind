@@ -8,8 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.ResolvedCellText;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
@@ -66,6 +66,7 @@ class ResolvedPlanExecutionTest {
     var baseGrant = ExecutionGrantTestSupport.forPlan(request, root, textFile);
     var grant =
         new dev.erst.gridgrind.core.grant.ExecutionGrant(
+            16L * 1024 * 1024,
             baseGrant.readableResources(),
             baseGrant.operationIds(),
             baseGrant.targetAuthority(),
@@ -83,20 +84,19 @@ class ResolvedPlanExecutionTest {
               return supplied;
             });
     var preflight = RequestPreflight.verify(request, bindings);
-    try {
-      assertEquals(List.of(), preflight.problems());
+    assertEquals(List.of(), preflight.problems());
+    try (var prepared = preflight.requirePreparedRequest()) {
       assertEquals(0, resolutions.get());
-      var plan = preflight.preparedPlan();
+      var plan = prepared.plan();
       var text = assertInstanceOf(PreparedMutationStep.class, plan.steps().getFirst());
       var cell = assertInstanceOf(ResolvedMutationAction.SetCell.class, text.action());
-      assertEquals(new CellValue.Text("Prepared title"), cell.value());
+      assertEquals(new ResolvedCellText("Prepared title"), cell.value());
       var pendingProtection = assertInstanceOf(PreparedMutationStep.class, plan.steps().get(1));
       assertSame(protection, pendingProtection.action());
       Files.delete(textFile);
       var executor =
           new FormulaAwareMutationStepExecutor(
-              new SemanticSelectorResolver(new WorkbookExecutionEngine()),
-              preflight.preparedBindings());
+              new SemanticSelectorResolver(new WorkbookExecutionEngine()), prepared.bindings());
       Path saved = root.resolve("prepared.xlsx");
       try (var workbook = XssfWorkbooks.create()) {
         workbook.getOrCreateSheet("Budget");
@@ -106,7 +106,12 @@ class ResolvedPlanExecutionTest {
             text,
             origins,
             ExecutionStepContextFactory.referenceFor(0, text.authoredStep()));
-        assertEquals("Prepared title", workbook.sheet("Budget").cells().text("A1"));
+        assertEquals(
+            "Prepared title",
+            workbook
+                .sheet("Budget")
+                .cells()
+                .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
         assertEquals(0, resolutions.get());
         executor.execute(
             workbook,
@@ -126,8 +131,6 @@ class ResolvedPlanExecutionTest {
             "Prepared title",
             reopened.getSheet("Budget").getRow(0).getCell(0).getStringCellValue());
       }
-    } finally {
-      preflight.release();
     }
   }
 }

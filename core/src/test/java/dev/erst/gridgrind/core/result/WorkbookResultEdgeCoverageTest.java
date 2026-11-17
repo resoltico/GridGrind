@@ -216,12 +216,11 @@ class WorkbookResultEdgeCoverageTest {
                         " ",
                         NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("A1"))))
             .getMessage());
-    assertDoesNotThrow(
-        () ->
-            new NamedRangeReport.FormulaReport(
-                new DefinedNameLabel("BudgetExpr"),
-                new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook(),
-                " "));
+    assertDoesNotThrow(() ->
+        new NamedRangeReport.FormulaReport(
+            new DefinedNameLabel("BudgetExpr"),
+            new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook(),
+            " "));
     assertEquals(
         "sheetName must not be blank",
         assertThrows(

@@ -1,7 +1,8 @@
 # Architecture
 
-The product modules are core, json, engine and cli. Architecture-tests verifies their
-compiled boundaries; fuzz is a root test source set.
+The public product modules are core, json, engine and cli. The resource-only native-provider
+project supplies the private runtime capsule and explicit compiler views. Architecture-tests
+verifies compiled boundaries; fuzz is a root test source set.
 
     core <- json <- cli
       ^---- engine <- cli
@@ -14,9 +15,13 @@ that metadata, while its tolerant parser retains syntax findings and independent
 fragments for complete diagnosis.
 
 Engine admits a plan, binds only authorized inputs, resolves semantic selectors into concrete
-targets and executes core operations. Native POI/OOXML mechanics stay in feature and backend
-packages. Only engine.api is exported. Execution backends consume the canonical plan and
+targets and executes core operations. Native POI/OOXML mechanics stay in unexported engine
+integration packages. Only engine.api is exported. Execution backends consume the canonical plan and
 publish capabilities from one pure declaration; routing, validation and help use that declaration.
+Each invocation owns an isolated native provider realm, fixed formatting context and admitted
+scratch resources. Parent-classpath POI classes and embedding-host defaults remain unchanged.
+The [capsule producer](../native-provider/README.md) owns source-pinned repairs, provenance and
+matching source/legal resources; the engine owns loading and lifetime.
 
 The CLI contains command, render and IO packages. Pure recipes and matching belong to
 core.discovery; workspace materialization is a host responsibility. Source-backed inputs

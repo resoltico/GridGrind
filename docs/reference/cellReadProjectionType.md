@@ -3,7 +3,7 @@
 
 ## CellReadProjection
 
-Shared readback projection that selects which factual cell facets are included on cell-returning inspection surfaces. Facets default to VALUE when omitted by the enclosing query. The facets field publishes enumValueDocs so each facet token explains the response fields it unlocks. Catalog field descriptors publish facet-gated response fields through projectedByFacets so agents can derive the required facet directly from the machine contract. Date-like numeric cells still read back as type=NUMBER until TEMPORAL is requested.
+Shared readback projection that selects which factual cell facets are included on cell-returning inspection surfaces. Facets default to VALUE when omitted by the enclosing query. The facets field publishes enumValueDocs so each facet token explains the response fields it unlocks. Catalog field descriptors publish facet-gated response fields through projectedByFacets so agents can derive the required facet directly from the machine contract. Date-like numeric cells retain type=NUMBER; TEMPORAL adds NOT_TEMPORAL, INTERPRETED or UNREPRESENTABLE without duplicating the VALUE fact.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
@@ -12,7 +12,7 @@ Shared readback projection that selects which factual cell facets are included o
 ```json
 {
   "id" : "CellReadProjection",
-  "summary" : "Shared readback projection that selects which factual cell facets are included on cell-returning inspection surfaces. Facets default to VALUE when omitted by the enclosing query. The facets field publishes enumValueDocs so each facet token explains the response fields it unlocks. Catalog field descriptors publish facet-gated response fields through projectedByFacets so agents can derive the required facet directly from the machine contract. Date-like numeric cells still read back as type=NUMBER until TEMPORAL is requested.",
+  "summary" : "Shared readback projection that selects which factual cell facets are included on cell-returning inspection surfaces. Facets default to VALUE when omitted by the enclosing query. The facets field publishes enumValueDocs so each facet token explains the response fields it unlocks. Catalog field descriptors publish facet-gated response fields through projectedByFacets so agents can derive the required facet directly from the machine contract. Date-like numeric cells retain type=NUMBER; TEMPORAL adds NOT_TEMPORAL, INTERPRETED or UNREPRESENTABLE without duplicating the VALUE fact.",
   "fields" : [ {
     "name" : "facets",
     "requirement" : "REQUIRED",

@@ -246,10 +246,9 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
   @Test
   void executeRejectsStaticSemanticFailuresBeforeExecutionAndMatchesDoctor() throws IOException {
     GridGrindCli cli =
-        GridGrindCli.forTesting(
-            (request, inputs, sink) -> {
-              throw new AssertionError("static-invalid request must not reach execution");
-            });
+        GridGrindCli.forTesting((request, inputs, sink) -> {
+          throw new AssertionError("static-invalid request must not reach execution");
+        });
     byte[] request =
         requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"OVERWRITE\" }", "[]")
             .getBytes(StandardCharsets.UTF_8);
@@ -287,10 +286,9 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
   void executeReportsKnownButIncompatibleTargetsAsStaticProblemsInsteadOfInternalErrors()
       throws IOException {
     GridGrindCli cli =
-        GridGrindCli.forTesting(
-            (request, inputs, sink) -> {
-              throw new AssertionError("static-invalid request must not reach execution");
-            });
+        GridGrindCli.forTesting((request, inputs, sink) -> {
+          throw new AssertionError("static-invalid request must not reach execution");
+        });
     byte[] request =
         requestJson(
                 "{ \"type\": \"NEW\" }",
@@ -343,9 +341,8 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
         executeDiagnostic.problems().stream().map(problem -> problem.code()).toList());
     List<ProblemContext.ValidateRequest> contexts =
         executeDiagnostic.problems().stream()
-            .map(
-                problem ->
-                    assertInstanceOf(ProblemContext.ValidateRequest.class, problem.context()))
+            .map(problem ->
+                assertInstanceOf(ProblemContext.ValidateRequest.class, problem.context()))
             .toList();
     assertEquals(
         List.of(Optional.of("steps[0].target.type"), Optional.of("steps[1].target.type")),
@@ -536,7 +533,8 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     requestJson(
                             "{ \"type\": \"NEW\" }",
-                            "{ \"type\": \"SAVE_AS\", \"path\": \"budget.txt\", \"ifExists\": \"REJECT\" }",
+                            "{ \"type\": \"SAVE_AS\", \"path\": \"budget.txt\", \"ifExists\":"
+                                + " \"REJECT\" }",
                             "[]")
                         .getBytes(StandardCharsets.UTF_8)),
                 stdout,
@@ -577,15 +575,13 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
   }
 
   private static GridGrindCli successfulCli() {
-    return GridGrindCli.forTesting(
-        (ignoredRequest, ignoredBindings, ignoredSink) ->
-            WorkbookResults.success(List.of(), List.of(), List.of()));
+    return GridGrindCli.forTesting((ignoredRequest, ignoredBindings, ignoredSink) ->
+        WorkbookResults.success(List.of(), List.of(), List.of()));
   }
 
   private static GridGrindCli helpOnlyCli() {
-    return GridGrindCli.forTesting(
-        (ignoredRequest, ignoredBindings, ignoredSink) -> {
-          throw new AssertionError("interactive no-arg invocation must not execute a request");
-        });
+    return GridGrindCli.forTesting((ignoredRequest, ignoredBindings, ignoredSink) -> {
+      throw new AssertionError("interactive no-arg invocation must not execute a request");
+    });
   }
 }

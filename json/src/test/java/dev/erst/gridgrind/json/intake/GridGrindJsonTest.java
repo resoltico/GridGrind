@@ -103,12 +103,13 @@ class GridGrindJsonTest {
             () ->
                 GridGrindJson.readRequest(
                     """
-            {"protocolVersion":1,"source":{"type":"NEW"},"persistence":{"type":"NONE"},
-             "execution":{"assertionMode":"NOT_A_MODE"},"steps":[]}
-            """
+                    {"protocolVersion":1,"source":{"type":"NEW"},"persistence":{"type":"NONE"},
+                     "execution":{"assertionMode":"NOT_A_MODE"},"steps":[]}
+                    """
                         .getBytes(StandardCharsets.UTF_8)));
     assertEquals(
-        "Unsupported value 'NOT_A_MODE' for field 'execution.assertionMode'; expected one of: FAIL_FAST, COLLECT",
+        "Unsupported value 'NOT_A_MODE' for field 'execution.assertionMode'; expected one of:"
+            + " FAIL_FAST, COLLECT",
         exception.getMessage());
   }
 
@@ -631,7 +632,8 @@ class GridGrindJsonTest {
         "Field 'steps[0].query.type' must be a JSON string type id", nonStringType.getMessage());
     assertEquals(Optional.of("steps[0].query.type"), nonStringType.jsonPath());
     assertEquals(
-        "Field 'steps[0].target.rowCount' must be a JSON integer between -2147483648 and 2147483647",
+        "Field 'steps[0].target.rowCount' must be a JSON integer between -2147483648 and"
+            + " 2147483647",
         fractionalInteger.getMessage());
     assertEquals(Optional.of("steps[0].target.rowCount"), fractionalInteger.jsonPath());
   }

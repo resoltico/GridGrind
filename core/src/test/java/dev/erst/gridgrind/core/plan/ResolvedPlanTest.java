@@ -29,8 +29,8 @@ class ResolvedPlanTest {
             ExecutionPolicySpec.defaults(),
             FormulaEnvironmentSpec.empty(),
             List.of(first, second));
-    var readyFirst = new PreparedMutationStep(first, action);
-    var readySecond = new PreparedMutationStep(second, action);
+    var readyFirst = (PreparedMutationStep) PreparedStep.prepare(first);
+    var readySecond = (PreparedMutationStep) PreparedStep.prepare(second);
     var input = new ArrayList<PreparedStep>(List.of(readyFirst, readySecond));
     var plan = new ResolvedPlan(request, input);
     input.clear();
@@ -44,6 +44,40 @@ class ResolvedPlanTest {
         IllegalArgumentException.class, () -> new ResolvedPlan(request, List.of(readyFirst)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PreparedMutationStep(first, new WorkbookMutationAction.DeleteSheet()));
+        () ->
+            PreparedStep.prepare(
+                first,
+                new MutationStep(
+                    first.stepId(), first.target(), new WorkbookMutationAction.DeleteSheet())));
+  }
+
+  @Test
+  void rejectsUnrelatedPreparedStepsSharingAnAuthoredIdentity() {
+    var id = new StepId("same");
+    var target =
+        new CellSelector.ByAddress(
+            new SheetName("Budget"), new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
+    var original =
+        new AssertionStep(
+            id,
+            target,
+            new CellAssertion.Value(
+                new dev.erst.gridgrind.core.model.value.CellValue.Text("Original")));
+    var changed =
+        new AssertionStep(
+            id,
+            target,
+            new CellAssertion.Value(
+                new dev.erst.gridgrind.core.model.value.CellValue.Text("Unrelated")));
+    var request =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionPolicySpec.defaults(),
+            FormulaEnvironmentSpec.empty(),
+            List.of(original));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ResolvedPlan(request, List.of(PreparedStep.prepare(changed))));
   }
 }

@@ -64,7 +64,13 @@ final class RequestPathDescriptorBinder {
         new RequestPathBoundDirectory(
             root, Path.of("."), secureDirectory(root, directoryStreams), identity);
     directories.add(boundRoot);
-    if (!identity.equals(RequestPathTopology.identityOf(root, true))) {
+    if (!identity.equals(RequestPathTopology.identityOf(root, true))
+        || !identity.equals(
+            RequestPathTopology.identityOf(
+                boundRoot.stream()
+                    .getFileAttributeView(java.nio.file.attribute.BasicFileAttributeView.class),
+                root,
+                true))) {
       throw new UnsafePathAccessException("execution root topology changed while binding: " + root);
     }
     return boundRoot;

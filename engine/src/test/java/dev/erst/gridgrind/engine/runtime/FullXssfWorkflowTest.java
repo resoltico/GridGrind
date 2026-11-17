@@ -10,7 +10,6 @@ import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
@@ -27,8 +26,7 @@ class FullXssfWorkflowTest {
   @TempDir Path root;
 
   @Test
-  void returnsStructuredFailureWhenOpaqueHostAcceptanceHasNoMaterializedSourceArtifact()
-      throws Exception {
+  void rejectsOpaqueHostAcceptanceWithoutAnExistingPersistedSourceAtAdmission() throws Exception {
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
@@ -36,25 +34,12 @@ class FullXssfWorkflowTest {
             ExecutionPolicySpec.defaults(),
             FormulaEnvironmentSpec.empty(),
             List.of());
-    CalculationWorkflow calculationSupport = new CalculationWorkflow(writer -> {});
-    ExecutionResults responseSupport = responseSupport();
-    FullXssfWorkflow workflow =
-        new FullXssfWorkflow(
-            calculationSupport,
-            new FullXssfStepLoop(null, null),
-            new FullXssfPersistence(
-                (workbook, source, persistence, bindings, acceptance) -> {
-                  throw new AssertionError("host capture must fail before persistence");
-                },
-                responseSupport),
-            new FullXssfHostAcceptance(
-                new HostAcceptanceExecutor(stepSupport()), calculationSupport),
-            responseSupport);
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
             root,
             root.resolve("scratch"),
             new ExecutionGrant(
+                16L * 1024 * 1024,
                 List.of(),
                 List.of(),
                 new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -65,21 +50,14 @@ class FullXssfWorkflowTest {
                         new AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(
                             List.of("/customXml/item1.xml"))))));
 
-    try (var workbook = XssfWorkbooks.create()) {
-      WorkbookResult.Failure failure =
-          assertInstanceOf(
-              WorkbookResult.Failure.class,
-              workflow.execute(
-                  new FullXssfWorkflow.Call(
-                      ProtocolVersion.CURRENT,
-                      MutationResolution.preparePlan(request),
-                      workbook,
-                      new ExecutionModeSpec.FullXssf(),
-                      new ArrayList<>(),
-                      ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
-                      bindings)));
-
-      assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+    try {
+      var admission = RequestPreflight.verify(request, bindings);
+      org.junit.jupiter.api.Assertions.assertTrue(admission.preparedRequest().isEmpty());
+      org.junit.jupiter.api.Assertions.assertTrue(
+          admission.problems().stream()
+              .anyMatch(problem -> problem.message().contains("opaque-part preservation")));
+    } finally {
+      bindings.closeRunResources();
     }
   }
 
@@ -115,6 +93,7 @@ class FullXssfWorkflowTest {
             root,
             root.resolve("scratch"),
             new ExecutionGrant(
+                16L * 1024 * 1024,
                 List.of(),
                 List.of(),
                 new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -123,19 +102,25 @@ class FullXssfWorkflowTest {
                 policy));
 
     try (var workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("A1+1"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedFormula("A1+1"));
 
       assertInstanceOf(
           WorkbookResult.Failure.class,
           workflow.execute(
               new FullXssfWorkflow.Call(
                   ProtocolVersion.CURRENT,
-                  MutationResolution.preparePlan(request),
+                  RequestPreflight.verify(request, bindings).requirePreparedRequest(),
                   workbook,
                   new ExecutionModeSpec.FullXssf(),
                   new ArrayList<>(),
-                  ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),
-                  bindings)));
+                  ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root))));
+    } finally {
+      bindings.closeRunResources();
     }
   }
 
@@ -159,7 +144,11 @@ class FullXssfWorkflowTest {
       FullXssfWorkflowState state =
           new FullXssfWorkflowState(
               ProtocolVersion.CURRENT,
-              MutationResolution.preparePlan(request),
+              new dev.erst.gridgrind.core.plan.ResolvedPlan(
+                  request,
+                  request.steps().stream()
+                      .map(step -> dev.erst.gridgrind.core.plan.PreparedStep.prepare(step, step))
+                      .toList()),
               workbook,
               new ArrayList<>(),
               ExecutionJournalRecorder.start(request, ExecutionProgressSink.NOOP, root),

@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import org.apache.poi.ss.util.CellReference;
 import org.jspecify.annotations.Nullable;
 
 /** Reads workbook facts and sheet introspection data from one workbook wrapper. */
@@ -220,8 +219,7 @@ final class WorkbookIntrospector {
                       .sheetName()
                       .value(),
                   ((dev.erst.gridgrind.core.plan.RangeSelector.RectangularWindow) command.target())
-                      .topLeftAddress()
-                      .value(),
+                      .topLeftAddress(),
                   ((dev.erst.gridgrind.core.plan.RangeSelector.RectangularWindow) command.target())
                       .rowCount(),
                   ((dev.erst.gridgrind.core.plan.RangeSelector.RectangularWindow) command.target())
@@ -246,7 +244,7 @@ final class WorkbookIntrospector {
     var dense =
         sheetIntrospector.window(
             workbook.sheet(window.sheetName().value()),
-            window.topLeftAddress().value(),
+            window.topLeftAddress(),
             window.rowCount(),
             window.columnCount(),
             query.resolvedProjection());
@@ -257,9 +255,8 @@ final class WorkbookIntrospector {
         dense.dimensions(),
         dense.rows().stream()
             .flatMap(row -> row.cells().stream())
-            .filter(
-                cell ->
-                    !(cell instanceof dev.erst.gridgrind.core.model.value.CellReport.BlankReport))
+            .filter(cell ->
+                !(cell instanceof dev.erst.gridgrind.core.model.value.CellReport.BlankReport))
             .toList());
   }
 
@@ -386,7 +383,7 @@ final class WorkbookIntrospector {
   SheetSchemaReport sheetSchema(
       XssfWorkbook workbook,
       String sheetName,
-      String topLeftAddress,
+      dev.erst.gridgrind.core.vocabulary.CellAddress topLeftAddress,
       int rowCount,
       int columnCount,
       CellReadProjection projection,
@@ -400,7 +397,8 @@ final class WorkbookIntrospector {
             rowCount,
             columnCount,
             projectionIncludingFormulaEvaluation(projection));
-    int topLeftColumn = new CellReference(topLeftAddress).getCol();
+    var topLeftPosition = topLeftAddress;
+    int topLeftColumn = topLeftPosition.columnIndex();
     boolean headerRowIsBlank =
         window.rows().getFirst().cells().stream()
             .allMatch(CellReport.BlankReport.class::isInstance);
@@ -450,9 +448,9 @@ final class WorkbookIntrospector {
       columns.add(
           new SchemaColumnReport(
               topLeftColumn + columnOffset,
-              new CellReference(
-                      new CellReference(topLeftAddress).getRow(), topLeftColumn + columnOffset)
-                  .formatAsString(),
+              new dev.erst.gridgrind.core.vocabulary.CellAddress(
+                      topLeftPosition.rowIndex(), topLeftColumn + columnOffset)
+                  .value(),
               headerCell.displayValue().orElse(""),
               populatedCellCount,
               blankCellCount,
@@ -462,7 +460,7 @@ final class WorkbookIntrospector {
 
     return new SheetSchemaReport(
         new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName),
-        new dev.erst.gridgrind.core.vocabulary.CellAddress(topLeftAddress),
+        topLeftAddress,
         rowCount,
         columnCount,
         dataRowCount,
@@ -564,7 +562,14 @@ final class WorkbookIntrospector {
       case dev.erst.gridgrind.core.model.value.CellValue.NumberValue _ ->
           projection.includes(CellReadFacet.TEMPORAL)
               ? temporal
-                  .flatMap(dev.erst.gridgrind.core.model.value.CellTemporalReport::kind)
+                  .filter(interpretation ->
+                      interpretation
+                          instanceof
+                          dev.erst.gridgrind.core.model.value.CellTemporalReport.Interpreted)
+                  .map(interpretation ->
+                      ((dev.erst.gridgrind.core.model.value.CellTemporalReport.Interpreted)
+                              interpretation)
+                          .kind())
                   .map(Enum::name)
                   .orElse("NUMBER")
               : "NUMBER";
@@ -574,7 +579,12 @@ final class WorkbookIntrospector {
   private static Optional<String> temporalObservedType(CellReport.NumberReport snapshot) {
     return snapshot
         .temporal()
-        .flatMap(dev.erst.gridgrind.core.model.value.CellTemporalReport::kind)
+        .filter(interpretation ->
+            interpretation
+                instanceof dev.erst.gridgrind.core.model.value.CellTemporalReport.Interpreted)
+        .map(interpretation ->
+            ((dev.erst.gridgrind.core.model.value.CellTemporalReport.Interpreted) interpretation)
+                .kind())
         .map(Enum::name);
   }
 
@@ -602,15 +612,12 @@ final class WorkbookIntrospector {
     };
   }
 
-  private static java.util.List<String> cellAddresses(
+  private static java.util.List<dev.erst.gridgrind.core.vocabulary.CellAddress> cellAddresses(
       dev.erst.gridgrind.core.plan.ResolvedTarget target) {
     return switch (target) {
       case dev.erst.gridgrind.core.plan.CellSelector.ByAddress cell ->
-          java.util.List.of(cell.address().value());
-      case dev.erst.gridgrind.core.plan.CellSelector.ByAddresses cells ->
-          cells.addresses().stream()
-              .map(dev.erst.gridgrind.core.vocabulary.CellAddress::value)
-              .toList();
+          java.util.List.of(cell.address());
+      case dev.erst.gridgrind.core.plan.CellSelector.ByAddresses cells -> cells.addresses();
       default -> throw new IllegalArgumentException("Expected exact cell addresses");
     };
   }

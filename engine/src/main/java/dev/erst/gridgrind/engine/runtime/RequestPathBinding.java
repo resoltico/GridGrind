@@ -63,6 +63,13 @@ final class RequestPathBinding implements AutoCloseable {
     return bind(rawPath, executionRoot, true, directoryStreams, channels);
   }
 
+  void requireRootIdentity(RequestPathTopology.Identity expected) throws IOException {
+    if (!expected.equals(descriptorChain.directories().getFirst().identity())) {
+      throw new UnsafePathAccessException("execution root changed after path admission");
+    }
+    RequestPathDescriptorVerifier.reverifyDirectories(descriptorChain);
+  }
+
   Path resolvedPath() {
     return descriptorChain.resolvedPath();
   }

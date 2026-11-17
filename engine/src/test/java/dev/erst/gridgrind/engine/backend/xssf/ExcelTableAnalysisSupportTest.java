@@ -6,7 +6,6 @@ import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -124,14 +123,46 @@ class ExcelTableAnalysisSupportTest {
   void tableAutofilterFindingsCoverHealthyInvalidMismatchAndBlankHeaderStates() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.cells().setCell("A1", new CellValue.Text("Owner"));
-      sheet.cells().setCell("B1", new CellValue.Text("Task"));
-      sheet.cells().setCell("A2", new CellValue.Text("Ada"));
-      sheet.cells().setCell("B2", new CellValue.Text("Queue"));
-      sheet.cells().setCell("A3", new CellValue.Text("Lin"));
-      sheet.cells().setCell("B3", new CellValue.Text("Pack"));
-      sheet.cells().setCell("A4", new CellValue.Text("Totals"));
-      sheet.cells().setCell("B4", new CellValue.Text("Done"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Task"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Queue"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Pack"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Totals"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Done"));
 
       TableAdapter controller = new TableAdapter();
       controller.setTable(

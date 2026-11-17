@@ -37,12 +37,11 @@ public final class DeterministicColumnSizer {
       }
     }
 
-    widthsByColumn.forEach(
-        (columnIndex, widthCharacters) ->
-            sheet.setColumnWidth(
-                columnIndex,
-                SheetStructure.toColumnWidthUnits(
-                    Math.min(widthCharacters, Limit.MAX_COLUMN_WIDTH_CHARACTERS))));
+    widthsByColumn.forEach((columnIndex, widthCharacters) ->
+        sheet.setColumnWidth(
+            columnIndex,
+            SheetStructure.toColumnWidthUnits(
+                Math.min(widthCharacters, Limit.MAX_COLUMN_WIDTH_CHARACTERS))));
   }
 
   private static boolean contributesVisibleContent(Cell cell) {
@@ -58,7 +57,10 @@ public final class DeterministicColumnSizer {
   }
 
   private static String cachedFormulaDisplayValue(Cell cell) {
-    DataFormatter cachedValueFormatter = new DataFormatter();
+    DataFormatter cachedValueFormatter =
+        new DataFormatter(
+            java.util.Locale.forLanguageTag(
+                dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD.localeTag()));
     cachedValueFormatter.setUseCachedValuesForFormulaCells(true);
     return cachedValueFormatter.formatCellValue(cell);
   }

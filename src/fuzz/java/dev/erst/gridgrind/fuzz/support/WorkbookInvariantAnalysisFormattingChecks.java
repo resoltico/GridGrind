@@ -19,9 +19,8 @@ final class WorkbookInvariantAnalysisFormattingChecks {
         !validation.ranges().isEmpty(), "data validation ranges must not be empty");
     validation
         .ranges()
-        .forEach(
-            range ->
-                WorkbookInvariantChecks.requireNonBlank(range.value(), "data validation range"));
+        .forEach(range ->
+            WorkbookInvariantChecks.requireNonBlank(range.value(), "data validation range"));
 
     switch (validation) {
       case DataValidationEntryReport.Supported supported ->
@@ -43,10 +42,8 @@ final class WorkbookInvariantAnalysisFormattingChecks {
         "conditional formatting ranges must not be empty");
     conditionalFormatting
         .ranges()
-        .forEach(
-            range ->
-                WorkbookInvariantChecks.requireNonBlank(
-                    range.value(), "conditional formatting range"));
+        .forEach(range ->
+            WorkbookInvariantChecks.requireNonBlank(range.value(), "conditional formatting range"));
     WorkbookInvariantChecks.require(
         conditionalFormatting.rules() != null, "conditional formatting rules must not be null");
     WorkbookInvariantChecks.require(
@@ -76,10 +73,9 @@ final class WorkbookInvariantAnalysisFormattingChecks {
             cellValueRule.formula1(), "conditional formatting formula1");
         cellValueRule
             .formula2()
-            .ifPresent(
-                formula ->
-                    WorkbookInvariantChecks.requireNonBlank(
-                        formula, "conditional formatting formula2"));
+            .ifPresent(formula ->
+                WorkbookInvariantChecks.requireNonBlank(
+                    formula, "conditional formatting formula2"));
         cellValueRule
             .style()
             .ifPresent(WorkbookInvariantAnalysisFormattingChecks::requireDifferentialStyleShape);
@@ -102,20 +98,18 @@ final class WorkbookInvariantAnalysisFormattingChecks {
             !colorScaleRule.colors().isEmpty(), "conditional formatting colors must not be empty");
         colorScaleRule
             .colors()
-            .forEach(
-                color ->
-                    WorkbookInvariantChecks.requireNonBlank(
-                        color.value(), "conditional formatting color"));
+            .forEach(color ->
+                WorkbookInvariantChecks.requireNonBlank(
+                    color.value(), "conditional formatting color"));
       }
       case ConditionalFormattingRuleReport.DataBarRule dataBarRule -> {
         WorkbookInvariantChecks.require(
             dataBarRule.color() != null, "conditional formatting color optional must not be null");
         dataBarRule
             .color()
-            .ifPresent(
-                color ->
-                    WorkbookInvariantChecks.requireNonBlank(
-                        color.value(), "conditional formatting color"));
+            .ifPresent(color ->
+                WorkbookInvariantChecks.requireNonBlank(
+                    color.value(), "conditional formatting color"));
         requireConditionalFormattingThresholdShape(dataBarRule.minThreshold());
         requireConditionalFormattingThresholdShape(dataBarRule.maxThreshold());
         WorkbookInvariantChecks.require(
@@ -172,16 +166,14 @@ final class WorkbookInvariantAnalysisFormattingChecks {
     }
     style
         .fontColor()
-        .ifPresent(
-            color ->
-                WorkbookInvariantCellStyleChecks.requireCellColorShape(
-                    color, "conditional formatting fontColor"));
+        .ifPresent(color ->
+            WorkbookInvariantCellStyleChecks.requireCellColorShape(
+                color, "conditional formatting fontColor"));
     style
         .fillColor()
-        .ifPresent(
-            color ->
-                WorkbookInvariantCellStyleChecks.requireCellColorShape(
-                    color, "conditional formatting fillColor"));
+        .ifPresent(color ->
+            WorkbookInvariantCellStyleChecks.requireCellColorShape(
+                color, "conditional formatting fillColor"));
     style
         .border()
         .ifPresent(WorkbookInvariantAnalysisFormattingChecks::requireDifferentialBorderShape);
@@ -190,11 +182,9 @@ final class WorkbookInvariantAnalysisFormattingChecks {
         "conditional formatting unsupportedFeatures must not be null");
     style
         .unsupportedFeatures()
-        .forEach(
-            feature ->
-                WorkbookInvariantChecks.require(
-                    feature != null,
-                    "conditional formatting unsupported feature must not be null"));
+        .forEach(feature ->
+            WorkbookInvariantChecks.require(
+                feature != null, "conditional formatting unsupported feature must not be null"));
   }
 
   static void requireDifferentialBorderShape(DifferentialBorderReport border) {
@@ -223,10 +213,9 @@ final class WorkbookInvariantAnalysisFormattingChecks {
     WorkbookInvariantChecks.require(
         side.style() != null, "conditional formatting border style must not be null");
     side.color()
-        .ifPresent(
-            color ->
-                WorkbookInvariantCellStyleChecks.requireCellColorShape(
-                    color, "conditional formatting border color"));
+        .ifPresent(color ->
+            WorkbookInvariantCellStyleChecks.requireCellColorShape(
+                color, "conditional formatting border color"));
   }
 
   static void requireTableStyleShape(TableStyleReport style) {
@@ -275,23 +264,19 @@ final class WorkbookInvariantAnalysisFormattingChecks {
     }
     validation
         .prompt()
-        .ifPresent(
-            prompt -> {
-              WorkbookInvariantChecks.requireNonBlank(
-                  prompt.title(), "data validation prompt title");
-              WorkbookInvariantChecks.requireNonBlank(prompt.text(), "data validation prompt text");
-            });
+        .ifPresent(prompt -> {
+          WorkbookInvariantChecks.requireNonBlank(prompt.title(), "data validation prompt title");
+          WorkbookInvariantChecks.requireNonBlank(prompt.text(), "data validation prompt text");
+        });
     validation
         .errorAlert()
-        .ifPresent(
-            errorAlert -> {
-              WorkbookInvariantChecks.require(
-                  errorAlert.style() != null, "data validation error style must not be null");
-              WorkbookInvariantChecks.requireNonBlank(
-                  errorAlert.title(), "data validation error title");
-              WorkbookInvariantChecks.requireNonBlank(
-                  errorAlert.text(), "data validation error text");
-            });
+        .ifPresent(errorAlert -> {
+          WorkbookInvariantChecks.require(
+              errorAlert.style() != null, "data validation error style must not be null");
+          WorkbookInvariantChecks.requireNonBlank(
+              errorAlert.title(), "data validation error title");
+          WorkbookInvariantChecks.requireNonBlank(errorAlert.text(), "data validation error text");
+        });
   }
 
   static void requireComparisonRuleShape(Object operator, String formula1) {

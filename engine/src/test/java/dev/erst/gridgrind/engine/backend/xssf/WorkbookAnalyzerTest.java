@@ -13,7 +13,6 @@ import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
@@ -55,15 +54,51 @@ class WorkbookAnalyzerTest {
     try (XssfWorkbook workbook =
         XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       XssfSheet budget = workbook.sheet("Budget");
-      budget.links().setHyperlink("A1", new HyperlinkTarget.Document("Missing!A1"));
-      budget.links().setHyperlink("A2", new HyperlinkTarget.Document("Budget!A1:"));
-      budget.links().setHyperlink("A3", new HyperlinkTarget.File("missing-supporting-doc.pdf"));
-      budget.cells().setCell("D1", new CellValue.Text("Owner"));
-      budget.cells().setCell("E1", new CellValue.Text("Task"));
-      budget.cells().setCell("D2", new CellValue.Text("Ada"));
-      budget.cells().setCell("E2", new CellValue.Text("Queue"));
-      budget.cells().setCell("D3", new CellValue.Text("Lin"));
-      budget.cells().setCell("E3", new CellValue.Text("Pack"));
+      budget
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new HyperlinkTarget.Document("Missing!A1"));
+      budget
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new HyperlinkTarget.Document("Budget!A1:"));
+      budget
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new HyperlinkTarget.File("missing-supporting-doc.pdf"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("D1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Task"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("D2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ada"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Queue"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("D3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Lin"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Pack"));
       budget
           .metadata()
           .setConditionalFormatting(
@@ -283,14 +318,37 @@ class WorkbookAnalyzerTest {
   void respectsSelectedSheetsAndNamedRanges() throws IOException {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.cells().setCell("A1", new CellValue.Text("Item"));
-      budget.cells().setCell("B1", new ResolvedFormula("NOW()"));
-      budget.links().setHyperlink("A1", new HyperlinkTarget.Document("Missing!A1"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new ResolvedFormula("NOW()"));
+      budget
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new HyperlinkTarget.Document("Missing!A1"));
 
       XssfSheet forecast = workbook.getOrCreateSheet("Forecast");
-      forecast.cells().setCell("A1", new CellValue.Text("Item"));
-      forecast.cells().setCell("B1", new ResolvedFormula("1+1"));
-      forecast.links().setHyperlink("C1", new HyperlinkTarget.File("relative-report.xlsx"));
+      forecast
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"));
+      forecast
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"), new ResolvedFormula("1+1"));
+      forecast
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+              new HyperlinkTarget.File("relative-report.xlsx"));
 
       workbook
           .names()
@@ -406,7 +464,9 @@ class WorkbookAnalyzerTest {
       workbook
           .getOrCreateSheet("Budget")
           .links()
-          .setHyperlink("A1", new HyperlinkTarget.File("reports/q1.xlsx"));
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new HyperlinkTarget.File("reports/q1.xlsx"));
 
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 

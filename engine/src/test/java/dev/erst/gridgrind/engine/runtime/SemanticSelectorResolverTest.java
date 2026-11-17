@@ -421,7 +421,12 @@ class SemanticSelectorResolverTest {
     assertEquals(expectedAddress, assertionTarget.address().value());
 
     CellStyleReport expectedStyle =
-        workbook.sheet(expectedSheet).cells().snapshotCell(expectedAddress).style().orElseThrow();
+        workbook
+            .sheet(expectedSheet)
+            .cells()
+            .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress(expectedAddress))
+            .style()
+            .orElseThrow();
     assertEquals(
         expectedAddress,
         assertInstanceOf(
@@ -597,31 +602,40 @@ class SemanticSelectorResolverTest {
         workbook,
         "Texts",
         "TextTable",
-        new CellValue.Text("Hosting"),
-        new CellValue.NumberValue(100.0d));
+        new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hosting"),
+        new CellValueSpec.NumberValue(100.0d));
     addTable(
-        workbook, "Blanks", "BlankTable", new CellValue.Blank(), new CellValue.NumberValue(10.0d));
+        workbook,
+        "Blanks",
+        "BlankTable",
+        new CellValue.Blank(),
+        new CellValueSpec.NumberValue(10.0d));
     addTable(
         workbook,
         "Numbers",
         "NumberTable",
-        new CellValue.NumberValue(42.0d),
-        new CellValue.NumberValue(200.0d));
+        new CellValueSpec.NumberValue(42.0d),
+        new CellValueSpec.NumberValue(200.0d));
     addTable(
         workbook,
         "Flags",
         "BooleanTable",
         new CellValue.BooleanValue(true),
-        new CellValue.NumberValue(300.0d));
+        new CellValueSpec.NumberValue(300.0d));
     addTable(
         workbook,
         "Formulas",
         "FormulaTable",
         new ResolvedFormula("2+2"),
-        new CellValue.NumberValue(400.0d));
+        new CellValueSpec.NumberValue(400.0d));
     addWideTable(workbook);
     workbook.getOrCreateSheet("Budget");
-    workbook.sheet("Budget").cells().setCell("A1", new CellValue.Text("Owner"));
+    workbook
+        .sheet("Budget")
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Owner"));
     return workbook;
   }
 
@@ -632,10 +646,26 @@ class SemanticSelectorResolverTest {
       ResolvedCellWrite keyValue,
       ResolvedCellWrite amountValue) {
     workbook.getOrCreateSheet(sheetName);
-    workbook.sheet(sheetName).cells().setCell("A1", new CellValue.Text("Item"));
-    workbook.sheet(sheetName).cells().setCell("B1", new CellValue.Text("Amount"));
-    workbook.sheet(sheetName).cells().setCell("A2", keyValue);
-    workbook.sheet(sheetName).cells().setCell("B2", amountValue);
+    workbook
+        .sheet(sheetName)
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"));
+    workbook
+        .sheet(sheetName)
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Amount"));
+    workbook
+        .sheet(sheetName)
+        .cells()
+        .setCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"), keyValue);
+    workbook
+        .sheet(sheetName)
+        .cells()
+        .setCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"), amountValue);
     new TableAdapter()
         .setTable(
             workbook,
@@ -649,10 +679,30 @@ class SemanticSelectorResolverTest {
 
   private static void addWideTable(XssfWorkbook workbook) {
     workbook.getOrCreateSheet("Wide");
-    workbook.sheet("Wide").cells().setCell("AA1", new CellValue.Text("Item"));
-    workbook.sheet("Wide").cells().setCell("AB1", new CellValue.Text("Amount"));
-    workbook.sheet("Wide").cells().setCell("AA2", new CellValue.Text("Hosting"));
-    workbook.sheet("Wide").cells().setCell("AB2", new CellValue.NumberValue(500.0d));
+    workbook
+        .sheet("Wide")
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("AA1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"));
+    workbook
+        .sheet("Wide")
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("AB1"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Amount"));
+    workbook
+        .sheet("Wide")
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("AA2"),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hosting"));
+    workbook
+        .sheet("Wide")
+        .cells()
+        .setCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("AB2"),
+            new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(500.0d));
     new TableAdapter()
         .setTable(
             workbook,

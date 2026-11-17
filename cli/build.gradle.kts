@@ -1,5 +1,9 @@
 import dev.erst.gridgrind.buildlogic.VerifyRuntimeLegalInventoryTask
+import dev.erst.gridgrind.buildlogic.GenerateRuntimeMavenMetadataTask
+import dev.erst.gridgrind.buildlogic.RuntimeMavenComponent
+import dev.erst.gridgrind.buildlogic.WriteRuntimeComponentInventoryTask
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.DuplicatesStrategy
 
 plugins {
@@ -12,6 +16,8 @@ val distributions = the<org.gradle.api.distribution.DistributionContainer>()
 val packagedLegalFileNames =
     listOf(
         "LICENSE",
+        "PROJECT-NOTICE.md",
+        "LICENSE-COMMERCIAL.md",
         "NOTICE",
         "PATENTS.md",
         "LICENSE-APACHE-2.0",
@@ -22,19 +28,19 @@ val packagedLegalFiles = files(packagedLegalFileNames.map(rootProject::file))
 val reviewedRuntimeArtifactNames =
     setOf(
         "SparseBitSet-1.3.jar",
-        "bcpkix-jdk18on-1.86.jar",
-        "bcprov-jdk18on-1.86.jar",
-        "bcutil-jdk18on-1.86.jar",
+        "bcpkix-jdk18on-1.87.jar",
+        "bcprov-jdk18on-1.87.jar",
+        "bcutil-jdk18on-1.87.jar",
         "commons-codec-1.23.0.jar",
         "commons-collections4-4.6.0.jar",
         "commons-compress-1.28.0.jar",
         "commons-io-2.22.0.jar",
-        "commons-lang3-3.21.0.jar",
+        "commons-lang3-3.22.0.jar",
         "commons-math3-3.6.1.jar",
         "curvesapi-1.08.jar",
-        "jackson-annotations-2.22.jar",
-        "jackson-core-3.2.4.jar",
-        "jackson-databind-3.2.4.jar",
+        "jackson-annotations-2.23.jar",
+        "jackson-core-3.3.0.jar",
+        "jackson-databind-3.3.0.jar",
         "jakarta.activation-api-2.1.4.jar",
         "jakarta.xml.bind-api-4.0.5.jar",
         "log4j-api-2.26.1.jar",
@@ -60,17 +66,17 @@ val reviewedNoticeMarkers =
         "Apache Commons Collections 4.6.0",
         "Apache Commons Compress 1.28.0",
         "Apache Commons IO 2.22.0",
-        "Apache Commons Lang 3.21.0",
+        "Apache Commons Lang 3.22.0",
         "Apache Commons Math 3.6.1",
         "Apache POI CustomXMLMappings.xlsx test data",
-        "Jackson Databind 3.2.4, Jackson Core 3.2.4, and Jackson Annotations 2.22",
+        "Jackson Databind 3.3.0, Jackson Core 3.3.0, and Jackson Annotations 2.23",
         "SparseBitSet 1.3",
         "Woodstox Core 7.3.0",
         "Woodstox 7.3.0 Shaded Components",
         "ISO-RELAX 20090621",
         "RELAX NG datatype API 20020414",
         "The Apache Software License, Version 1.1",
-        "Bouncy Castle (bcpkix-jdk18on 1.86, bcprov-jdk18on 1.86, bcutil-jdk18on 1.86)",
+        "Bouncy Castle (bcpkix-jdk18on 1.87, bcprov-jdk18on 1.87, bcutil-jdk18on 1.87)",
         "SLF4J API 2.0.20",
         "Stax2 API 4.3.2",
         "Jakarta Activation API 2.1.4",
@@ -83,6 +89,12 @@ description = "CLI transport adapter for the GridGrind protocol"
 
 
 dependencies {
+    constraints {
+        // Log4j compile-only publisher annotations use the audited contributor pins.
+        compileOnly(libs.bnd.annotations)
+        compileOnly(libs.errorprone.annotations)
+        compileOnly(libs.osgi.resource)
+    }
     testImplementation(testFixtures(project(":core")))
     implementation(project(":json"))
     implementation(project(":engine"))
@@ -90,15 +102,49 @@ dependencies {
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.poi.ooxml)
     testRuntimeOnly(libs.junit.platform.launcher)
-    runtimeOnly(libs.log4j.core)
+    implementation(libs.log4j.core)
     runtimeOnly(libs.log4j.slf4j2.impl)
 }
 
 val runtimeClasspathConfiguration = configurations.named("runtimeClasspath")
-val externalRuntimeArtifacts =
+val externalRuntimeArtifactCollection =
     runtimeClasspathConfiguration.get().incoming.artifactView {
         componentFilter { component -> component is ModuleComponentIdentifier }
-    }.files
+    }.artifacts
+val externalRuntimeArtifacts = externalRuntimeArtifactCollection.artifactFiles
+val externalRuntimeComponents = externalRuntimeArtifactCollection.resolvedArtifacts.map { artifacts ->
+    artifacts.map { artifact ->
+        val id = artifact.id.componentIdentifier as ModuleComponentIdentifier
+        RuntimeMavenComponent(id.group, id.module, id.version, artifact.file)
+    }.sortedBy { "${it.group}:${it.artifact}:${it.version}:${it.file.name}" }
+}
+val generateRuntimeMavenMetadata = tasks.register<GenerateRuntimeMavenMetadataTask>("generateRuntimeMavenMetadata") {
+    group = "distribution"
+    description = "Supplies missing Maven identity metadata for the actual bundled runtime components"
+    components.set(externalRuntimeComponents)
+    outputDirectory.set(layout.buildDirectory.dir("generated/runtime-maven-metadata"))
+}
+val nativeProviderProject = project(":native-provider")
+val nativeRuntimeArtifacts = runtimeClasspathConfiguration.get().incoming.artifactView {
+    componentFilter { component ->
+        component is ProjectComponentIdentifier && component.projectPath == ":native-provider"
+    }
+}.artifacts.artifactFiles
+val writeRuntimeComponentInventory = tasks.register<WriteRuntimeComponentInventoryTask>("writeRuntimeComponentInventory") {
+    group = "distribution"
+    description = "Writes actual resolved runtime components for prepared artifact and SBOM verification"
+    components.set(externalRuntimeComponents)
+    legalFiles.set(packagedLegalFileNames)
+    nativeCapsule.set(layout.file(nativeRuntimeArtifacts.elements.map { elements ->
+        require(elements.size == 1) { "Expected exactly one consumed native provider capsule" }
+        elements.single().asFile
+    }))
+    nativeGroup.set(nativeProviderProject.group.toString())
+    nativeArtifact.set(nativeProviderProject.name)
+    nativeVersion.set(nativeProviderProject.version.toString())
+    inventoryFile.set(layout.buildDirectory.file("runtime-component-inventory.json"))
+    resolvedFilesFile.set(layout.buildDirectory.file("runtime-component-files.json"))
+}
 val verifyRuntimeLegalInventory =
     tasks.register<VerifyRuntimeLegalInventoryTask>("verifyRuntimeLegalInventory") {
         group = "verification"
@@ -115,6 +161,7 @@ tasks.named("check") {
 
 application {
     mainClass = "dev.erst.gridgrind.cli.App"
+    applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
 }
 
 distributions.named("shadow") {
@@ -166,6 +213,7 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     // Keep local UP-TO-DATE reuse without retaining another bundled dependency copy per revision.
     outputs.doNotCacheIf("Bundled JARs are inexpensive to assemble and expensive to cache per revision") { true }
     dependsOn(verifyRuntimeLegalInventory)
+    from(generateRuntimeMavenMetadata.flatMap { it.outputDirectory })
     archiveBaseName = "gridgrind"
     archiveVersion = ""
     archiveClassifier = ""
@@ -189,7 +237,7 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     exclude("META-INF/maven/com.sun.xml.bind.jaxb/isorelax/pom.xml")
 
     // Bundle the curated attribution notice and license texts into META-INF/.
-    // LICENSE is the MPL 2.0 license for GridGrind's own code.
+    // LICENSE and PROJECT-NOTICE.md identify AGPL-3.0-only for GridGrind's original code.
     // The Apache, BSD 2-Clause, and component-specific BSD 3-Clause files cover all bundled
     // third-party license families not reproduced directly in NOTICE.
     packagedLegalFileNames.forEach { legalFileName ->
@@ -202,6 +250,7 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
             "Implementation-Version" to project.version,
             "Implementation-Vendor" to "Ervins Strauhmanis",
             "Implementation-License" to "Multiple; see META-INF/NOTICE",
+            "Enable-Native-Access" to "ALL-UNNAMED",
         )
     }
 }
@@ -260,6 +309,7 @@ for (suite in listOf("container", "devcontainer")) {
         useJUnitPlatform { includeTags(suite) }
         if (suite == "container") {
             systemProperty("gridgrind.container.image", providers.gradleProperty("containerImage").orElse("").get())
+            systemProperty("gridgrind.container.platform", providers.gradleProperty("containerPlatform").orElse("").get())
         }
         systemProperty("gridgrind.repository", rootProject.projectDir.absolutePath)
         extensions.configure<org.gradle.testing.jacoco.plugins.JacocoTaskExtension> { isEnabled = false }
@@ -293,3 +343,8 @@ val documentationTest = tasks.register<Test>("documentationTest") {
     extensions.configure<org.gradle.testing.jacoco.plugins.JacocoTaskExtension> { isEnabled = false }
 }
 tasks.named("check") { dependsOn(documentationTest) }
+
+// Atomic workspace publication uses the JDK foreign-function API for OS no-clobber rename.
+tasks.withType<Test>().configureEach {
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+}

@@ -250,11 +250,10 @@ class CatalogLookupSupportCoverageTest {
   void lookupValueGroupTypesPublishOwningTopLevelEntryIds() {
     Catalog catalog = lookupCoverageCatalog();
 
-    var nestedValue = new CatalogNestedGroupLookupValue(catalog.nestedTypes().getFirst());
-    var plainValue = new CatalogPlainGroupLookupValue(catalog.plainTypes().getFirst());
+    var nestedValue = catalog.nestedTypes().getFirst();
+    var plainValue = catalog.plainTypes().getFirst();
     List<TypeEntry> mutableTopLevelTypes = new ArrayList<>(catalog.mutationActionTypes());
-    var topLevelValue =
-        new CatalogTopLevelGroupLookupValue("mutationActionTypes", mutableTopLevelTypes);
+    var topLevelValue = new TopLevelTypeGroup("mutationActionTypes", mutableTopLevelTypes);
     mutableTopLevelTypes.clear();
 
     assertEquals(

@@ -5,7 +5,7 @@ import org.gradle.api.Project
 
 /** Retains the current configuration report and two preceding input comparisons after check. */
 fun Project.registerGridGrindReportRetention() =
-    tasks.register("pruneConfigurationCacheReports") { task ->
+    tasks.register("pruneConfigurationCacheReports") { val task = this
         task.description = "Retains the three newest project configuration-cache reports after check."
         val reportRoot = layout.buildDirectory.dir("reports/configuration-cache").get().asFile
         task.doLast {

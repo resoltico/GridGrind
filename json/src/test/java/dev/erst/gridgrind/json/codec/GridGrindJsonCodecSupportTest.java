@@ -4,139 +4,98 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.plan.*;
-import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.ExplicitNullField;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import dev.erst.gridgrind.core.problem.MissingRequiredField;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-/** Direct coverage for request-shape detection at the tree-to-record decode seam. */
+/** Checks generic value-fragment codec mechanics; complete documents use their owned readers. */
 class GridGrindJsonCodecSupportTest {
+  private static final JsonMapper MAPPER = GridGrindJsonMapperSupport.JSON_MAPPER;
+
   @Test
-  void decodeTreeReturnsAValidBoundValue() throws IOException {
-    JsonNode requestTree =
-        GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER.readTree(
-            """
-            {
-              "protocolVersion": 1,
-              "source": { "type": "NEW" },
-              "persistence": { "type": "NONE" },
-              "steps": []
-            }
-            """);
-
-    WorkbookPlan plan =
+  void decodeTreeReturnsAValidBoundFragment() throws IOException {
+    var tree = MAPPER.readTree("{\"protocolVersion\":1}");
+    assertEquals(
+        new Fragment(ProtocolVersion.CURRENT),
         GridGrindJsonCodecSupport.decodeTree(
-            requestTree,
-            GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
-            WorkbookPlan.class,
-            JsonReadFailures::syntax);
-
-    assertEquals(0, plan.steps().size());
+            tree, MAPPER, Fragment.class, JsonReadFailures::syntax));
   }
 
   @Test
   void decodeTreeRejectsExplicitNullMembersBeforeBinding() throws IOException {
-    JsonNode requestTree =
-        GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER.readTree(
-            """
-            {
-              "protocolVersion": null
-            }
-            """);
-
-    InvalidRequestShapeException failure =
+    var tree = MAPPER.readTree("{\"protocolVersion\":null}");
+    var failure =
         assertThrows(
             InvalidRequestShapeException.class,
             () ->
                 GridGrindJsonCodecSupport.decodeTree(
-                    requestTree,
-                    GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
-                    WorkbookPlan.class,
-                    JsonReadFailures::syntax));
-
-    ExplicitNullField problem = assertInstanceOf(ExplicitNullField.class, failure.requestProblem());
-    assertEquals(
-        "Field 'protocolVersion' must be omitted when absent; explicit null is not accepted.",
-        failure.getMessage());
+                    tree, MAPPER, Fragment.class, JsonReadFailures::syntax));
+    var problem = assertInstanceOf(ExplicitNullField.class, failure.requestProblem());
     assertEquals("protocolVersion", problem.jsonPathValue());
     assertEquals(Optional.of("protocolVersion"), failure.jsonPath());
   }
 
   @Test
   void decodeTreeDetectsMissingRequiredFieldsStructurally() throws IOException {
-    JsonNode requestTree =
-        GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER.readTree(
-            """
-            {
-              "steps": []
-            }
-            """);
-
-    InvalidRequestShapeException failure =
+    var tree = MAPPER.readTree("{}");
+    var failure =
         assertThrows(
             InvalidRequestShapeException.class,
             () ->
                 GridGrindJsonCodecSupport.decodeTree(
-                    requestTree,
-                    GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
-                    WorkbookPlan.class,
-                    JsonReadFailures::syntax));
-
-    MissingRequiredField problem =
-        assertInstanceOf(MissingRequiredField.class, failure.requestProblem());
-    assertEquals("Missing required field 'protocolVersion'", failure.getMessage());
+                    tree, MAPPER, Fragment.class, JsonReadFailures::syntax));
+    var problem = assertInstanceOf(MissingRequiredField.class, failure.requestProblem());
     assertEquals("protocolVersion", problem.jsonPathValue());
     assertEquals(Optional.of("protocolVersion"), failure.jsonPath());
   }
 
   @Test
   void codecSupportMapsStringGrammarFailuresAndNestedArrayNullsBeforeBinding() throws IOException {
-    JsonMapper mapper = GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER;
-
     assertEquals(
         "{}",
-        GridGrindJsonCodecSupport.readTree("{}", mapper, JsonReadFailures::syntax).toString());
-
-    assertInstanceOf(
+        GridGrindJsonCodecSupport.readTree("{}", MAPPER, JsonReadFailures::syntax).toString());
+    assertThrows(
         InvalidJsonException.class,
-        assertThrows(
-            InvalidJsonException.class,
-            () -> GridGrindJsonCodecSupport.readTree("{", mapper, JsonReadFailures::syntax)));
-    assertInstanceOf(
+        () -> GridGrindJsonCodecSupport.readTree("{", MAPPER, JsonReadFailures::syntax));
+    assertThrows(
         InvalidRequestShapeException.class,
-        assertThrows(
-            InvalidRequestShapeException.class,
-            () ->
-                GridGrindJsonCodecSupport.decodeTree(
-                    mapper.readTree("[null]"), mapper, Object.class, JsonReadFailures::syntax)));
-    assertInstanceOf(
+        () ->
+            GridGrindJsonCodecSupport.decodeTree(
+                MAPPER.readTree("[null]"), MAPPER, Object.class, JsonReadFailures::syntax));
+    assertThrows(
         InvalidRequestShapeException.class,
-        assertThrows(
-            InvalidRequestShapeException.class,
-            () ->
-                GridGrindJsonCodecSupport.decodeTree(
-                    mapper.nullNode(), mapper, Object.class, JsonReadFailures::syntax)));
+        () ->
+            GridGrindJsonCodecSupport.decodeTree(
+                MAPPER.nullNode(), MAPPER, Object.class, JsonReadFailures::syntax));
   }
 
   @Test
-  void rejectsNonObjectTopLevelPayloadsForWorkbookPlans() {
-    InvalidRequestShapeException exception =
+  void rejectsNonObjectTopLevelPayloadsForRecordFragments() {
+    var failure =
         assertThrows(
             InvalidRequestShapeException.class,
             () ->
                 GridGrindJsonCodecSupport.readValue(
                     "[]".getBytes(StandardCharsets.UTF_8),
-                    GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
-                    WorkbookPlan.class,
+                    MAPPER,
+                    Fragment.class,
                     JsonReadFailures::syntax));
-    assertEquals("JSON value has the wrong shape for this field", exception.getMessage());
+    assertEquals("JSON value has the wrong shape for this field", failure.getMessage());
+  }
+
+  @SuppressWarnings("PMD.PublicMemberInNonPublicType")
+  // The reflected value fixture needs its public canonical constructor; the JUnit class stays
+  // package-private.
+  public record Fragment(ProtocolVersion protocolVersion) {
+    public Fragment {
+      java.util.Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
+    }
   }
 }

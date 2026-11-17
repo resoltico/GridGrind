@@ -31,13 +31,16 @@ class RequestConstructorValidationTest {
   }
 
   @Test
-  void everyExampleConstructsTheSameCanonicalPlanBeforeJacksonBinding() throws IOException {
+  void everyExampleMatchesIndependentFragmentCodecsWithoutAnotherRootDecoder() throws IOException {
     Path root = Path.of(System.getProperty("gridgrind.root.dir"));
     try (var paths = Files.list(root.resolve("examples"))) {
       List<Path> examples =
           paths.filter(path -> path.toString().endsWith(".json")).sorted().toList();
       assertEquals(14, examples.size());
       List<RequestBindingFailure> problems = new ArrayList<>();
+      var stepListType =
+          new tools.jackson.core.type.TypeReference<
+              List<dev.erst.gridgrind.core.plan.WorkbookStep>>() {};
       for (Path file : examples) {
         problems.clear();
         byte[] bytes = Files.readAllBytes(file);
@@ -46,11 +49,40 @@ class RequestConstructorValidationTest {
         var actual =
             RequestConstructorValidation.validate(parsed.root(), WorkbookPlan.class, "", problems);
         assertTrue(problems.isEmpty(), () -> file + ": " + problems);
+        var tree = RequestFragmentBinder.toJsonNode(parsed.root());
+        var mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
+        var plan = actual.orElseThrow();
         assertEquals(
-            dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER
-                .treeToValue(RequestFragmentBinder.toJsonNode(parsed.root()), WorkbookPlan.class),
-            actual.orElseThrow(),
-            file.toString());
+            mapper.treeToValue(
+                tree.path("protocolVersion"),
+                dev.erst.gridgrind.core.vocabulary.ProtocolVersion.class),
+            plan.protocolVersion());
+        assertEquals(
+            mapper.treeToValue(tree.path("source"), WorkbookPlan.WorkbookSource.class),
+            plan.source());
+        assertEquals(
+            mapper.treeToValue(tree.path("persistence"), WorkbookPlan.WorkbookPersistence.class),
+            plan.persistence());
+        if (tree.has("execution")) {
+          assertEquals(
+              mapper.treeToValue(
+                  tree.path("execution"), dev.erst.gridgrind.core.plan.ExecutionPolicySpec.class),
+              plan.execution());
+        } else {
+          assertTrue(plan.execution().isDefault());
+        }
+        if (tree.has("formulaEnvironment")) {
+          assertEquals(
+              mapper.treeToValue(
+                  tree.path("formulaEnvironment"),
+                  dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.class),
+              plan.formulaEnvironment());
+        } else {
+          assertTrue(plan.formulaEnvironment().isEmpty());
+        }
+        assertEquals(
+            mapper.readValue(mapper.writeValueAsBytes(tree.path("steps")), stepListType),
+            plan.steps());
       }
     }
   }

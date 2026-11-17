@@ -31,10 +31,9 @@ public final class CliArguments {
     String primary = args[0];
     CommandName operation =
         CommandName.forToken(primary)
-            .orElseThrow(
-                () ->
-                    new CliArgumentsException(
-                        primary, "Unknown command: " + primary + ". Use gridgrind help."));
+            .orElseThrow(() ->
+                new CliArgumentsException(
+                    primary, "Unknown command: " + primary + ". Use gridgrind help."));
     Map<Option, String> values = new EnumMap<>(Option.class);
     List<String> operands = new ArrayList<>();
     boolean pretty = false;
@@ -245,13 +244,12 @@ public final class CliArguments {
 
   private static Optional<Path> path(Map<Option, String> values, Option option) {
     return Optional.ofNullable(values.get(option))
-        .map(
-            value ->
-                CliPathArguments.requirePathValue(
-                    option.token,
-                    value,
-                    option.token.substring(2) + " path",
-                    option == Option.REQUEST));
+        .map(value ->
+            CliPathArguments.requirePathValue(
+                option.token,
+                value,
+                option.token.substring(2) + " path",
+                option == Option.REQUEST));
   }
 
   private static void require(Map<Option, String> values, Option option, String command) {

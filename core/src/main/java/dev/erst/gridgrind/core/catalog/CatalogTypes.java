@@ -43,38 +43,33 @@ final class CatalogTypes {
       TOP_LEVEL_GROUPS.stream().flatMap(group -> group.typeDescriptors().stream()).toList();
   static final List<CatalogNestedTypeDescriptor> NESTED_TYPE_GROUPS =
       MODEL_TYPES.stream()
-          .filter(
-              type ->
-                  type.isAnnotationPresent(Union.class)
-                      && type.getAnnotation(Union.class).catalog())
-          .map(
-              type ->
-                  new CatalogNestedTypeDescriptor(
-                      groupId(type),
-                      type.getAnnotation(Union.class).discriminator(),
-                      type,
-                      descriptors(type)))
+          .filter(type ->
+              type.isAnnotationPresent(Union.class) && type.getAnnotation(Union.class).catalog())
+          .map(type ->
+              new CatalogNestedTypeDescriptor(
+                  groupId(type),
+                  type.getAnnotation(Union.class).discriminator(),
+                  type,
+                  descriptors(type)))
           .sorted(
               Comparator.comparingInt(
                   group -> group.sealedType().getAnnotation(Union.class).displayOrder()))
           .toList();
   static final List<CatalogPlainTypeDescriptor> PLAIN_TYPE_DESCRIPTORS =
       MODEL_TYPES.stream()
-          .filter(
-              type ->
-                  type.isRecord()
-                      && type != WorkbookPlan.class
-                      && type.isAnnotationPresent(CatalogType.class))
-          .map(
-              type -> {
-                CatalogType metadata = type.getAnnotation(CatalogType.class);
-                return new CatalogPlainTypeDescriptor(
-                    plainGroupId(type),
-                    type.asSubclass(Record.class),
-                    metadata.id(),
-                    metadata.summary(),
-                    List.of(metadata.noteRefs()));
-              })
+          .filter(type ->
+              type.isRecord()
+                  && type != WorkbookPlan.class
+                  && type.isAnnotationPresent(CatalogType.class))
+          .map(type -> {
+            CatalogType metadata = type.getAnnotation(CatalogType.class);
+            return new CatalogPlainTypeDescriptor(
+                plainGroupId(type),
+                type.asSubclass(Record.class),
+                metadata.id(),
+                metadata.summary(),
+                List.of(metadata.noteRefs()));
+          })
           .sorted(
               Comparator.comparingInt(
                   group -> group.recordType().getAnnotation(CatalogType.class).displayOrder()))
@@ -107,11 +102,9 @@ final class CatalogTypes {
   static List<CatalogProjectedField> projections(Class<?> recordType) {
     return Arrays.stream(recordType.getRecordComponents())
         .filter(component -> component.isAnnotationPresent(ProjectedBy.class))
-        .map(
-            component ->
-                new CatalogProjectedField(
-                    component.getName(),
-                    List.of(component.getAnnotation(ProjectedBy.class).value())))
+        .map(component ->
+            new CatalogProjectedField(
+                component.getName(), List.of(component.getAnnotation(ProjectedBy.class).value())))
         .toList();
   }
 

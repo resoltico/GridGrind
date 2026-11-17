@@ -45,7 +45,7 @@ class RequestPathPublicationCreateNewTest {
   }
 
   @Test
-  void leavesCreateNewDestinationAbsentWhenAtomicPublicationDoesNotBegin() throws Exception {
+  void reportsUncertainWhenPrimitiveInvocationThrowsWithoutProvenOccurrence() throws Exception {
     Path staged = Files.write(root.resolve("staged.xlsx"), new byte[] {6, 7, 8});
     Path destination = root.resolve("output.xlsx");
 
@@ -63,9 +63,9 @@ class RequestPathPublicationCreateNewTest {
                       WorkbookArtifactWriteDisposition.CREATE_NEW,
                       verifiedStage()));
 
-      PublicationOutcome.NotPublished outcome =
-          assertInstanceOf(PublicationOutcome.NotPublished.class, attempt.outcome());
-      assertEquals(PublicationOutcome.DestinationState.ABSENT, outcome.destinationState());
+      var outcome = assertInstanceOf(PublicationOutcome.Uncertain.class, attempt.outcome());
+      assertEquals(
+          PublicationOutcome.CommitObservation.NOT_ESTABLISHED, outcome.commitObservation());
     }
 
     assertTrue(Files.notExists(destination));
@@ -73,8 +73,7 @@ class RequestPathPublicationCreateNewTest {
   }
 
   @Test
-  void reportsUncertainWhenTheBoundDestinationChangesBeforePublicationStateIsCaptured()
-      throws Exception {
+  void doesNotAttemptMutationWhenBoundDestinationAlreadyChanged() throws Exception {
     Path staged = Files.write(root.resolve("staged.xlsx"), new byte[] {6, 7, 8});
     Path destination = root.resolve("output.xlsx");
 
@@ -91,14 +90,14 @@ class RequestPathPublicationCreateNewTest {
                       WorkbookArtifactWriteDisposition.CREATE_NEW,
                       verifiedStage()));
 
-      assertInstanceOf(PublicationOutcome.Uncertain.class, attempt.outcome());
+      assertInstanceOf(PublicationOutcome.NotAttempted.class, attempt.outcome());
     }
 
     assertArrayEquals(new byte[] {9}, Files.readAllBytes(destination));
   }
 
   @Test
-  void reportsUncertainWhenADestinationAppearsAfterCreateNewStateIsCaptured() throws Exception {
+  void doesNotAttemptMutationWhenDestinationChangesDuringPrivateStaging() throws Exception {
     Path staged = Files.write(root.resolve("staged.xlsx"), new byte[] {6, 7, 8});
     Path destination = root.resolve("output.xlsx");
 
@@ -107,7 +106,7 @@ class RequestPathPublicationCreateNewTest {
           assertInstanceOf(
               FailedPublicationAttempt.class,
               new RequestPathPublication(
-                      RequestPathPublicationTestSupport::moveAtomically,
+                      RequestPathPublicationTestSupport::commitAtomically,
                       (stagedArtifact, targetBinding, siblingName) -> {
                         copySiblingExactly(stagedArtifact, targetBinding, siblingName);
                         Files.write(targetBinding.resolvedPath(), new byte[] {9});
@@ -118,7 +117,7 @@ class RequestPathPublicationCreateNewTest {
                       WorkbookArtifactWriteDisposition.CREATE_NEW,
                       verifiedStage()));
 
-      assertInstanceOf(PublicationOutcome.Uncertain.class, attempt.outcome());
+      assertInstanceOf(PublicationOutcome.NotAttempted.class, attempt.outcome());
     }
 
     assertArrayEquals(new byte[] {9}, Files.readAllBytes(destination));
@@ -135,7 +134,7 @@ class RequestPathPublicationCreateNewTest {
           assertInstanceOf(
               FailedPublicationAttempt.class,
               new RequestPathPublication(
-                      RequestPathPublicationTestSupport::moveAtomically,
+                      RequestPathPublicationTestSupport::commitAtomically,
                       RequestPathPublicationTestSupport::writeOneByteThenFail)
                   .publish(
                       binding,
@@ -143,9 +142,7 @@ class RequestPathPublicationCreateNewTest {
                       WorkbookArtifactWriteDisposition.CREATE_NEW,
                       verifiedStage()));
 
-      PublicationOutcome.NotPublished outcome =
-          assertInstanceOf(PublicationOutcome.NotPublished.class, attempt.outcome());
-      assertEquals(PublicationOutcome.DestinationState.ABSENT, outcome.destinationState());
+      assertInstanceOf(PublicationOutcome.NotAttempted.class, attempt.outcome());
     }
 
     assertTrue(Files.notExists(destination));
@@ -162,7 +159,7 @@ class RequestPathPublicationCreateNewTest {
           assertInstanceOf(
               FailedPublicationAttempt.class,
               new RequestPathPublication(
-                      RequestPathPublicationTestSupport::moveAtomically,
+                      RequestPathPublicationTestSupport::commitAtomically,
                       RequestPathPublicationTestSupport::writeDigestMismatchSibling)
                   .publish(
                       binding,
@@ -170,9 +167,7 @@ class RequestPathPublicationCreateNewTest {
                       WorkbookArtifactWriteDisposition.CREATE_NEW,
                       verifiedStage()));
 
-      PublicationOutcome.NotPublished outcome =
-          assertInstanceOf(PublicationOutcome.NotPublished.class, attempt.outcome());
-      assertEquals(PublicationOutcome.DestinationState.ABSENT, outcome.destinationState());
+      assertInstanceOf(PublicationOutcome.NotAttempted.class, attempt.outcome());
     }
 
     assertTrue(Files.notExists(destination));

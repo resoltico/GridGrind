@@ -19,7 +19,7 @@ Standard full workbook read and write execution with no special low-memory restr
 
 ## EVENT_READ
 
-GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only, with execution.calculation.strategy=DO_NOT_CALCULATE and markRecalculateOnOpen=false.
+GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only, with execution.calculation.strategy=DO_NOT_CALCULATE and markRecalculateOnOpen=false. Host acceptance can require a full workbook view.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
@@ -27,7 +27,7 @@ GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only, with execution.calculation.stra
 ```json
 {
   "id" : "EVENT_READ",
-  "summary" : "GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only, with execution.calculation.strategy=DO_NOT_CALCULATE and markRecalculateOnOpen=false.",
+  "summary" : "GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only, with execution.calculation.strategy=DO_NOT_CALCULATE and markRecalculateOnOpen=false. Host acceptance can require a full workbook view.",
   "fields" : [ ],
   "targetSelectors" : [ ]
 }
@@ -35,7 +35,7 @@ GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only, with execution.calculation.stra
 
 ## STREAMING_WRITE
 
-source.type must be NEW; mutation actions limited to ENSURE_SHEET and APPEND_ROW; execution.calculation must keep strategy=DO_NOT_CALCULATE and may set markRecalculateOnOpen=true.
+source.type must be NEW; mutation actions limited to ENSURE_SHEET and APPEND_ROW; execution.calculation must keep strategy=DO_NOT_CALCULATE and may set markRecalculateOnOpen=true. Mutation after an observation selects the full workbook backend. Terminal observations, host acceptance and persisted-artifact verification can require full workbook materialization.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
@@ -43,7 +43,7 @@ source.type must be NEW; mutation actions limited to ENSURE_SHEET and APPEND_ROW
 ```json
 {
   "id" : "STREAMING_WRITE",
-  "summary" : "source.type must be NEW; mutation actions limited to ENSURE_SHEET and APPEND_ROW; execution.calculation must keep strategy=DO_NOT_CALCULATE and may set markRecalculateOnOpen=true.",
+  "summary" : "source.type must be NEW; mutation actions limited to ENSURE_SHEET and APPEND_ROW; execution.calculation must keep strategy=DO_NOT_CALCULATE and may set markRecalculateOnOpen=true. Mutation after an observation selects the full workbook backend. Terminal observations, host acceptance and persisted-artifact verification can require full workbook materialization.",
   "fields" : [ ],
   "targetSelectors" : [ ]
 }

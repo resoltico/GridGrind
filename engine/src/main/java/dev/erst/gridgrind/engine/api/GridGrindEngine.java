@@ -4,132 +4,67 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput;
 import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.problem.RequestIntake;
-import java.util.Objects;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.engine.bootstrap.NativeProviderInvocation;
 
-/** Factory for the engine module's narrow published request-execution seam. */
+/** Factory for the engine's published ports; each call owns a fresh synchronous native realm. */
 public final class GridGrindEngine {
-  private static final GridGrindRequestExecutor REQUEST_EXECUTOR =
-      new ProductionRequestExecutor(
-          new dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor());
-  private static final GridGrindRequestDoctor REQUEST_DOCTOR =
-      new ProductionRequestDoctor(new dev.erst.gridgrind.engine.runtime.GridGrindRequestDoctor());
+  private static final GridGrindRequestExecutor REQUEST_EXECUTOR = new ProductionRequestExecutor();
+  private static final GridGrindRequestDoctor REQUEST_DOCTOR = new ProductionRequestDoctor();
 
   private GridGrindEngine() {}
 
-  /** Returns the production request executor backed by the workbook engine runtime. */
+  /** Returns the reusable execution port; each invocation owns its native realm. */
   public static GridGrindRequestExecutor requestExecutor() {
     return REQUEST_EXECUTOR;
   }
 
-  /** Returns the production request doctor backed by the workbook engine runtime. */
+  /** Returns the reusable doctor port; each diagnosis owns its native realm. */
   public static GridGrindRequestDoctor requestDoctor() {
     return REQUEST_DOCTOR;
   }
 
-  private record ProductionRequestExecutor(
-      dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor delegate)
-      implements GridGrindRequestExecutor {
-    private ProductionRequestExecutor {
-      Objects.requireNonNull(delegate, "delegate must not be null");
-    }
-
+  /** Creates an invocation-owned implementation for each execution call. */
+  private static final class ProductionRequestExecutor implements GridGrindRequestExecutor {
     @Override
-    public dev.erst.gridgrind.core.result.WorkbookResult execute(
+    public WorkbookResult execute(
         WorkbookPlan request, GridGrindRequestInputs inputs, GridGrindProgressSink sink) {
-      Objects.requireNonNull(request, "request must not be null");
-      Objects.requireNonNull(inputs, "inputs must not be null");
-      Objects.requireNonNull(sink, "sink must not be null");
-      return delegate.execute(
-          request,
-          toInternalInputs(inputs),
-          event -> GridGrindProgressSink.requireNonNull(sink).emit(event));
+      return NativeProviderInvocation.create(GridGrindRequestExecutor.class)
+          .execute(request, inputs, sink);
     }
 
     @Override
-    public dev.erst.gridgrind.core.result.WorkbookResult execute(
+    public WorkbookResult execute(
         RequestIntake analysis, GridGrindRequestInputs inputs, GridGrindProgressSink sink) {
-      Objects.requireNonNull(analysis, "analysis must not be null");
-      Objects.requireNonNull(inputs, "inputs must not be null");
-      Objects.requireNonNull(sink, "sink must not be null");
-      return delegate.execute(
-          analysis.requireCompletePlan(),
-          toInternalInputs(inputs),
-          event -> GridGrindProgressSink.requireNonNull(sink).emit(event),
-          java.util.Optional.of(analysis));
+      return NativeProviderInvocation.create(GridGrindRequestExecutor.class)
+          .execute(analysis, inputs, sink);
     }
   }
 
-  private record ProductionRequestDoctor(
-      dev.erst.gridgrind.engine.runtime.GridGrindRequestDoctor delegate)
-      implements GridGrindRequestDoctor {
-    private ProductionRequestDoctor {
-      Objects.requireNonNull(delegate, "delegate must not be null");
-    }
-
+  /** Creates an invocation-owned implementation for each diagnosis call. */
+  private static final class ProductionRequestDoctor implements GridGrindRequestDoctor {
     @Override
-    public RequestDoctorReport diagnose(RequestIntake analysis, RequestInput requestInput) {
-      return delegate.diagnose(analysis, requestInput);
+    public RequestDoctorReport diagnose(RequestIntake analysis, RequestInput input) {
+      return NativeProviderInvocation.create(GridGrindRequestDoctor.class)
+          .diagnose(analysis, input);
     }
 
     @Override
     public RequestDoctorReport diagnose(
-        RequestIntake analysis, RequestInput requestInput, GridGrindRequestInputs inputs) {
-      Objects.requireNonNull(inputs, "inputs must not be null");
-      return delegate.diagnose(analysis, requestInput, toInternalInputs(inputs));
+        RequestIntake analysis, RequestInput input, GridGrindRequestInputs inputs) {
+      return NativeProviderInvocation.create(GridGrindRequestDoctor.class)
+          .diagnose(analysis, input, inputs);
     }
 
     @Override
     public RequestDoctorReport diagnose(WorkbookPlan request) {
-      return delegate.diagnose(request);
+      return NativeProviderInvocation.create(GridGrindRequestDoctor.class).diagnose(request);
     }
 
     @Override
     public RequestDoctorReport diagnose(WorkbookPlan request, GridGrindRequestInputs inputs) {
-      Objects.requireNonNull(inputs, "inputs must not be null");
-      return delegate.diagnose(request, toInternalInputs(inputs));
+      return NativeProviderInvocation.create(GridGrindRequestDoctor.class)
+          .diagnose(request, inputs);
     }
-  }
-
-  private static dev.erst.gridgrind.engine.runtime.ExecutionInputBindings toInternalInputs(
-      GridGrindRequestInputs inputs) {
-    Objects.requireNonNull(inputs, "inputs must not be null");
-    return inputs
-        .standardInputBytes()
-        .map(
-            bytes ->
-                inputs
-                    .secretResolver()
-                    .<dev.erst.gridgrind.engine.runtime.ExecutionInputBindings>map(
-                        resolver ->
-                            new dev.erst.gridgrind.engine.runtime.ExecutionInputBindings(
-                                inputs.workingDirectory(),
-                                inputs.tempRoot(),
-                                bytes,
-                                inputs.executionGrant(),
-                                resolver))
-                    .orElseGet(
-                        () ->
-                            new dev.erst.gridgrind.engine.runtime.ExecutionInputBindings(
-                                inputs.workingDirectory(),
-                                inputs.tempRoot(),
-                                bytes,
-                                inputs.executionGrant())))
-        .orElseGet(
-            () ->
-                inputs
-                    .secretResolver()
-                    .<dev.erst.gridgrind.engine.runtime.ExecutionInputBindings>map(
-                        resolver ->
-                            new dev.erst.gridgrind.engine.runtime.ExecutionInputBindings(
-                                inputs.workingDirectory(),
-                                inputs.tempRoot(),
-                                inputs.executionGrant(),
-                                resolver))
-                    .orElseGet(
-                        () ->
-                            new dev.erst.gridgrind.engine.runtime.ExecutionInputBindings(
-                                inputs.workingDirectory(),
-                                inputs.tempRoot(),
-                                inputs.executionGrant())));
   }
 }

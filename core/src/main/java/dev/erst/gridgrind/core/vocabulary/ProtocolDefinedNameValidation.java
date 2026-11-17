@@ -19,17 +19,16 @@ public final class ProtocolDefinedNameValidation {
   public static String validateName(String name) {
     Objects.requireNonNull(name, "name must not be null");
     violation(name)
-        .ifPresent(
-            violation -> {
-              var mapped = FieldValidationProblemMappers.definedName("name", violation);
-              throw new InvalidRequestException(
-                  new FieldValidationProblem(
-                      mapped.fieldName(), Optional.empty(), mapped.rule(), mapped.operands()),
-                  Optional.empty(),
-                  Optional.empty(),
-                  Optional.empty(),
-                  null);
-            });
+        .ifPresent(violation -> {
+          var mapped = FieldValidationProblemMappers.definedName("name", violation);
+          throw new InvalidRequestException(
+              new FieldValidationProblem(
+                  mapped.fieldName(), Optional.empty(), mapped.rule(), mapped.operands()),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              null);
+        });
     return name;
   }
 

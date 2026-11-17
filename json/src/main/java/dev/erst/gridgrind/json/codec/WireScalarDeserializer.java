@@ -1,8 +1,6 @@
 package dev.erst.gridgrind.json.codec;
 
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
-import dev.erst.gridgrind.core.problem.MessageInvariant;
-import dev.erst.gridgrind.core.problem.RequestProblemSource;
 import dev.erst.gridgrind.core.vocabulary.WireScalar;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -19,7 +17,7 @@ final class WireScalarDeserializer extends ValueDeserializer<WireScalar> {
 
   WireScalarDeserializer(Class<? extends WireScalar> valueType) {
     try {
-      componentType = valueType.getRecordComponents()[0].getType();
+      componentType = WireScalar.wireType(valueType);
       constructor = valueType.getConstructor(componentType);
     } catch (NoSuchMethodException exception) {
       throw new IllegalArgumentException(
@@ -28,6 +26,8 @@ final class WireScalarDeserializer extends ValueDeserializer<WireScalar> {
   }
 
   @Override
+  @SuppressWarnings("PMD.PreserveStackTrace")
+  // The reflected fatal cause must escape by identity; wrapping it would violate that contract.
   public WireScalar deserialize(JsonParser parser, DeserializationContext context) {
     Object scalar;
     if (componentType == String.class) {
@@ -47,18 +47,14 @@ final class WireScalarDeserializer extends ValueDeserializer<WireScalar> {
       return constructor.newInstance(scalar);
     } catch (InvocationTargetException exception) {
       Throwable cause = exception.getCause();
-      if (cause instanceof IllegalArgumentException invalid
-          && !(cause instanceof RequestProblemSource)) {
-        String message = invalid.getMessage();
-        if (message == null || message.isBlank()) {
-          message = "Domain value is invalid.";
-        }
+      if (cause instanceof Error fatal) throw fatal;
+      if (cause instanceof dev.erst.gridgrind.core.problem.ValueInvariantException declared) {
         return (WireScalar)
             context.handleInstantiationProblem(
                 handledType(),
                 scalar,
                 new InvalidRequestException(
-                    new MessageInvariant(message, Optional.empty()),
+                    declared.requestProblem(),
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),

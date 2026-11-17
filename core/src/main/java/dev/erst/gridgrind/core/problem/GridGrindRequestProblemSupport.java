@@ -66,21 +66,20 @@ public final class GridGrindRequestProblemSupport {
           unknownTypeValue
               .jsonPath()
               .or(() -> requestJsonPath)
-              .map(
-                  jsonPath ->
-                      "Replace field '"
-                          + jsonPath
-                          + "' with one supported type value. Inspect the protocol catalog when you need the"
-                          + " allowed values.")
+              .map(jsonPath ->
+                  "Replace field '"
+                      + jsonPath
+                      + "' with one supported type value. Inspect the protocol catalog when you"
+                      + " need the allowed values.")
               .orElse("Replace the unknown type value with one supported by the protocol.");
       case UnsupportedValue unsupportedValue ->
           unsupportedValue
               .jsonPath()
-              .map(
-                  jsonPath ->
-                      "Replace field '"
-                          + jsonPath
-                          + "' with one supported value. Inspect the protocol catalog for the allowed values.")
+              .map(jsonPath ->
+                  "Replace field '"
+                      + jsonPath
+                      + "' with one supported value. Inspect the protocol catalog for the allowed"
+                      + " values.")
               .orElse("Replace the unsupported value with one allowed by the protocol.");
       case ExplicitNullField explicitNullField ->
           "Remove field '"
@@ -93,9 +92,8 @@ public final class GridGrindRequestProblemSupport {
           messageShape
               .jsonPath()
               .or(() -> requestJsonPath)
-              .map(
-                  jsonPath ->
-                      "Fix field '" + jsonPath + "' so it matches the published request shape.")
+              .map(jsonPath ->
+                  "Fix field '" + jsonPath + "' so it matches the published request shape.")
               .orElse("Fix the request payload so it matches the published request shape.");
       case DuplicateStepId duplicateStepId ->
           "Make every stepId unique. Rename or remove the duplicate value '"
@@ -104,11 +102,10 @@ public final class GridGrindRequestProblemSupport {
       case NonXlsxPath nonXlsxPath ->
           nonXlsxPath
               .jsonPath()
-              .map(
-                  jsonPath ->
-                      "Provide a path ending in .xlsx for field '"
-                          + preciseRequestPath(jsonPath, requestJsonPath)
-                          + "'.")
+              .map(jsonPath ->
+                  "Provide a path ending in .xlsx for field '"
+                      + preciseRequestPath(jsonPath, requestJsonPath)
+                      + "'.")
               .orElse("Provide a workbook path ending in .xlsx.");
       case FieldValidationProblem fieldValidationProblem -> fieldValidationProblem.resolution();
       case ActionableInvariantMessage actionableInvariantMessage ->
@@ -176,14 +173,13 @@ public final class GridGrindRequestProblemSupport {
     String allowedValues = String.join(", ", unsupportedValue.allowedValues());
     return unsupportedValue
         .jsonPath()
-        .map(
-            jsonPath ->
-                "Unsupported value '"
-                    + unsupportedValue.value()
-                    + "' for field '"
-                    + jsonPath
-                    + "'; expected one of: "
-                    + allowedValues)
+        .map(jsonPath ->
+            "Unsupported value '"
+                + unsupportedValue.value()
+                + "' for field '"
+                + jsonPath
+                + "'; expected one of: "
+                + allowedValues)
         .orElse(
             "Unsupported value '"
                 + unsupportedValue.value()

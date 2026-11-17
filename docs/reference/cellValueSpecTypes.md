@@ -169,7 +169,7 @@ Write one exact stored Excel error literal such as #REF!, #DIV/0!, or #N/A. Eval
 
 ## DATE
 
-Write an ISO-8601 date value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE.
+Write a timezone-free Gregorian date within the receiving workbook calendar, through 9999-12-31. Stored as a numeric serial; TEMPORAL may interpret it as DATE.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
@@ -178,7 +178,7 @@ Write an ISO-8601 date value. Stored as an Excel serial number; readback keeps t
 ```json
 {
   "id" : "DATE",
-  "summary" : "Write an ISO-8601 date value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE.",
+  "summary" : "Write a timezone-free Gregorian date within the receiving workbook calendar, through 9999-12-31. Stored as a numeric serial; TEMPORAL may interpret it as DATE.",
   "fields" : [ {
     "name" : "value",
     "requirement" : "REQUIRED",
@@ -194,7 +194,7 @@ Write an ISO-8601 date value. Stored as an Excel serial number; readback keeps t
 
 ## DATE_TIME
 
-Write an ISO-8601 date-time value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE_TIME.
+Write a timezone-free Gregorian date-time within the receiving workbook calendar at millisecond precision. Finer precision refuses; numeric readback may expose an INTERPRETED DATE_TIME facet.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
@@ -203,7 +203,7 @@ Write an ISO-8601 date-time value. Stored as an Excel serial number; readback ke
 ```json
 {
   "id" : "DATE_TIME",
-  "summary" : "Write an ISO-8601 date-time value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE_TIME.",
+  "summary" : "Write a timezone-free Gregorian date-time within the receiving workbook calendar at millisecond precision. Finer precision refuses; numeric readback may expose an INTERPRETED DATE_TIME facet.",
   "fields" : [ {
     "name" : "value",
     "requirement" : "REQUIRED",

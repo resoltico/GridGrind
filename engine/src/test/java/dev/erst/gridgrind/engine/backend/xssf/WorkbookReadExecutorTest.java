@@ -3,7 +3,6 @@ package dev.erst.gridgrind.engine.backend.xssf;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.ResolvedInspectionStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
@@ -19,13 +18,25 @@ class WorkbookReadExecutorTest {
   void windowQueriesSelectDensityAndPreserveDenseBlankMetadata() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       var sheet = workbook.getOrCreateSheet("Grid");
-      sheet.cells().setCell("A1", new dev.erst.gridgrind.core.model.value.CellValue.Text("header"));
-      sheet.cells().setCell("B2", new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(3));
-      sheet.cells().setCell("B3", new dev.erst.gridgrind.core.model.formula.ResolvedFormula("1+1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("header"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(3));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+              new dev.erst.gridgrind.core.model.formula.ResolvedFormula("1+1"));
       sheet
           .comments()
           .setComment(
-              "B1",
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
               new dev.erst.gridgrind.core.model.drawing.ResolvedComment(
                   "blank metadata", "tester", false));
       var projection =
@@ -90,8 +101,16 @@ class WorkbookReadExecutorTest {
   void appliesVarargsAndIterableCommandsInOrder() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Budget");
-      sheet.cells().setCell("A1", new CellValue.Text("Report"));
-      sheet.cells().setCell("B2", new CellValue.NumberValue(61.0));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Report"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(61.0));
       workbook
           .names()
           .setNamedRange(

@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
@@ -32,10 +31,14 @@ class ScopedTableInspectionTest {
           .getOrCreateSheet("Ops")
           .cells()
           .setRange(
-              "A1:B2",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
               List.of(
-                  List.of(new CellValue.Text("Item"), new CellValue.Text("Value")),
-                  List.of(new CellValue.Text("A"), new CellValue.NumberValue(3))));
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Value")),
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("A"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(3))));
       new TableAdapter()
           .setTable(
               workbook,
@@ -132,10 +135,14 @@ class ScopedTableInspectionTest {
           .getOrCreateSheet("Ops")
           .cells()
           .setRange(
-              "A1:B2",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
               List.of(
-                  List.of(new CellValue.Text("Item"), new CellValue.Text("Value")),
-                  List.of(new CellValue.Text("A"), new CellValue.NumberValue(3))));
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"),
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Value")),
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("A"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(3))));
       new PivotAdapter()
           .setPivotTable(
               workbook,

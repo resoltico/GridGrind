@@ -122,7 +122,9 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
       XssfSheet sourceSheet = workbook.getOrCreateSheet("LL");
       sourceSheet
           .comments()
-          .setComment("C11", new ResolvedComment("Note Name3", "GridGrind", false));
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C11"),
+              new ResolvedComment("Note Name3", "GridGrind", false));
       sourceSheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
       workbook.sheets().copySheet("LL", "LL_B1", new SheetCopyPosition.AtIndex(0));
@@ -189,10 +191,9 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
   private static org.apache.poi.openxml4j.opc.PackagePart previewDrawingPart(
       XSSFObjectData objectData) {
     return DrawingAdapter.previewDrawingRelationId(objectData)
-        .flatMap(
-            relationId ->
-                DrawingAdapter.relatedInternalPart(
-                    objectData.getDrawing().getPackagePart(), relationId))
+        .flatMap(relationId ->
+            DrawingAdapter.relatedInternalPart(
+                objectData.getDrawing().getPackagePart(), relationId))
         .orElse(null);
   }
 

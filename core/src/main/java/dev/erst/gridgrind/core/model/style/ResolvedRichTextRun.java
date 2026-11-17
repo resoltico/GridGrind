@@ -6,7 +6,8 @@ import java.util.Optional;
 /** One materialized rich-text run with a canonical font patch. */
 public record ResolvedRichTextRun(String text, Optional<CellFontPatch> font) {
   public ResolvedRichTextRun {
-    Objects.requireNonNull(text, "text must not be null");
+    text =
+        dev.erst.gridgrind.core.source.OoxmlTextValidation.requireXml10CharacterData(text, "text");
     Objects.requireNonNull(font, "font must not be null");
     if (text.isEmpty()) {
       throw new IllegalArgumentException("text must not be empty");

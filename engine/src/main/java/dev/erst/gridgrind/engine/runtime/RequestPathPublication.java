@@ -3,6 +3,8 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactWriteDisposition;
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
@@ -15,19 +17,47 @@ import java.util.UUID;
 
 /** Publishes one verified staged artifact without exposing a partial final destination. */
 public final class RequestPathPublication {
-  private final AtomicMover atomicMover;
+  private final PublicationFileOperations.FileForcer fileForcer;
+  private final PublicationFacts facts;
+  private final PublicationCommitter committer;
   private final SiblingWriter siblingWriter;
 
   RequestPathPublication() {
-    this(RequestPathPublication::moveAtomically, RequestPathPublication::copySibling);
+    this(RequestPathPublication::commitAtomically, RequestPathPublication::copySibling);
   }
 
-  RequestPathPublication(AtomicMover atomicMover) {
-    this(atomicMover, RequestPathPublication::copySibling);
+  RequestPathPublication(PublicationCommitter committer) {
+    this(committer, RequestPathPublication::copySibling);
   }
 
-  RequestPathPublication(AtomicMover atomicMover, SiblingWriter siblingWriter) {
-    this.atomicMover = Objects.requireNonNull(atomicMover, "atomicMover must not be null");
+  RequestPathPublication(PublicationFacts facts) {
+    this(facts, RequestPathPublication::commitAtomically, RequestPathPublication::copySibling);
+  }
+
+  RequestPathPublication(PublicationCommitter committer, SiblingWriter siblingWriter) {
+    this(new PublicationFacts(), committer, siblingWriter);
+  }
+
+  RequestPathPublication(
+      PublicationCommitter committer,
+      SiblingWriter siblingWriter,
+      PublicationFileOperations.FileForcer fileForcer) {
+    this(new PublicationFacts(), committer, siblingWriter, fileForcer);
+  }
+
+  private RequestPathPublication(
+      PublicationFacts facts, PublicationCommitter committer, SiblingWriter siblingWriter) {
+    this(facts, committer, siblingWriter, channel -> channel.force(true));
+  }
+
+  private RequestPathPublication(
+      PublicationFacts facts,
+      PublicationCommitter committer,
+      SiblingWriter siblingWriter,
+      PublicationFileOperations.FileForcer fileForcer) {
+    this.fileForcer = Objects.requireNonNull(fileForcer);
+    this.facts = Objects.requireNonNull(facts);
+    this.committer = Objects.requireNonNull(committer, "committer must not be null");
     this.siblingWriter = Objects.requireNonNull(siblingWriter, "siblingWriter must not be null");
   }
 
@@ -43,12 +73,10 @@ public final class RequestPathPublication {
         stagedArtifactVerification, "stagedArtifactVerification must not be null");
 
     Optional<Path> siblingName = Optional.empty();
-    PublicationTargetState before = new PublicationTargetUnknown();
-    PublicationMoveState moveState = new PublicationMoveNotAttempted();
+    PublicationCommitState commitState = new PublicationCommitNotAttempted();
     try {
       binding.reverifyPublicationTarget();
-      before = targetSnapshot(binding, disposition);
-      WorkbookArtifactWriteDisposition atomicDisposition = atomicDisposition(disposition, before);
+      WorkbookArtifactWriteDisposition atomicDisposition = disposition;
       PublicationFileOperations.ArtifactDigest stagedDigest =
           PublicationFileOperations.digest(stagedArtifact);
       Path createdSibling = nextSiblingName();
@@ -59,59 +87,56 @@ public final class RequestPathPublication {
       if (!siblingDigest.equals(stagedDigest)) {
         return failedAttempt(
             binding,
-            stagedArtifactVerification,
-            before,
-            moveState,
+            commitState,
             new IOException("private publication sibling digest differs from staged artifact"));
       }
       binding.reverifyPublicationTarget();
-      moveState = new PublicationMoveAttempted(createdSibling);
-      atomicMover.move(
+      if (atomicDisposition == WorkbookArtifactWriteDisposition.CREATE_NEW) {
+        requireQualifiedNoClobberProvider(binding.siblingPath(createdSibling));
+      }
+      commitState =
+          new PublicationCommitAttempted(
+              atomicDisposition == WorkbookArtifactWriteDisposition.CREATE_NEW);
+      facts.attempting(binding.resolvedPath().toString());
+      committer.commit(
           binding.siblingPath(createdSibling), binding.resolvedPath(), atomicDisposition);
-      moveState = new PublicationMoveCompleted();
-      return publishedAttempt(binding, stagedDigest, stagedArtifactVerification);
+      facts.returnedSuccessfully(binding.resolvedPath().toString());
+      commitState = new PublicationCommitCompleted();
+      var published = publishedAttempt(binding, stagedDigest, stagedArtifactVerification);
+      facts.established(published.outcome());
+      return published;
     } catch (IOException exception) {
-      return failedAttempt(binding, stagedArtifactVerification, before, moveState, exception);
+      return failedAttempt(binding, commitState, exception);
     } finally {
-      siblingName.ifPresent(sibling -> deleteSiblingQuietly(binding, sibling));
+      siblingName.ifPresent(sibling -> cleanupSibling(binding, sibling));
     }
   }
 
   private PublicationAttempt failedAttempt(
-      RequestPathBinding binding,
-      PublicationOutcome.StagedArtifactVerification stagedArtifactVerification,
-      PublicationTargetState before,
-      PublicationMoveState moveState,
-      IOException exception) {
-    switch (moveState) {
-      case PublicationMoveCompleted _ -> {
-        return uncertainAttempt(binding, exception);
-      }
-      case PublicationMoveAttempted attempted -> {
-        try {
-          PublicationFileOperations.ArtifactDigest stagedDigest =
-              PublicationFileOperations.digest(
-                  binding.openSiblingReadChannel(attempted.siblingName()));
-          Optional<PublicationFileOperations.ArtifactDigest> current = currentDigest(binding);
-          if (current.isPresent() && current.orElseThrow().equals(stagedDigest)) {
-            return publishedAttempt(binding, stagedDigest, stagedArtifactVerification);
+      RequestPathBinding binding, PublicationCommitState commitState, IOException exception) {
+    PublicationAttempt attempt =
+        switch (commitState) {
+          case PublicationCommitNotAttempted _ ->
+              new FailedPublicationAttempt(new PublicationOutcome.NotAttempted(), exception);
+          case PublicationCommitCompleted _ ->
+              uncertainAttempt(
+                  binding, exception, PublicationOutcome.CommitObservation.RETURNED_SUCCESSFULLY);
+          case PublicationCommitAttempted attempted -> {
+            if (attempted.noClobber() && exception instanceof FileAlreadyExistsException) {
+              yield new FailedPublicationAttempt(
+                  new PublicationOutcome.NotPublished(
+                      PublicationOutcome.DestinationState.COLLISION_OBSERVED),
+                  exception);
+            }
+            yield uncertainAttempt(
+                binding, exception, PublicationOutcome.CommitObservation.NOT_ESTABLISHED);
           }
-        } catch (IOException verificationFailure) {
-          exception.addSuppressed(verificationFailure);
-        }
-      }
-      case PublicationMoveNotAttempted _ -> {}
-    }
-    try {
-      PublicationOutcome.DestinationState state = destinationState(binding, before);
-      return new FailedPublicationAttempt(new PublicationOutcome.NotPublished(state), exception);
-    } catch (IOException stateFailure) {
-      exception.addSuppressed(stateFailure);
-      return uncertainAttempt(binding, exception);
-    }
+        };
+    facts.established(((FailedPublicationAttempt) attempt).outcome());
+    return attempt;
   }
 
-  private static PublishedPublicationAttempt publishedAttempt(
+  private PublishedPublicationAttempt publishedAttempt(
       RequestPathBinding binding,
       PublicationFileOperations.ArtifactDigest stagedDigest,
       PublicationOutcome.StagedArtifactVerification stagedArtifactVerification)
@@ -124,7 +149,8 @@ public final class RequestPathPublication {
               + binding.resolvedPath());
     }
     PublicationOutcome.DurabilityEvidence durability =
-        PublicationFileOperations.forcePublishedArtifact(binding);
+        PublicationFileOperations.forcePublishedArtifact(
+            binding, fileForcer, PublicationFileOperations::forceDirectory);
     return new PublishedPublicationAttempt(
         new PublicationOutcome.Published(
             binding.resolvedPath().toString(),
@@ -135,70 +161,15 @@ public final class RequestPathPublication {
   }
 
   private static FailedPublicationAttempt uncertainAttempt(
-      RequestPathBinding binding, IOException exception) {
+      RequestPathBinding binding,
+      IOException exception,
+      PublicationOutcome.CommitObservation observation) {
     return new FailedPublicationAttempt(
         new PublicationOutcome.Uncertain(
             binding.resolvedPath().toString(),
-            PublicationOutcome.Recovery.INSPECT_DESTINATION_DO_NOT_RETRY),
+            PublicationOutcome.Recovery.INSPECT_DESTINATION_DO_NOT_RETRY,
+            observation),
         exception);
-  }
-
-  private static PublicationTargetState targetSnapshot(
-      RequestPathBinding binding, WorkbookArtifactWriteDisposition disposition) throws IOException {
-    return switch (disposition) {
-      case CREATE_NEW -> new PublicationTargetAbsent();
-      case REPLACE_EXISTING ->
-          currentDigest(binding)
-              .<PublicationTargetState>map(PublicationTargetExisting::new)
-              .orElseGet(PublicationTargetAbsent::new);
-    };
-  }
-
-  private static PublicationOutcome.DestinationState destinationState(
-      RequestPathBinding binding, PublicationTargetState before) throws IOException {
-    Optional<PublicationFileOperations.ArtifactDigest> current = currentDigest(binding);
-    return switch (before) {
-      case PublicationTargetUnknown _ ->
-          throw new IOException(
-              "publication destination state was not established before the failed publication: "
-                  + binding.resolvedPath());
-      case PublicationTargetAbsent _ -> {
-        if (current.isEmpty()) {
-          yield PublicationOutcome.DestinationState.ABSENT;
-        }
-        throw destinationStateChanged(binding);
-      }
-      case PublicationTargetExisting existing -> {
-        if (current.isPresent() && existing.digest().equals(current.orElseThrow())) {
-          yield PublicationOutcome.DestinationState.PRESERVED;
-        }
-        throw destinationStateChanged(binding);
-      }
-    };
-  }
-
-  private static IOException destinationStateChanged(RequestPathBinding binding) {
-    return new IOException(
-        "publication destination differs from its admitted state after a failed publication: "
-            + binding.resolvedPath());
-  }
-
-  private static WorkbookArtifactWriteDisposition atomicDisposition(
-      WorkbookArtifactWriteDisposition requestedDisposition, PublicationTargetState before) {
-    if (requestedDisposition == WorkbookArtifactWriteDisposition.REPLACE_EXISTING
-        && before instanceof PublicationTargetAbsent) {
-      return WorkbookArtifactWriteDisposition.CREATE_NEW;
-    }
-    return requestedDisposition;
-  }
-
-  private static Optional<PublicationFileOperations.ArtifactDigest> currentDigest(
-      RequestPathBinding binding) throws IOException {
-    try {
-      return Optional.of(PublicationFileOperations.digest(binding.openPublishedReadChannel()));
-    } catch (NoSuchFileException ignored) {
-      return Optional.empty();
-    }
   }
 
   private static Path nextSiblingName() {
@@ -217,38 +188,51 @@ public final class RequestPathPublication {
                 LinkOption.NOFOLLOW_LINKS)));
   }
 
-  private static void moveAtomically(
+  static void commitAtomically(
       Path source, Path destination, WorkbookArtifactWriteDisposition disposition)
       throws IOException {
     if (disposition == WorkbookArtifactWriteDisposition.CREATE_NEW) {
-      Files.move(source, destination, StandardCopyOption.ATOMIC_MOVE);
+      Files.createLink(destination, source);
       return;
     }
     Files.move(
         source, destination, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
   }
 
-  private static void deleteSiblingQuietly(RequestPathBinding binding, Path siblingName) {
-    deleteSiblingQuietly(siblingName, binding::deleteSibling);
-  }
-
-  static void deleteSiblingQuietly(Path siblingName, SiblingDeletion deletion) {
-    Objects.requireNonNull(siblingName, "siblingName must not be null");
-    Objects.requireNonNull(deletion, "deletion must not be null");
-    try {
-      deletion.delete(siblingName);
-    } catch (NoSuchFileException ignored) {
-      // Atomic publication already moved the sibling into the final destination.
-    } catch (IOException ignored) {
-      // A retained final artifact state remains more actionable than private cleanup noise.
+  private static void requireQualifiedNoClobberProvider(Path source) throws IOException {
+    String type = Files.getFileStore(source).type().toLowerCase(java.util.Locale.ROOT);
+    String provider = source.getFileSystem().provider().getClass().getName();
+    if (!java.util.Set.of(
+                "sun.nio.fs.LinuxFileSystemProvider", "sun.nio.fs.MacOSXFileSystemProvider")
+            .contains(provider)
+        || !source
+            .getFileSystem()
+            .provider()
+            .equals(java.nio.file.FileSystems.getDefault().provider())
+        || !java.util.Set.of("apfs", "ext4", "xfs", "overlay", "overlayfs", "tmpfs", "fakeowner")
+            .contains(type)) {
+      throw new AtomicMoveNotSupportedException(
+          source.toString(),
+          null,
+          "atomic no-clobber publication is not qualified for this filesystem provider");
     }
   }
 
-  /** One atomic move seam for deterministic publication-failure injection. */
+  private void cleanupSibling(RequestPathBinding binding, Path siblingName) {
+    try {
+      binding.deleteSibling(siblingName);
+    } catch (NoSuchFileException ignored) {
+      // Replacement publication transferred the sibling entry.
+    } catch (IOException failure) {
+      facts.cleanupFailed(failure);
+    }
+  }
+
+  /** One atomic commit seam for deterministic publication-failure injection. */
   @FunctionalInterface
-  interface AtomicMover {
-    /** Moves one private sibling into its final destination. */
-    void move(Path source, Path destination, WorkbookArtifactWriteDisposition disposition)
+  interface PublicationCommitter {
+    /** Commits one private sibling to its final destination. */
+    void commit(Path source, Path destination, WorkbookArtifactWriteDisposition disposition)
         throws IOException;
   }
 
@@ -259,49 +243,20 @@ public final class RequestPathPublication {
     void write(Path stagedArtifact, RequestPathBinding binding, Path siblingName)
         throws IOException;
   }
-
-  /** Deletes a private publication sibling without re-resolving its request-owned path. */
-  @FunctionalInterface
-  interface SiblingDeletion {
-    /** Deletes the supplied private sibling name. */
-    void delete(Path siblingName) throws IOException;
-  }
 }
 
-/** Exact atomic-publication state known at a caught I/O boundary. */
-sealed interface PublicationMoveState
-    permits PublicationMoveNotAttempted, PublicationMoveAttempted, PublicationMoveCompleted {}
+/** Exact publication state known at a caught I/O boundary. */
+sealed interface PublicationCommitState
+    permits PublicationCommitNotAttempted, PublicationCommitAttempted, PublicationCommitCompleted {}
 
-/** No atomic move was started. */
-record PublicationMoveNotAttempted() implements PublicationMoveState {}
+/** The final mutation primitive was not invoked. */
+record PublicationCommitNotAttempted() implements PublicationCommitState {}
 
-/** One private sibling was handed to the atomic move primitive. */
-record PublicationMoveAttempted(Path siblingName) implements PublicationMoveState {
-  PublicationMoveAttempted {
-    Objects.requireNonNull(siblingName, "siblingName must not be null");
-  }
-}
+/** One private sibling was handed to the commit primitive. */
+record PublicationCommitAttempted(boolean noClobber) implements PublicationCommitState {}
 
-/** The move returned normally but final verification did not establish publication. */
-record PublicationMoveCompleted() implements PublicationMoveState {}
-
-/** Final-destination fact established before private sibling publication begins. */
-sealed interface PublicationTargetState
-    permits PublicationTargetUnknown, PublicationTargetAbsent, PublicationTargetExisting {}
-
-/** The pre-publication destination fact was not established. */
-record PublicationTargetUnknown() implements PublicationTargetState {}
-
-/** The pre-publication destination was established as absent. */
-record PublicationTargetAbsent() implements PublicationTargetState {}
-
-/** The pre-publication destination was established with these exact bytes. */
-record PublicationTargetExisting(PublicationFileOperations.ArtifactDigest digest)
-    implements PublicationTargetState {
-  PublicationTargetExisting {
-    Objects.requireNonNull(digest, "digest must not be null");
-  }
-}
+/** The commit returned normally but final verification did not establish publication. */
+record PublicationCommitCompleted() implements PublicationCommitState {}
 
 /** Internal outcome preserving the precise publication fact plus any primary I/O failure. */
 sealed interface PublicationAttempt permits PublishedPublicationAttempt, FailedPublicationAttempt {}
@@ -318,9 +273,11 @@ record PublishedPublicationAttempt(PublicationOutcome.Published outcome)
 record FailedPublicationAttempt(PublicationOutcome outcome, IOException failure)
     implements PublicationAttempt {
   FailedPublicationAttempt {
-    if (!(outcome instanceof PublicationOutcome.NotPublished)
+    if (!(outcome instanceof PublicationOutcome.NotAttempted)
+        && !(outcome instanceof PublicationOutcome.NotPublished)
         && !(outcome instanceof PublicationOutcome.Uncertain)) {
-      throw new IllegalArgumentException("failure outcome must be NOT_PUBLISHED or UNCERTAIN");
+      throw new IllegalArgumentException(
+          "failure outcome must be NOT_ATTEMPTED, NOT_PUBLISHED or UNCERTAIN");
     }
     Objects.requireNonNull(failure, "failure must not be null");
   }

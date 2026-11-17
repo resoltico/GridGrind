@@ -34,7 +34,8 @@ public final class HelpRenderer {
                   renderCommandSection(surface.usage()),
                   renderWorkflows(surface.workflows()),
                   renderSection(surface.execution()),
-                  "Use gridgrind help protocol for request constraints, or help guidance for examples.",
+                  "Use gridgrind help protocol for request constraints, or help guidance for"
+                      + " examples.",
                   renderReferences(surface.docs(), documentRef));
           case PROTOCOL ->
               String.join(
@@ -78,9 +79,8 @@ public final class HelpRenderer {
       return section.label()
           + ":\n"
           + section.entries().stream()
-              .map(
-                  entry ->
-                      wrappedText(entry.pattern() + ": " + entry.convention(), "  ", "    ", width))
+              .map(entry ->
+                  wrappedText(entry.pattern() + ": " + entry.convention(), "  ", "    ", width))
               .map(line -> line + "\n")
               .collect(java.util.stream.Collectors.joining())
               .stripTrailing();
@@ -93,9 +93,8 @@ public final class HelpRenderer {
         + separator
         + "\n"
         + section.entries().stream()
-            .map(
-                entry ->
-                    ("  %-" + leftWidth + "s %s").formatted(entry.pattern(), entry.convention()))
+            .map(entry ->
+                ("  %-" + leftWidth + "s %s").formatted(entry.pattern(), entry.convention()))
             .map(line -> line + "\n")
             .collect(java.util.stream.Collectors.joining())
             .stripTrailing();
@@ -186,16 +185,15 @@ public final class HelpRenderer {
     return section.label()
         + ":\n"
         + section.entries().stream()
-            .map(
-                entry ->
-                    "  "
-                        + entry.label()
-                        + ": "
-                        + documentRef
-                        + "/"
-                        + entry.relativePath()
-                        + "\n"
-                        + wrappedText(entry.description(), "    ", "    ", helpTextWidth()))
+            .map(entry ->
+                "  "
+                    + entry.label()
+                    + ": "
+                    + documentRef
+                    + "/"
+                    + entry.relativePath()
+                    + "\n"
+                    + wrappedText(entry.description(), "    ", "    ", helpTextWidth()))
             .map(block -> block + "\n")
             .collect(java.util.stream.Collectors.joining())
             .stripTrailing();
@@ -228,11 +226,10 @@ public final class HelpRenderer {
         + label
         + ":\n"
         + guidanceEntries.stream()
-            .map(
-                entry ->
-                    wrappedText(entry.title() + ".", "    - ", "      ", helpTextWidth())
-                        + "\n"
-                        + indentLinesWrapped(entry.lines(), 6))
+            .map(entry ->
+                wrappedText(entry.title() + ".", "    - ", "      ", helpTextWidth())
+                    + "\n"
+                    + indentLinesWrapped(entry.lines(), 6))
             .collect(java.util.stream.Collectors.joining("\n"));
   }
 

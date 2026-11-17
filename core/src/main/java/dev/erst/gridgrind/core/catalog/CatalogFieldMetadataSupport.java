@@ -136,6 +136,9 @@ public final class CatalogFieldMetadataSupport {
   public static FieldShape fieldShape(Class<?> classType) {
     Objects.requireNonNull(classType, "classType must not be null");
     if (WireScalar.isValueType(classType)) {
+      if (classType.getRecordComponents().length != 1) {
+        return fieldShape(WireScalar.wireType(classType));
+      }
       RecordComponent value = classType.getRecordComponents()[0];
       return applyConstraints(
           fieldShape(value.getGenericType()),
@@ -143,10 +146,8 @@ public final class CatalogFieldMetadataSupport {
     }
     return scalarFieldShape(classType)
         .or(() -> groupedFieldShape(classType))
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "Unsupported catalog field type: " + classType.getName()));
+        .orElseThrow(() ->
+            new IllegalStateException("Unsupported catalog field type: " + classType.getName()));
   }
 
   /** Returns whether one non-parameterized record component type is represented as JSON NUMBER. */

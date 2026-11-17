@@ -10,7 +10,6 @@ import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSecurity;
 import dev.erst.gridgrind.core.model.security.ResolvedPersistenceSignature;
 import dev.erst.gridgrind.core.model.security.ResolvedSignature;
 import dev.erst.gridgrind.core.model.value.CellReport;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
 import dev.erst.gridgrind.core.plan.ResolvedStep;
@@ -80,7 +79,10 @@ class ExcelOoxmlPackageSecuritySupportTest {
           "Encrypted workbook",
           assertInstanceOf(
                   CellReport.TextReport.class,
-                  workbook.sheet("Encrypted").cells().snapshotCell("A1"))
+                  workbook
+                      .sheet("Encrypted")
+                      .cells()
+                      .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")))
               .value()
               .orElseThrow()
               .value());
@@ -214,7 +216,8 @@ class ExcelOoxmlPackageSecuritySupportTest {
               workbook,
               new ResolvedStep(
                   new CellSelector.ByAddress(new SheetName("Encrypted"), new CellAddress("B2")),
-                  new ResolvedMutationAction.SetCell(new CellValue.Text("Mutated"))));
+                  new ResolvedMutationAction.SetCell(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Mutated"))));
       workbook
           .persistence()
           .save(
@@ -268,7 +271,8 @@ class ExcelOoxmlPackageSecuritySupportTest {
               workbook,
               new ResolvedStep(
                   new CellSelector.ByAddress(new SheetName("Signed"), new CellAddress("C1")),
-                  new ResolvedMutationAction.SetCell(new CellValue.Text("Touch"))));
+                  new ResolvedMutationAction.SetCell(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Touch"))));
 
       dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult afterMutation =
           assertInstanceOf(

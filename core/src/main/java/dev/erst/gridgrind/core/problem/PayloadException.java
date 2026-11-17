@@ -13,7 +13,8 @@ public sealed interface PayloadException
         InvalidJsonException,
         InvalidRequestException,
         InvalidRequestShapeException,
-        NumberNotRepresentableException {
+        NumberNotRepresentableException,
+        InvalidAuthorityException {
   /** Normalized JSON location variant for the payload failure. */
   PayloadLocation jsonLocation();
 

@@ -45,13 +45,12 @@ public record SchemaColumnReport(
     if (observedTypeCountTotal != populatedCellCount) {
       throw new IllegalArgumentException("observedTypes counts must sum to populatedCellCount");
     }
-    dominantType.ifPresent(
-        type -> {
-          TypeCountReport.requireSupportedType(type, "dominantType");
-          if (!observedTypeNames.contains(type)) {
-            throw new IllegalArgumentException(
-                "dominantType must be omitted or match one observedTypes entry");
-          }
-        });
+    dominantType.ifPresent(type -> {
+      TypeCountReport.requireSupportedType(type, "dominantType");
+      if (!observedTypeNames.contains(type)) {
+        throw new IllegalArgumentException(
+            "dominantType must be omitted or match one observedTypes entry");
+      }
+    });
   }
 }

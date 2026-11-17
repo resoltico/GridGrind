@@ -52,6 +52,7 @@ final class ExecutionInputBindingsFixtureSupport {
         workingDirectory,
         managedTempRoot(workingDirectory),
         new ExecutionGrant(
+            planGrant.maxInputSnapshotBytes(),
             planGrant.readableResources(),
             planGrant.operationIds(),
             planGrant.targetAuthority(),
@@ -66,6 +67,7 @@ final class ExecutionInputBindingsFixtureSupport {
     ExecutionGrant planGrant = grantForPlan(plan, workingDirectory);
     ExecutionGrant grant =
         new ExecutionGrant(
+            planGrant.maxInputSnapshotBytes(),
             planGrant.readableResources(),
             planGrant.operationIds(),
             planGrant.targetAuthority(),
@@ -96,6 +98,7 @@ final class ExecutionInputBindingsFixtureSupport {
             .toList();
     ExecutionGrant grant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             resources,
             planGrant.operationIds(),
             planGrant.targetAuthority(),
@@ -131,6 +134,7 @@ final class ExecutionInputBindingsFixtureSupport {
       Path workingDirectory, List<Path> readableFiles, Map<SecretReference, String> secrets) {
     ExecutionGrant grant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             readableFiles.stream()
                 .<ExecutionGrant.ReadAuthority>map(ExecutionGrant.ReadAuthority.File::new)
                 .toList(),
@@ -173,6 +177,7 @@ final class ExecutionInputBindingsFixtureSupport {
 
   static ExecutionGrant noPublicationGrant(List<String> operationIds, List<Path> readableFiles) {
     return new ExecutionGrant(
+        16L * 1024 * 1024,
         readableFiles.stream()
             .<ExecutionGrant.ReadAuthority>map(ExecutionGrant.ReadAuthority.File::new)
             .toList(),
@@ -190,6 +195,7 @@ final class ExecutionInputBindingsFixtureSupport {
             .<ExecutionGrant.ReadAuthority>map(ExecutionGrant.ReadAuthority.File::new)
             .toList();
     return new ExecutionGrant(
+        16L * 1024 * 1024,
         readableResources,
         plan.steps().stream().map(ExecutionInputBindingPlanFacts::operationId).distinct().toList(),
         new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -214,21 +220,19 @@ final class ExecutionInputBindingsFixtureSupport {
               case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> saveAs.security();
               case WorkbookPlan.WorkbookPersistence.Overwrite overwrite -> overwrite.security();
             };
-    security.ifPresent(
-        value -> {
-          if (value.encryption()
-              instanceof
-              dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.Encrypt
-                  encrypt) {
-            references.add(encrypt.encryption().passwordRef());
-          }
-          if (value.signature()
-              instanceof
-              dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec.Sign sign) {
-            references.add(sign.signature().keystorePasswordRef());
-            sign.signature().keyPasswordRef().ifPresent(references::add);
-          }
-        });
+    security.ifPresent(value -> {
+      if (value.encryption()
+          instanceof
+          dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.Encrypt encrypt) {
+        references.add(encrypt.encryption().passwordRef());
+      }
+      if (value.signature()
+          instanceof
+          dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureSpec.Sign sign) {
+        references.add(sign.signature().keystorePasswordRef());
+        sign.signature().keyPasswordRef().ifPresent(references::add);
+      }
+    });
     return references.stream().distinct().toList();
   }
 
@@ -254,6 +258,7 @@ final class ExecutionInputBindingsFixtureSupport {
 
   private static ExecutionGrant standardInputGrant() {
     return new ExecutionGrant(
+        16L * 1024 * 1024,
         List.of(new ExecutionGrant.ReadAuthority.Stdin()),
         List.of(),
         new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),

@@ -12,12 +12,12 @@ import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.autofilter.AutofilterAdapter;
 import dev.erst.gridgrind.engine.backend.xssf.SheetNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
-import dev.erst.gridgrind.engine.poi.CellBounds;
 import dev.erst.gridgrind.engine.poi.FormulaWrites;
 import dev.erst.gridgrind.engine.poi.SheetStructure;
 import java.util.ArrayList;
@@ -32,12 +32,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
@@ -67,7 +65,7 @@ public final class TableAdapter {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
-    CellBounds targetRange = CellBounds.parse(definition.range().value());
+    RangeRef targetRange = definition.range();
     requireSupportedTableShape(targetRange, definition.showTotalsRow());
     XSSFSheet sheet = requiredSheet(workbook, definition.sheetName().value());
     List<String> headerNames = SheetStructure.headerNames(sheet, targetRange);
@@ -85,13 +83,10 @@ public final class TableAdapter {
 
     XSSFTable table =
         existingByName.isEmpty()
-            ? sheet.createTable(
-                new AreaReference(
-                    SheetStructure.formatRange(targetRange), SpreadsheetVersion.EXCEL2007))
+            ? sheet.createTable(SheetStructure.toAreaReference(targetRange))
             : existingByName.orElseThrow().table();
     if (existingByName.isPresent()) {
-      table.setArea(
-          new AreaReference(SheetStructure.formatRange(targetRange), SpreadsheetVersion.EXCEL2007));
+      table.setArea(SheetStructure.toAreaReference(targetRange));
     }
     CTTable ctTable = table.getCTTable();
     ctTable.setHeaderRowCount(1);
@@ -216,11 +211,11 @@ public final class TableAdapter {
     return List.copyOf(findings);
   }
 
-  private void clearOverlappingSheetAutofilter(XSSFSheet sheet, CellBounds tableRange) {
+  private void clearOverlappingSheetAutofilter(XSSFSheet sheet, RangeRef tableRange) {
     if (!sheet.getCTWorksheet().isSetAutoFilter()) {
       return;
     }
-    Optional<CellBounds> sheetAutofilterRange =
+    Optional<RangeRef> sheetAutofilterRange =
         SheetStructure.parseOptionalRange(
             Objects.requireNonNullElse(sheet.getCTWorksheet().getAutoFilter().getRef(), ""));
     if (sheetAutofilterRange.isPresent()
@@ -232,7 +227,7 @@ public final class TableAdapter {
   private void requireNoOverlappingOtherTables(
       XssfWorkbook workbook,
       ResolvedTable definition,
-      CellBounds targetRange,
+      RangeRef targetRange,
       Optional<TableHandle> existingByName) {
     List<String> overlaps = new ArrayList<>();
     for (TableHandle tableHandle : allTables(workbook)) {
@@ -243,7 +238,7 @@ public final class TableAdapter {
           && tableHandle.name().equalsIgnoreCase(existingByName.orElseThrow().name())) {
         continue;
       }
-      Optional<CellBounds> existingRange =
+      Optional<RangeRef> existingRange =
           SheetStructure.parseOptionalRange(
               Objects.requireNonNullElse(tableHandle.table().getCTTable().getRef(), ""));
       if (existingRange.isPresent()
@@ -567,13 +562,13 @@ public final class TableAdapter {
     Objects.requireNonNull(table, "table must not be null");
 
     List<AnalysisFindingReport> findings = new ArrayList<>();
-    Optional<CellBounds> parsedRange = SheetStructure.parseOptionalRange(table.range().value());
+    Optional<RangeRef> parsedRange = SheetStructure.parseOptionalRange(table.range().value());
     AnalysisLocationReport location = tableLocation(table, parsedRange);
     if (parsedRange.isEmpty()) {
       return brokenReferenceFindings(table, location);
     }
 
-    CellBounds range = parsedRange.orElseThrow();
+    RangeRef range = parsedRange.orElseThrow();
     addRowCountFinding(findings, table, range, location);
     addHeaderFindings(findings, table, location);
     addStyleFinding(findings, workbook, table, location);
@@ -581,7 +576,7 @@ public final class TableAdapter {
   }
 
   private static AnalysisLocationReport tableLocation(
-      TableEntryReport table, Optional<CellBounds> parsedRange) {
+      TableEntryReport table, Optional<RangeRef> parsedRange) {
     return parsedRange.isEmpty()
         ? new AnalysisLocationReport.Sheet(
             new dev.erst.gridgrind.core.vocabulary.SheetLabel(table.sheetName().value()))
@@ -605,7 +600,7 @@ public final class TableAdapter {
   private static void addRowCountFinding(
       List<AnalysisFindingReport> findings,
       TableEntryReport table,
-      CellBounds range,
+      RangeRef range,
       AnalysisLocationReport location) {
     int minimumRows = table.structure().headerRowCount() + table.structure().totalsRowCount() + 1;
     if (table.structure().headerRowCount() < 1 || range.rowCount() < minimumRows) {
@@ -691,7 +686,7 @@ public final class TableAdapter {
     Objects.requireNonNull(table, "table must not be null");
     Objects.requireNonNull(allTables, "allTables must not be null");
 
-    Optional<CellBounds> tableRange = SheetStructure.parseOptionalRange(table.range().value());
+    Optional<RangeRef> tableRange = SheetStructure.parseOptionalRange(table.range().value());
     if (tableRange.isEmpty()) {
       return List.of();
     }
@@ -700,7 +695,7 @@ public final class TableAdapter {
       if (other.equals(table) || !other.sheetName().value().equals(table.sheetName().value())) {
         continue;
       }
-      Optional<CellBounds> otherRange = SheetStructure.parseOptionalRange(other.range().value());
+      Optional<RangeRef> otherRange = SheetStructure.parseOptionalRange(other.range().value());
       if (otherRange.isPresent()
           && SheetStructure.intersects(tableRange.orElseThrow(), otherRange.orElseThrow())) {
         overlaps.add(other.name().value() + "@" + other.range().value());
@@ -730,7 +725,7 @@ public final class TableAdapter {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(table, "table must not be null");
 
-    Optional<CellBounds> tableRange = SheetStructure.parseOptionalRange(table.range().value());
+    Optional<RangeRef> tableRange = SheetStructure.parseOptionalRange(table.range().value());
     AnalysisLocationReport location =
         tableRange.isEmpty()
             ? new AnalysisLocationReport.Sheet(
@@ -742,7 +737,7 @@ public final class TableAdapter {
     XSSFTable xssfTable = requiredTableByName(sheet, table.name().value());
     String rawFilterRange =
         Objects.requireNonNullElse(xssfTable.getCTTable().getAutoFilter().getRef(), "");
-    Optional<CellBounds> parsedFilterRange = SheetStructure.parseOptionalRange(rawFilterRange);
+    Optional<RangeRef> parsedFilterRange = SheetStructure.parseOptionalRange(rawFilterRange);
     if (parsedFilterRange.isEmpty()) {
       return List.of(
           new AnalysisFindingReport(
@@ -781,7 +776,7 @@ public final class TableAdapter {
   }
 
   /** Validates that one table range can hold its header row, data rows, and optional totals row. */
-  public static void requireSupportedTableShape(CellBounds range, boolean showTotalsRow) {
+  public static void requireSupportedTableShape(RangeRef range, boolean showTotalsRow) {
     int minimumRows = showTotalsRow ? 3 : 2;
     if (range.rowCount() < minimumRows) {
       throw new IllegalArgumentException(
@@ -792,7 +787,7 @@ public final class TableAdapter {
   }
 
   /** Applies one GridGrind table-owned autofilter definition to a mutable XSSF table. */
-  public static void applyAutofilter(XSSFTable table, CellBounds range, boolean showTotalsRow) {
+  public static void applyAutofilter(XSSFTable table, RangeRef range, boolean showTotalsRow) {
     CTAutoFilter autoFilter =
         table.getCTTable().isSetAutoFilter()
             ? table.getCTTable().getAutoFilter()
@@ -834,11 +829,11 @@ public final class TableAdapter {
   public static String expectedAutofilterRangeText(TableEntryReport table) {
     Objects.requireNonNull(table, "table must not be null");
 
-    Optional<CellBounds> range = SheetStructure.parseOptionalRange(table.range().value());
+    Optional<RangeRef> range = SheetStructure.parseOptionalRange(table.range().value());
     if (range.isEmpty()) {
       return table.range().value();
     }
-    CellBounds parsedRange = range.orElseThrow();
+    RangeRef parsedRange = range.orElseThrow();
     int lastFilterRow =
         parsedRange.lastRow()
             - Math.min(table.structure().totalsRowCount(), parsedRange.rowCount() - 1);
@@ -870,13 +865,13 @@ public final class TableAdapter {
   }
 
   private static void canonicalizeTable(XSSFSheet sheet, XSSFTable table) {
-    Optional<CellBounds> range =
+    Optional<RangeRef> range =
         SheetStructure.parseOptionalRange(
             Objects.requireNonNullElse(table.getCTTable().getRef(), ""));
     if (range.isEmpty()) {
       return;
     }
-    CellBounds parsedRange = range.orElseThrow();
+    RangeRef parsedRange = range.orElseThrow();
     int firstBodyRow = parsedRange.firstRow() + 1;
     int lastBodyRow = parsedRange.lastRow() - totalsRowCount(table.getCTTable());
     if (firstBodyRow > lastBodyRow) {
@@ -946,12 +941,12 @@ public final class TableAdapter {
   }
 
   /** Synchronizes table header metadata for sheet tables intersecting the changed cell range. */
-  public static void syncAffectedHeaders(XSSFSheet sheet, CellBounds changedRange) {
+  public static void syncAffectedHeaders(XSSFSheet sheet, RangeRef changedRange) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(changedRange, "changedRange must not be null");
 
     for (XSSFTable table : sheet.getTables()) {
-      Optional<CellBounds> headerRange = headerRange(table);
+      Optional<RangeRef> headerRange = headerRange(table);
       if (headerRange.isPresent()
           && SheetStructure.intersects(headerRange.orElseThrow(), changedRange)) {
         syncHeader(table);
@@ -975,21 +970,21 @@ public final class TableAdapter {
     }
   }
 
-  private static Optional<CellBounds> headerRange(XSSFTable table) {
+  private static Optional<RangeRef> headerRange(XSSFTable table) {
     Objects.requireNonNull(table, "table must not be null");
 
     if (table.getHeaderRowCount() < 1) {
       return Optional.empty();
     }
-    Optional<CellBounds> tableRange =
+    Optional<RangeRef> tableRange =
         SheetStructure.parseOptionalRange(
             Objects.requireNonNullElse(table.getCTTable().getRef(), ""));
     if (tableRange.isEmpty()) {
       return Optional.empty();
     }
-    CellBounds resolved = tableRange.orElseThrow();
+    RangeRef resolved = tableRange.orElseThrow();
     return Optional.of(
-        new CellBounds(
+        new RangeRef(
             resolved.firstRow(),
             Math.min(resolved.lastRow(), resolved.firstRow() + table.getHeaderRowCount() - 1),
             resolved.firstColumn(),

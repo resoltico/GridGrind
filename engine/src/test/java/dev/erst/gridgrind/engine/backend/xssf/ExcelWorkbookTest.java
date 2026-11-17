@@ -48,7 +48,6 @@ import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.CellReport;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ResolvedMutationAction;
@@ -110,18 +109,27 @@ class ExcelWorkbookTest {
               new ResolvedStep(
                   new SheetSelector.ByName(new SheetName("Budget")),
                   new ResolvedMutationAction.AppendRow(
-                      List.of(new CellValue.Text("Item"), new CellValue.Text("Amount")))),
+                      List.of(
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"),
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Amount")))),
               new ResolvedStep(
                   new SheetSelector.ByName(new SheetName("Budget")),
                   new ResolvedMutationAction.AppendRow(
-                      List.of(new CellValue.Text("Hosting"), new CellValue.NumberValue(49.0)))),
+                      List.of(
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hosting"),
+                          new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(
+                              49.0)))),
               new ResolvedStep(
                   new SheetSelector.ByName(new SheetName("Budget")),
                   new ResolvedMutationAction.AppendRow(
-                      List.of(new CellValue.Text("Domain"), new CellValue.NumberValue(12.0)))),
+                      List.of(
+                          new dev.erst.gridgrind.core.model.value.ResolvedCellText("Domain"),
+                          new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(
+                              12.0)))),
               new ResolvedStep(
                   new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A4")),
-                  new ResolvedMutationAction.SetCell(new CellValue.Text("Total"))),
+                  new ResolvedMutationAction.SetCell(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Total"))),
               new ResolvedStep(
                   new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4")),
                   new ResolvedMutationAction.SetCell(new ResolvedFormula("SUM(B2:B3)")))));
@@ -140,7 +148,8 @@ class ExcelWorkbookTest {
       XssfSheet sheet = workbook.sheet("Budget");
 
       CellReport.FormulaReport totalSnapshot =
-          (CellReport.FormulaReport) sheet.cells().snapshotCell("B4");
+          (CellReport.FormulaReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"));
       assertEquals("FORMULA", totalSnapshot.type());
       assertEquals("FORMULA", totalSnapshot.type());
       assertEquals("SUM(B2:B3)", totalSnapshot.formula().orElseThrow());
@@ -170,8 +179,18 @@ class ExcelWorkbookTest {
             .resolve("nested/book.xlsx");
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Hello"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("B1", new CellValue.NumberValue(12.0));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hello"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(12.0));
       workbook.formulas().markRecalculateOnOpen();
       workbook
           .persistence()
@@ -188,8 +207,18 @@ class ExcelWorkbookTest {
 
     try (XssfWorkbook workbook =
         XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      assertEquals("Hello", workbook.sheet("Budget").cells().text("A1"));
-      assertEquals(12.0, workbook.sheet("Budget").cells().number("B1"));
+      assertEquals(
+          "Hello",
+          workbook
+              .sheet("Budget")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
+      assertEquals(
+          12.0,
+          workbook
+              .sheet("Budget")
+              .cells()
+              .number(new dev.erst.gridgrind.core.vocabulary.CellAddress("B1")));
     }
   }
 
@@ -219,8 +248,18 @@ class ExcelWorkbookTest {
       assertTrue(workbook.formulaRuntimeContext().hasExternalWorkbookBinding("RATES.XLSX"));
       assertTrue(workbook.formulaRuntimeContext().hasUserDefinedFunction("double"));
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(2.0d));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new ResolvedFormula("A1*2"));
       workbook.formulas().evaluateAll();
       workbook
           .persistence()
@@ -269,8 +308,18 @@ class ExcelWorkbookTest {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-sheet-management-");
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Live"));
-      workbook.getOrCreateSheet("Archive").cells().setCell("A1", new CellValue.Text("Old"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Live"));
+      workbook
+          .getOrCreateSheet("Archive")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Old"));
       workbook.getOrCreateSheet("Scratch");
 
       workbook.sheets().renameSheet("Archive", "History");
@@ -285,7 +334,12 @@ class ExcelWorkbookTest {
               ExcelTempFileFactoryTestSupport.tempFileFactory());
 
       assertEquals(List.of("History", "Budget"), workbook.sheets().sheetNames());
-      assertEquals("Old", workbook.sheet("History").cells().text("A1"));
+      assertEquals(
+          "Old",
+          workbook
+              .sheet("History")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
       assertThrows(SheetNotFoundException.class, () -> workbook.sheet("Archive"));
     }
 
@@ -329,7 +383,12 @@ class ExcelWorkbookTest {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-sheet-state-");
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Alpha").cells().setCell("A1", new CellValue.Text("Live"));
+      workbook
+          .getOrCreateSheet("Alpha")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Live"));
       workbook.getOrCreateSheet("Beta");
       workbook.getOrCreateSheet("Gamma");
       workbook.sheets().copySheet("Alpha", "Replica", new SheetCopyPosition.AtIndex(1));
@@ -441,24 +500,53 @@ class ExcelWorkbookTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Source");
-      workbook.sheet("Source").cells().setCell("A1", new CellValue.Text("Item"));
-      workbook.sheet("Source").cells().setCell("B1", new CellValue.Text("Amount"));
-      workbook.sheet("Source").cells().setCell("A2", new CellValue.Text("Hosting"));
-      workbook.sheet("Source").cells().setCell("B2", new CellValue.NumberValue(49.0));
-      workbook.sheet("Source").cells().setCell("B3", new ResolvedFormula("SUM(B2:B2)"));
+      workbook
+          .sheet("Source")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"));
+      workbook
+          .sheet("Source")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Amount"));
+      workbook
+          .sheet("Source")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hosting"));
+      workbook
+          .sheet("Source")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(49.0));
+      workbook
+          .sheet("Source")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+              new ResolvedFormula("SUM(B2:B2)"));
       workbook
           .sheet("Source")
           .links()
-          .setHyperlink("A2", new HyperlinkTarget.Url("https://example.com/h"));
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new HyperlinkTarget.Url("https://example.com/h"));
       workbook
           .sheet("Source")
           .comments()
-          .setComment("A2", new ResolvedComment("Review", "GridGrind", false));
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new ResolvedComment("Review", "GridGrind", false));
       workbook
           .sheet("Source")
           .metadata()
           .setDataValidation(
-              "C2:C4",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("C2:C4"),
               new ResolvedDataValidation(
                   new DataValidationRuleSpec.WholeNumber(
                       ExcelComparisonOperator.GREATER_OR_EQUAL,
@@ -491,7 +579,10 @@ class ExcelWorkbookTest {
                                   Optional.empty(),
                                   Optional.of(ColorSpec.rgb(new RgbHex("#E0F0AA"))),
                                   Optional.empty()))))));
-      workbook.sheet("Source").layout().mergeCells("A1:B1");
+      workbook
+          .sheet("Source")
+          .layout()
+          .mergeCells(new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B1"));
       workbook.sheet("Source").layout().setPane(new PaneSpec.Frozen(1, 1, 1, 1));
       workbook.sheet("Source").layout().setZoom(140);
       workbook
@@ -573,19 +664,30 @@ class ExcelWorkbookTest {
 
     try (XssfWorkbook workbook =
         XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      assertEquals("Item", workbook.sheet("Replica").cells().text("A1"));
+      assertEquals(
+          "Item",
+          workbook
+              .sheet("Replica")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
       assertEquals(
           "https://example.com/h",
           workbook
               .sheet("Replica")
               .cells()
-              .snapshotCell("A2")
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"))
               .hyperlink()
               .map(link -> assertInstanceOf(HyperlinkTarget.Url.class, link).target())
               .orElseThrow());
       assertEquals(
           "Review",
-          workbook.sheet("Replica").cells().snapshotCell("A2").comment().orElseThrow().text());
+          workbook
+              .sheet("Replica")
+              .cells()
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"))
+              .comment()
+              .orElseThrow()
+              .text());
       assertEquals(
           List.of("A1:B1"),
           workbook.sheet("Replica").layout().mergedRegions().stream()
@@ -623,10 +725,30 @@ class ExcelWorkbookTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Tables");
-      workbook.sheet("Tables").cells().setCell("A1", new CellValue.Text("Name"));
-      workbook.sheet("Tables").cells().setCell("B1", new CellValue.Text("Value"));
-      workbook.sheet("Tables").cells().setCell("A2", new CellValue.Text("Ops"));
-      workbook.sheet("Tables").cells().setCell("B2", new CellValue.NumberValue(1.0));
+      workbook
+          .sheet("Tables")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Name"));
+      workbook
+          .sheet("Tables")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Value"));
+      workbook
+          .sheet("Tables")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Ops"));
+      workbook
+          .sheet("Tables")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(1.0));
       new TableAdapter()
           .setTable(
               workbook,
@@ -682,8 +804,12 @@ class ExcelWorkbookTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.cells().setCell("A1", new CellValue.Text("Quarterly"));
-      budget.layout().mergeCells("A1:B1");
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Quarterly"));
+      budget.layout().mergeCells(new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B1"));
       budget.columns().setWidth(0, 1, 16.0);
       budget.rows().setHeight(0, 0, 28.5);
       budget.layout().setPane(new PaneSpec.Frozen(1, 1, 1, 1));
@@ -729,7 +855,11 @@ class ExcelWorkbookTest {
                 FormulaRuntimeTestDouble.failingEvaluation(
                     poiWorkbook.getCreationHelper().createFormulaEvaluator(),
                     new org.apache.poi.ss.formula.FakeFormulaFailure("bad formula")))) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("1+1"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), new ResolvedFormula("1+1"));
 
       InvalidFormulaException exception =
           assertThrows(InvalidFormulaException.class, workbook.formulas()::evaluateAll);
@@ -745,12 +875,20 @@ class ExcelWorkbookTest {
         XssfWorkbook workbook =
             new XssfWorkbook(
                 poiWorkbook, poiWorkbook.getCreationHelper().createFormulaEvaluator())) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("1+1"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), new ResolvedFormula("1+1"));
 
       workbook.formulas().evaluateAll();
 
       CellReport.FormulaReport snapshot =
-          (CellReport.FormulaReport) workbook.sheet("Budget").cells().snapshotCell("A1");
+          (CellReport.FormulaReport)
+              workbook
+                  .sheet("Budget")
+                  .cells()
+                  .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       assertEquals("2", snapshot.displayValue().orElseThrow());
     }
   }
@@ -758,13 +896,26 @@ class ExcelWorkbookTest {
   @Test
   void setCellLiteralReplacesExistingFormulaCell() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("1+1"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), new ResolvedFormula("1+1"));
 
-      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(0.0d));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(0.0d));
 
       CellReport.NumberReport snapshot =
           assertInstanceOf(
-              CellReport.NumberReport.class, workbook.sheet("Budget").cells().snapshotCell("A1"));
+              CellReport.NumberReport.class,
+              workbook
+                  .sheet("Budget")
+                  .cells()
+                  .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
       assertEquals("NUMBER", snapshot.type());
       assertEquals(0.0d, snapshot.value().orElseThrow().value());
     }
@@ -773,22 +924,41 @@ class ExcelWorkbookTest {
   @Test
   void setRangeLiteralReplacesExistingFormulaCells() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("1+1"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("B1", new ResolvedFormula("2+2"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), new ResolvedFormula("1+1"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"), new ResolvedFormula("2+2"));
 
       workbook
           .sheet("Budget")
           .cells()
           .setRange(
-              "A1:B1",
-              List.of(List.of(new CellValue.NumberValue(0.0d), new CellValue.NumberValue(5.0d))));
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B1"),
+              List.of(
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(0.0d),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(5.0d))));
 
       CellReport.NumberReport first =
           assertInstanceOf(
-              CellReport.NumberReport.class, workbook.sheet("Budget").cells().snapshotCell("A1"));
+              CellReport.NumberReport.class,
+              workbook
+                  .sheet("Budget")
+                  .cells()
+                  .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
       CellReport.NumberReport second =
           assertInstanceOf(
-              CellReport.NumberReport.class, workbook.sheet("Budget").cells().snapshotCell("B1"));
+              CellReport.NumberReport.class,
+              workbook
+                  .sheet("Budget")
+                  .cells()
+                  .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B1")));
       assertEquals(0.0d, first.value().orElseThrow().value());
       assertEquals(5.0d, second.value().orElseThrow().value());
     }
@@ -920,7 +1090,12 @@ class ExcelWorkbookTest {
       assertEquals(
           FormulaContext.from(ResolvedFormulaEnvironment.defaults()),
           workbook.formulaRuntimeContext());
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Header"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Header"));
       assertThrows(
           CellNotFoundException.class,
           () ->
@@ -962,7 +1137,12 @@ class ExcelWorkbookTest {
   @Test
   void clearFormulaCachesRemovesInlineStringAndTypeMetadata() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("\"hello\""));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedFormula("\"hello\""));
       workbook.formulas().evaluateAll();
 
       org.apache.poi.xssf.usermodel.XSSFCell cell =
@@ -987,7 +1167,11 @@ class ExcelWorkbookTest {
   @Test
   void clearFormulaCachesLeavesUnsetTypeMetadataUnset() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("1+1"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), new ResolvedFormula("1+1"));
       workbook.formulas().evaluateAll();
 
       org.apache.poi.xssf.usermodel.XSSFCell cell =
@@ -1009,7 +1193,12 @@ class ExcelWorkbookTest {
     Path workbookPath = ManagedTempFiles.createManagedTempFile("gridgrind-empty-persist-", ".xlsx");
     try {
       try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-        workbook.getOrCreateSheet("Alpha").cells().setCell("A1", new CellValue.Text("Hello"));
+        workbook
+            .getOrCreateSheet("Alpha")
+            .cells()
+            .setCell(
+                new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hello"));
         workbook
             .persistence()
             .save(
@@ -1021,7 +1210,12 @@ class ExcelWorkbookTest {
       }
       try (XssfWorkbook reopened =
           XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-        assertEquals("Hello", reopened.sheet("Alpha").cells().text("A1"));
+        assertEquals(
+            "Hello",
+            reopened
+                .sheet("Alpha")
+                .cells()
+                .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
       }
     } finally {
       Files.deleteIfExists(workbookPath);
@@ -1048,7 +1242,12 @@ class ExcelWorkbookTest {
     try {
       saveBudgetWorkbook(workbookPath);
       try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-        workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Again"));
+        workbook
+            .getOrCreateSheet("Budget")
+            .cells()
+            .setCell(
+                new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                new dev.erst.gridgrind.core.model.value.ResolvedCellText("Again"));
         assertThrows(
             FileAlreadyExistsException.class,
             () ->
@@ -1070,7 +1269,12 @@ class ExcelWorkbookTest {
     Path relativePath = Path.of("gridgrind-relative-" + UUID.randomUUID() + ".xlsx");
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Hello"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hello"));
       workbook
           .persistence()
           .save(
@@ -1086,8 +1290,18 @@ class ExcelWorkbookTest {
 
   private static byte[] saveBudgetWorkbook(Path workbookPath) throws IOException {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Hello"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("B1", new CellValue.NumberValue(12.0d));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Hello"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(12.0d));
       workbook.formulas().markRecalculateOnOpen();
       workbook
           .persistence()
@@ -1132,12 +1346,17 @@ class ExcelWorkbookTest {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-style-roundtrip-");
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Item"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"));
       workbook
           .sheet("Budget")
           .cells()
           .applyStyle(
-              "A1",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"),
               new CellStylePatch(
                   Optional.empty(),
                   Optional.of(
@@ -1200,11 +1419,15 @@ class ExcelWorkbookTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.cells().setCell("A1", new CellValue.Text("Linear"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Linear"));
       budget
           .cells()
           .applyStyle(
-              "A1",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"),
               new CellStylePatch(
                   Optional.empty(),
                   Optional.empty(),
@@ -1231,7 +1454,12 @@ class ExcelWorkbookTest {
     try (XssfWorkbook reopenedWorkbook =
         XssfWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       CellStyleReport linearStyle =
-          reopenedWorkbook.sheet("Budget").cells().snapshotCell("A1").style().orElseThrow();
+          reopenedWorkbook
+              .sheet("Budget")
+              .cells()
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"))
+              .style()
+              .orElseThrow();
 
       CellGradientFillReport gradient = fillGradient(linearStyle.fill());
       assertEquals("LINEAR", gradientType(gradient));
@@ -1250,10 +1478,26 @@ class ExcelWorkbookTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.cells().setCell("A1", new CellValue.Text("Report"));
-      budget.cells().setCell("B4", new CellValue.NumberValue(61.0));
-      budget.links().setHyperlink("A1", new HyperlinkTarget.Url("https://example.com/report"));
-      budget.comments().setComment("A1", new ResolvedComment("Review", "GridGrind", true));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Report"));
+      budget
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(61.0));
+      budget
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new HyperlinkTarget.Url("https://example.com/report"));
+      budget
+          .comments()
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedComment("Review", "GridGrind", true));
       workbook
           .names()
           .setNamedRange(
@@ -1334,8 +1578,16 @@ class ExcelWorkbookTest {
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("C");
-      sheet.links().setHyperlink("F18", new HyperlinkTarget.Email("Report_Value@example.com"));
-      sheet.links().setHyperlink("F18", new HyperlinkTarget.Email("Summary.Total@example.com"));
+      sheet
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("F18"),
+              new HyperlinkTarget.Email("Report_Value@example.com"));
+      sheet
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("F18"),
+              new HyperlinkTarget.Email("Summary.Total@example.com"));
       workbook
           .persistence()
           .save(

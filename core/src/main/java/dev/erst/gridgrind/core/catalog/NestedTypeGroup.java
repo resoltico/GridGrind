@@ -4,7 +4,8 @@ import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
 
 /** JSON-serializable named group of nested tagged union variants. */
-public record NestedTypeGroup(String group, String discriminatorField, List<TypeEntry> types) {
+public record NestedTypeGroup(String group, String discriminatorField, List<TypeEntry> types)
+    implements CatalogLookupValue {
   public NestedTypeGroup {
     group = TextValidation.requireNonBlank(group, "group");
     discriminatorField = TextValidation.requireNonBlank(discriminatorField, "discriminatorField");

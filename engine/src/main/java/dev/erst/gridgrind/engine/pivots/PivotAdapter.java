@@ -76,7 +76,8 @@ public final class PivotAdapter {
 
     ResolvedAuthoringSource source = resolveAuthoringSource(workbook, definition.source());
     SourceColumns columns = sourceColumns(source.sheet(), source.area(), source.description());
-    CellReference anchor = new CellReference(definition.anchor().topLeftAddress().value());
+    var position = definition.anchor().topLeftAddress();
+    CellReference anchor = new CellReference(position.rowIndex(), position.columnIndex());
     requireSupportedReportFilterAnchor(definition, anchor);
 
     if (existing.isPresent()) {
@@ -98,7 +99,8 @@ public final class PivotAdapter {
   private void requireSupportedReportFilterAnchor(PivotTableSpec definition, CellReference anchor) {
     if (!definition.reportFilters().isEmpty() && anchor.getRow() < 2) {
       throw new IllegalArgumentException(
-          "pivot tables with reportFilters require anchor.topLeftAddress on row 3 or lower because Apache POI moves page filters below the first two rows");
+          "pivot tables with reportFilters require anchor.topLeftAddress on row 3 or lower because"
+              + " Apache POI moves page filters below the first two rows");
     }
   }
 
@@ -303,13 +305,12 @@ public final class PivotAdapter {
 
   public static String resolvedName(PivotHandle handle) {
     return actualName(handle)
-        .orElseGet(
-            () ->
-                syntheticName(
-                    handle.sheetName(),
-                    safeLocation(handle)
-                        .map(PivotLocation::topLeftAddress)
-                        .orElse("PIVOT_" + (handle.ordinalOnSheet() + 1))));
+        .orElseGet(() ->
+            syntheticName(
+                handle.sheetName(),
+                safeLocation(handle)
+                    .map(PivotLocation::topLeftAddress)
+                    .orElse("PIVOT_" + (handle.ordinalOnSheet() + 1))));
   }
 
   public static Optional<String> actualName(PivotHandle handle) {
@@ -392,7 +393,8 @@ public final class PivotAdapter {
               dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.ERROR,
               handle,
               "Pivot table name is not unique",
-              "Multiple pivot tables share the same case-insensitive name, so exact-name selection is ambiguous.",
+              "Multiple pivot tables share the same case-insensitive name, so exact-name selection"
+                  + " is ambiguous.",
               List.of(resolvedName(handle))));
     }
     return List.copyOf(findings);
@@ -408,7 +410,8 @@ public final class PivotAdapter {
               dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.WARNING,
               handle,
               "Pivot table name is missing",
-              "The pivot table does not persist a name, so GridGrind assigned a synthetic identifier for readback.",
+              "The pivot table does not persist a name, so GridGrind assigned a synthetic"
+                  + " identifier for readback.",
               List.of(resolvedName(handle))));
     }
 
@@ -656,7 +659,8 @@ public final class PivotAdapter {
     if (registry.isEmpty()) {
       if (allocationSentinel.isEmpty()) {
         throw new IllegalStateException(
-            "Pivot table allocation cannot advance because the workbook still contains pivot package numbering without any live pivot relations.");
+            "Pivot table allocation cannot advance because the workbook still contains pivot"
+                + " package numbering without any live pivot relations.");
       }
       while (registry.size() < highWaterMark) {
         registry.add(allocationSentinel.orElseThrow());
@@ -965,10 +969,8 @@ public final class PivotAdapter {
 
   public static XSSFPivotCacheDefinition requiredCacheDefinition(XSSFPivotTable pivotTable) {
     return cacheDefinition(pivotTable)
-        .orElseThrow(
-            () ->
-                new IllegalArgumentException(
-                    "Pivot table is missing its cache definition relation."));
+        .orElseThrow(() ->
+            new IllegalArgumentException("Pivot table is missing its cache definition relation."));
   }
 
   public static Optional<XSSFPivotCacheDefinition> cacheDefinition(XSSFPivotTable pivotTable) {
@@ -1011,7 +1013,8 @@ public final class PivotAdapter {
     return switch (source) {
       case PivotTableSpec.PivotSourceSpec.Range range -> {
         XSSFSheet sheet = requiredSheet(workbook, range.sheetName().value());
-        AreaReference area = contiguousArea(range.range().value(), "range");
+        AreaReference area =
+            dev.erst.gridgrind.engine.poi.SheetStructure.toAreaReference(range.range());
         yield ResolvedAuthoringSource.range(sheet, area);
       }
       case PivotTableSpec.PivotSourceSpec.NamedRange namedRange -> {

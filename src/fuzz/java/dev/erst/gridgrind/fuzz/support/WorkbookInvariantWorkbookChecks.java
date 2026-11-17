@@ -32,49 +32,47 @@ final class WorkbookInvariantWorkbookChecks {
     workbook
         .sheets()
         .sheetNames()
-        .forEach(
-            sheetName -> {
-              requireEngineSheetSummaryShape(
-                  ((dev.erst.gridgrind.core.plan.SheetInspectionResult.SheetSummaryResult)
-                          readExecutor
-                              .read(
-                                  workbook,
-                                  new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
-                                      new StepId("sheet-shape-" + sheetName),
-                                      new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
-                                          new dev.erst.gridgrind.core.vocabulary.SheetName(
-                                              sheetName)),
-                                      new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
-                                          .GetSheetSummary()))
-                              .getFirst())
-                      .sheet());
-              ((dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.DrawingObjectsResult)
+        .forEach(sheetName -> {
+          requireEngineSheetSummaryShape(
+              ((dev.erst.gridgrind.core.plan.SheetInspectionResult.SheetSummaryResult)
                       readExecutor
                           .read(
                               workbook,
                               new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
-                                  new StepId("drawing-shape-" + sheetName),
-                                  new dev.erst.gridgrind.core.plan.DrawingObjectSelector.AllOnSheet(
+                                  new StepId("sheet-shape-" + sheetName),
+                                  new dev.erst.gridgrind.core.plan.SheetSelector.ByName(
                                       new dev.erst.gridgrind.core.vocabulary.SheetName(sheetName)),
-                                  new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
-                                      .GetDrawingObjects()))
+                                  new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery
+                                      .GetSheetSummary()))
                           .getFirst())
-                  .drawingObjects()
-                  .forEach(WorkbookInvariantWorkbookChecks::requireEngineDrawingObjectShape);
-              ((dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.ChartsResult)
-                      readExecutor
-                          .read(
-                              workbook,
-                              new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
-                                  new StepId("chart-shape-" + sheetName),
-                                  new dev.erst.gridgrind.core.plan.ChartSelector.AllOnSheet(
-                                      new dev.erst.gridgrind.core.vocabulary.SheetName(sheetName)),
-                                  new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
-                                      .GetCharts()))
-                          .getFirst())
-                  .charts()
-                  .forEach(WorkbookInvariantWorkbookChecks::requireEngineChartShape);
-            });
+                  .sheet());
+          ((dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.DrawingObjectsResult)
+                  readExecutor
+                      .read(
+                          workbook,
+                          new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                              new StepId("drawing-shape-" + sheetName),
+                              new dev.erst.gridgrind.core.plan.DrawingObjectSelector.AllOnSheet(
+                                  new dev.erst.gridgrind.core.vocabulary.SheetName(sheetName)),
+                              new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                                  .GetDrawingObjects()))
+                      .getFirst())
+              .drawingObjects()
+              .forEach(WorkbookInvariantWorkbookChecks::requireEngineDrawingObjectShape);
+          ((dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.ChartsResult)
+                  readExecutor
+                      .read(
+                          workbook,
+                          new dev.erst.gridgrind.core.plan.ResolvedInspectionStep(
+                              new StepId("chart-shape-" + sheetName),
+                              new dev.erst.gridgrind.core.plan.ChartSelector.AllOnSheet(
+                                  new dev.erst.gridgrind.core.vocabulary.SheetName(sheetName)),
+                              new dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery
+                                  .GetCharts()))
+                      .getFirst())
+              .charts()
+              .forEach(WorkbookInvariantWorkbookChecks::requireEngineChartShape);
+        });
     ((dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.PivotTablesResult)
             readExecutor
                 .read(

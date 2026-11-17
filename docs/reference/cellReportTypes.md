@@ -166,7 +166,7 @@ Factual text cell report. VALUE projects value, RICH_TEXT_RUNS projects runs, an
 
 ## NUMBER
 
-Factual numeric cell report. VALUE projects value; TEMPORAL adds date, time, or date-time semantics when a numeric Excel value is format-derived rather than a plain number.
+Factual numeric cell report. VALUE projects the original number; TEMPORAL independently reports whether its format has a supported civil interpretation or an explicit unrepresentability reason.
 
 | Field | Requirement | Shape | Default |
 | --- | --- | --- | --- |
@@ -176,12 +176,12 @@ Factual numeric cell report. VALUE projects value; TEMPORAL adds date, time, or 
 | hyperlink | OPTIONAL | {"type":"NESTED_TYPE_GROUP","group":"hyperlinkTargetTypes"} |  |
 | comment | OPTIONAL | {"type":"PLAIN_TYPE_GROUP","group":"commentReportType"} |  |
 | value | OPTIONAL | {"type":"NESTED_TYPE_GROUP","group":"cellValueTypes"} |  |
-| temporal | OPTIONAL | {"type":"PLAIN_TYPE_GROUP","group":"cellTemporalReportType"} |  |
+| temporal | OPTIONAL | {"type":"NESTED_TYPE_GROUP","group":"cellTemporalReportTypes"} |  |
 
 ```json
 {
   "id" : "NUMBER",
-  "summary" : "Factual numeric cell report. VALUE projects value; TEMPORAL adds date, time, or date-time semantics when a numeric Excel value is format-derived rather than a plain number.",
+  "summary" : "Factual numeric cell report. VALUE projects the original number; TEMPORAL independently reports whether its format has a supported civil interpretation or an explicit unrepresentability reason.",
   "fields" : [ {
     "name" : "address",
     "requirement" : "REQUIRED",
@@ -239,8 +239,8 @@ Factual numeric cell report. VALUE projects value; TEMPORAL adds date, time, or 
     "name" : "temporal",
     "requirement" : "OPTIONAL",
     "shape" : {
-      "type" : "PLAIN_TYPE_GROUP",
-      "group" : "cellTemporalReportType"
+      "type" : "NESTED_TYPE_GROUP",
+      "group" : "cellTemporalReportTypes"
     },
     "enumValues" : [ ],
     "projectedByFacets" : [ "TEMPORAL" ]
@@ -413,7 +413,7 @@ Factual formula cell report with separate projected scalar value. FORMULA projec
 | formula | OPTIONAL | {"type":"SCALAR","scalarType":"STRING"} |  |
 | value | OPTIONAL | {"type":"NESTED_TYPE_GROUP","group":"cellValueTypes"} |  |
 | runs | OPTIONAL | {"type":"LIST","elementShape":{"type":"PLAIN_TYPE_GROUP","group":"richTextRunReportType"}} |  |
-| temporal | OPTIONAL | {"type":"PLAIN_TYPE_GROUP","group":"cellTemporalReportType"} |  |
+| temporal | OPTIONAL | {"type":"NESTED_TYPE_GROUP","group":"cellTemporalReportTypes"} |  |
 
 ```json
 {
@@ -497,8 +497,8 @@ Factual formula cell report with separate projected scalar value. FORMULA projec
     "name" : "temporal",
     "requirement" : "OPTIONAL",
     "shape" : {
-      "type" : "PLAIN_TYPE_GROUP",
-      "group" : "cellTemporalReportType"
+      "type" : "NESTED_TYPE_GROUP",
+      "group" : "cellTemporalReportTypes"
     },
     "enumValues" : [ ],
     "projectedByFacets" : [ "TEMPORAL" ]

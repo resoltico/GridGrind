@@ -30,7 +30,7 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
       new DataValidationAdapter()
           .setDataValidation(
               formulaSheet,
-              "A2:A4",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A2:A4"),
               new ResolvedDataValidation(
                   new DataValidationRuleSpec.CustomFormula(
                       ComparisonFormulas.normalizeFormula("LEN(A2)>0", "formula")),
@@ -72,7 +72,7 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
       new DataValidationAdapter()
           .setDataValidation(
               formulaSheet,
-              "A1:A3",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A3"),
               new ResolvedDataValidation(
                   new DataValidationRuleSpec.CustomFormula(
                       ComparisonFormulas.normalizeFormula("LEN(A1)>0", "formula")),

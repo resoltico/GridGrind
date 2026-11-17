@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.cli.render;
 
+import dev.erst.gridgrind.core.catalog.CatalogFieldMetadataKey;
+import dev.erst.gridgrind.core.catalog.CatalogLookupNamespace;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import java.util.List;
@@ -13,8 +15,8 @@ public record ProtocolCatalogIndexReport(
     List<ProtocolCatalogGroupIndex> topLevelGroups,
     List<ProtocolCatalogGroupIndex> nestedTypeGroups,
     List<ProtocolCatalogGroupIndex> plainTypeGroups,
-    List<ProtocolCatalogFieldMetadataKey> fieldMetadataKeys,
-    List<ProtocolCatalogLookupNamespace> lookupNamespaces,
+    List<CatalogFieldMetadataKey> fieldMetadataKeys,
+    List<CatalogLookupNamespace> lookupNamespaces,
     List<dev.erst.gridgrind.core.limits.Limit> limits) {
   public ProtocolCatalogIndexReport {
     limits = List.copyOf(limits);
@@ -40,16 +42,14 @@ public record ProtocolCatalogIndexReport(
             .toList();
     fieldMetadataKeys =
         fieldMetadataKeys.stream()
-            .map(
-                fieldMetadataKey ->
-                    Objects.requireNonNull(
-                        fieldMetadataKey, "fieldMetadataKeys must not contain nulls"))
+            .map(fieldMetadataKey ->
+                Objects.requireNonNull(
+                    fieldMetadataKey, "fieldMetadataKeys must not contain nulls"))
             .toList();
     lookupNamespaces =
         lookupNamespaces.stream()
-            .map(
-                namespace ->
-                    Objects.requireNonNull(namespace, "lookupNamespaces must not contain nulls"))
+            .map(namespace ->
+                Objects.requireNonNull(namespace, "lookupNamespaces must not contain nulls"))
             .toList();
   }
 }

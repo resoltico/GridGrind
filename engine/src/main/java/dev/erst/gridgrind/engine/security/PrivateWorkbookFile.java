@@ -6,7 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
-/** One private OS-temp workbook path owned by the OOXML security flow. */
+/** One private invocation-owned workbook path owned by the OOXML security flow. */
 final class PrivateWorkbookFile implements AutoCloseable {
   private static final String ROOT_PREFIX = "gridgrind-ooxml-private-";
 
@@ -19,12 +19,27 @@ final class PrivateWorkbookFile implements AutoCloseable {
     this.workbookPath = Objects.requireNonNull(workbookPath, "workbookPath must not be null");
   }
 
-  static PrivateWorkbookFile create(String prefix, String suffix) throws IOException {
+  static PrivateWorkbookFile create(
+      String prefix,
+      String suffix,
+      dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory factory)
+      throws IOException {
     Objects.requireNonNull(prefix, "prefix must not be null");
     Objects.requireNonNull(suffix, "suffix must not be null");
-    Path root = Files.createTempDirectory(ROOT_PREFIX).toAbsolutePath().normalize();
-    Path workbookPath = Files.createTempFile(root, prefix, suffix).toAbsolutePath().normalize();
-    return new PrivateWorkbookFile(root, workbookPath);
+    Path root = factory.createTempFile(ROOT_PREFIX, ".directory").toAbsolutePath().normalize();
+    try {
+      Files.delete(root);
+      Files.createDirectory(root);
+      Path workbookPath = Files.createTempFile(root, prefix, suffix).toAbsolutePath().normalize();
+      return new PrivateWorkbookFile(root, workbookPath);
+    } catch (IOException | RuntimeException | Error failure) {
+      try {
+        WorkbookFiles.deleteTreeIfExists(root);
+      } catch (IOException cleanup) {
+        if (failure.getSuppressed().length < 8) failure.addSuppressed(cleanup);
+      }
+      throw failure;
+    }
   }
 
   Path workbookPath() {
@@ -42,7 +57,7 @@ final class PrivateWorkbookFile implements AutoCloseable {
   }
 
   @Override
-  public void close() {
+  public void close() throws IOException {
     if (!released) {
       WorkbookFiles.deleteTreeIfExists(root);
     }

@@ -25,10 +25,9 @@ class RequestPrimitiveBoundaryTest {
 
       assertTrue(
           problems.stream()
-              .anyMatch(
-                  problem ->
-                      problem instanceof RequestExplicitNullField
-                          && problem.jsonPath().equals(java.util.Optional.of(jsonPath))),
+              .anyMatch(problem ->
+                  problem instanceof RequestExplicitNullField
+                      && problem.jsonPath().equals(java.util.Optional.of(jsonPath))),
           () -> "Primitive request field accepted explicit null: " + field);
     }
   }
@@ -47,10 +46,9 @@ class RequestPrimitiveBoundaryTest {
 
       assertTrue(
           problems.stream()
-              .anyMatch(
-                  problem ->
-                      problem instanceof RequestMissingRequiredField
-                          && problem.jsonPath().equals(java.util.Optional.of(jsonPath))),
+              .anyMatch(problem ->
+                  problem instanceof RequestMissingRequiredField
+                      && problem.jsonPath().equals(java.util.Optional.of(jsonPath))),
           () -> "Required primitive request field silently defaulted: " + field);
     }
   }

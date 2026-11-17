@@ -41,6 +41,10 @@
       },
       "evidence" : {
         "admission" : {
+          "executionStrategy" : {
+            "backend" : "FULL_XSSF",
+            "fullWorkbookMaterializationRequired" : true
+          },
           "materializedInputs" : [ {
             "byteSize" : 210,
             "path" : "<workspace>/recipe/custom-xml-assets/custom-xml-update.xml",

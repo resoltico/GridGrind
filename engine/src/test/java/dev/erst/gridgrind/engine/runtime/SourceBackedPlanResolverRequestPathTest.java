@@ -83,7 +83,8 @@ class SourceBackedPlanResolverRequestPathTest {
         new ExecutionInputBindings(
             root,
             Files.createDirectory(root.resolve("temp")),
-            ExecutionGrantTestSupport.noPublication());
+            ExecutionGrantTestSupport.noPublication(
+                List.of(), List.of(root.resolve("missing-formula.txt"))));
     InputResolutionFailures failures = new InputResolutionFailures();
     TextSourceSpec.Utf8File missingFormula = TextSourceSpec.utf8File("missing-formula.txt");
 

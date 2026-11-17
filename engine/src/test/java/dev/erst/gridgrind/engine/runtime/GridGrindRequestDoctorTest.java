@@ -55,9 +55,16 @@ class GridGrindRequestDoctorTest {
             ]
             """);
 
-    RequestDoctorReport cleanReport = new GridGrindRequestDoctor().diagnose(cleanRequest);
+    RequestDoctorReport cleanReport =
+        new GridGrindRequestDoctor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
+            .diagnose(cleanRequest);
     RequestDoctorReport standardInputReport =
-        new GridGrindRequestDoctor().diagnose(standardInputRequest);
+        new GridGrindRequestDoctor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
+            .diagnose(standardInputRequest);
 
     assertTrue(cleanReport.valid());
     assertEquals(AnalysisSeverity.INFO, cleanReport.severity());
@@ -103,8 +110,16 @@ class GridGrindRequestDoctorTest {
             dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec.empty(),
             java.util.List.of());
 
-    RequestDoctorReport warningReport = new GridGrindRequestDoctor().diagnose(warningRequest);
-    RequestDoctorReport invalidReport = new GridGrindRequestDoctor().diagnose(invalidRequest);
+    RequestDoctorReport warningReport =
+        new GridGrindRequestDoctor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
+            .diagnose(warningRequest);
+    RequestDoctorReport invalidReport =
+        new GridGrindRequestDoctor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
+            .diagnose(invalidRequest);
 
     assertTrue(warningReport.valid());
     assertEquals(AnalysisSeverity.WARNING, warningReport.severity());
@@ -150,7 +165,11 @@ class GridGrindRequestDoctorTest {
             """);
 
     RequestDoctorReport report =
-        new GridGrindRequestDoctor(new StaticRequestValidator()).diagnose(request);
+        new GridGrindRequestDoctor(
+                new StaticRequestValidator(),
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
+            .diagnose(request);
 
     assertTrue(report.valid());
     assertEquals(3, report.summary().orElseThrow().stepCount());
@@ -161,14 +180,27 @@ class GridGrindRequestDoctorTest {
 
   @Test
   void productionConstructorsRejectNullRequestsAndBindings() {
-    assertThrows(NullPointerException.class, () -> new GridGrindRequestDoctor().diagnose(null));
-    assertThrows(
-        NullPointerException.class,
-        () -> new GridGrindRequestDoctor(new StaticRequestValidator()).diagnose(null));
     assertThrows(
         NullPointerException.class,
         () ->
-            new GridGrindRequestDoctor()
+            new GridGrindRequestDoctor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
+                .diagnose(null));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new GridGrindRequestDoctor(
+                    new StaticRequestValidator(),
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
+                .diagnose(null));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new GridGrindRequestDoctor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
                 .diagnose(
                     WorkbookPlan.standard(
                         new WorkbookPlan.WorkbookSource.New(),
@@ -207,7 +239,9 @@ class GridGrindRequestDoctorTest {
             """);
 
     RequestDoctorReport report =
-        new GridGrindRequestDoctor()
+        new GridGrindRequestDoctor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .diagnose(
                 request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request));
 
@@ -243,7 +277,9 @@ class GridGrindRequestDoctorTest {
             """);
 
     RequestDoctorReport report =
-        new GridGrindRequestDoctor()
+        new GridGrindRequestDoctor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .diagnose(
                 request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request));
     dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs context =
@@ -283,7 +319,9 @@ class GridGrindRequestDoctorTest {
             """);
 
     RequestDoctorReport report =
-        new GridGrindRequestDoctor()
+        new GridGrindRequestDoctor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .diagnose(
                 invalidRequest,
                 ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, invalidRequest));
@@ -323,7 +361,9 @@ class GridGrindRequestDoctorTest {
             """);
 
     RequestDoctorReport report =
-        new GridGrindRequestDoctor()
+        new GridGrindRequestDoctor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .diagnose(
                 request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request));
 
@@ -359,7 +399,9 @@ class GridGrindRequestDoctorTest {
             """);
 
     RequestDoctorReport report =
-        new GridGrindRequestDoctor()
+        new GridGrindRequestDoctor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .diagnose(
                 request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request));
 
@@ -400,7 +442,9 @@ class GridGrindRequestDoctorTest {
             """);
 
     RequestDoctorReport report =
-        new GridGrindRequestDoctor()
+        new GridGrindRequestDoctor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .diagnose(
                 request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request));
 
@@ -412,7 +456,13 @@ class GridGrindRequestDoctorTest {
   @Test
   void rejectsNullRequestsAtTheBoundary() {
     NullPointerException failure =
-        assertThrows(NullPointerException.class, () -> new GridGrindRequestDoctor().diagnose(null));
+        assertThrows(
+            NullPointerException.class,
+            () ->
+                new GridGrindRequestDoctor(
+                        NativeInvocationContext.enterOwned(
+                            dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
+                    .diagnose(null));
 
     assertEquals("request must not be null", failure.getMessage());
   }

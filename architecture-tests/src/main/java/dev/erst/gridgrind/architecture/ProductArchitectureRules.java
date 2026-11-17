@@ -13,12 +13,8 @@ public enum ProductArchitectureRules {
       ProductDomainShapeArchitectureRules.unionTagsUseTypeOrStatus();
 
   @ArchTest
-  static final ArchRule CANONICAL_MODEL_NAMES_DESCRIBE_THEIR_ROLE =
-      ProductDomainShapeArchitectureRules.canonicalModelNamesDescribeTheirRole();
-
-  @ArchTest
-  static final ArchRule CORE_DOES_NOT_OWN_CONCRETE_HOST_TYPES =
-      ProductDependencyArchitectureRules.coreDoesNotOwnConcreteHostTypes();
+  static final ArchRule CORE_DOES_NOT_DEPEND_ON_ADAPTERS =
+      ProductDependencyArchitectureRules.coreDoesNotDependOnAdapters();
 
   @ArchTest
   static final ArchRule CORE_DOES_NOT_DEPEND_ON_WORKBOOK_OR_JSON_LIBRARIES =
@@ -33,10 +29,6 @@ public enum ProductArchitectureRules {
       ProductDependencyArchitectureRules.poiDependenciesStayInNativeAdapters();
 
   @ArchTest
-  static final ArchRule ENGINE_API_RUNTIME_DEPENDENCIES_STAY_IN_OWNED_BRIDGES =
-      ProductDependencyArchitectureRules.engineApiRuntimeDependenciesStayInOwnedBridges();
-
-  @ArchTest
   static final ArchRule ENGINE_API_DOES_NOT_EXPOSE_IMPLEMENTATION_TYPES =
       ProductDependencyArchitectureRules.engineApiDoesNotExposeImplementationTypes();
 
@@ -44,8 +36,8 @@ public enum ProductArchitectureRules {
   static final ArchTests TOOLING_SEAMS = ArchTests.in(ProductToolingSeamArchitectureRules.class);
 
   @ArchTest
-  static final ArchRule SEALED_TYPES_USE_CLOSED_DOMAIN_SHAPES =
-      ProductDomainShapeArchitectureRules.sealedTypesUseClosedDomainShapes();
+  static final ArchRule WIRE_UNIONS_USE_RECORD_VARIANTS =
+      ProductDomainShapeArchitectureRules.wireUnionsUseRecordVariants();
 
   @ArchTest
   static final ArchTests ASSURANCE_BOUNDARIES =

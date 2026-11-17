@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.engine.layout.StructuralEdits;
-import dev.erst.gridgrind.engine.poi.CellBounds;
 import java.util.List;
 import java.util.function.BiConsumer;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -35,10 +35,8 @@ class ExcelStructureGuardHelperCoverageTest extends ExcelRowColumnStructureTestS
         "DeleteRows!$A$3:$B$4",
         new ExcelRowSpan(2, 2),
         (workbook, sheet, rows) ->
-            runUnchecked(
-                () ->
-                    StructuralEdits.rejectDestructiveNamedRangesForRowDelete(
-                        workbook, sheet, rows)),
+            runUnchecked(() ->
+                StructuralEdits.rejectDestructiveNamedRangesForRowDelete(workbook, sheet, rows)),
         "A3",
         "Low",
         "B4",
@@ -49,10 +47,8 @@ class ExcelStructureGuardHelperCoverageTest extends ExcelRowColumnStructureTestS
         "ShiftRows!$A$1:$B$2",
         new ExcelRowSpan(2, 3),
         (workbook, sheet, rows) ->
-            runUnchecked(
-                () ->
-                    StructuralEdits.rejectDestructiveNamedRangesForRowShift(
-                        workbook, sheet, rows, -2)),
+            runUnchecked(() ->
+                StructuralEdits.rejectDestructiveNamedRangesForRowShift(workbook, sheet, rows, -2)),
         "A1",
         "Named",
         "B2",
@@ -67,10 +63,9 @@ class ExcelStructureGuardHelperCoverageTest extends ExcelRowColumnStructureTestS
         "DeleteColumns!$C$1:$D$2",
         new ExcelColumnSpan(2, 2),
         (workbook, sheet, columns) ->
-            runUnchecked(
-                () ->
-                    StructuralEdits.rejectDestructiveNamedRangesForColumnDelete(
-                        workbook, sheet, columns)),
+            runUnchecked(() ->
+                StructuralEdits.rejectDestructiveNamedRangesForColumnDelete(
+                    workbook, sheet, columns)),
         "C1",
         "Low",
         "D2",
@@ -81,10 +76,9 @@ class ExcelStructureGuardHelperCoverageTest extends ExcelRowColumnStructureTestS
         "ShiftColumns!$A$1:$B$2",
         new ExcelColumnSpan(2, 3),
         (workbook, sheet, columns) ->
-            runUnchecked(
-                () ->
-                    StructuralEdits.rejectDestructiveNamedRangesForColumnShift(
-                        workbook, sheet, columns, -2)),
+            runUnchecked(() ->
+                StructuralEdits.rejectDestructiveNamedRangesForColumnShift(
+                    workbook, sheet, columns, -2)),
         "A1",
         "Named",
         "B2",
@@ -101,47 +95,39 @@ class ExcelStructureGuardHelperCoverageTest extends ExcelRowColumnStructureTestS
       XSSFSheet safeRowSheet = workbook.createSheet("SafeRows");
       setString(safeRowSheet, "A1", "Header");
       setString(safeRowSheet, "A2", "Value");
-      assertDoesNotThrow(
-          () ->
-              StructuralEdits.rejectAffectedRowStructuresForDelete(
-                  safeRowSheet, new ExcelRowSpan(0, 0)));
-      assertDoesNotThrow(
-          () ->
-              StructuralEdits.rejectAffectedRowStructuresForShift(
-                  safeRowSheet, new ExcelRowSpan(0, 0), 1));
+      assertDoesNotThrow(() ->
+          StructuralEdits.rejectAffectedRowStructuresForDelete(
+              safeRowSheet, new ExcelRowSpan(0, 0)));
+      assertDoesNotThrow(() ->
+          StructuralEdits.rejectAffectedRowStructuresForShift(
+              safeRowSheet, new ExcelRowSpan(0, 0), 1));
 
       XSSFSheet safeColumnSheet = workbook.createSheet("SafeColumns");
       seedTable(safeColumnSheet, workbook, "SafeTable");
       safeColumnSheet.getCTWorksheet().addNewAutoFilter().setRef("A1:B3");
-      assertDoesNotThrow(
-          () ->
-              StructuralEdits.rejectAffectedColumnStructuresForDelete(
-                  safeColumnSheet, new ExcelColumnSpan(4, 4)));
-      assertDoesNotThrow(
-          () ->
-              StructuralEdits.rejectAffectedColumnStructuresForShift(
-                  safeColumnSheet, new ExcelColumnSpan(4, 4), 1));
+      assertDoesNotThrow(() ->
+          StructuralEdits.rejectAffectedColumnStructuresForDelete(
+              safeColumnSheet, new ExcelColumnSpan(4, 4)));
+      assertDoesNotThrow(() ->
+          StructuralEdits.rejectAffectedColumnStructuresForShift(
+              safeColumnSheet, new ExcelColumnSpan(4, 4), 1));
 
       XSSFSheet namesSheet = workbook.createSheet("Names");
       setString(namesSheet, "A1", "Budget");
       setString(namesSheet, "B2", "Values");
       seedNamedRange(workbook, "BudgetValues", "Names!$A$1:$B$2");
-      assertDoesNotThrow(
-          () ->
-              StructuralEdits.rejectDestructiveNamedRangesForRowDelete(
-                  workbook, namesSheet, new ExcelRowSpan(4, 4)));
-      assertDoesNotThrow(
-          () ->
-              StructuralEdits.rejectDestructiveNamedRangesForRowShift(
-                  workbook, namesSheet, new ExcelRowSpan(4, 4), 1));
-      assertDoesNotThrow(
-          () ->
-              StructuralEdits.rejectDestructiveNamedRangesForColumnDelete(
-                  workbook, namesSheet, new ExcelColumnSpan(4, 4)));
-      assertDoesNotThrow(
-          () ->
-              StructuralEdits.rejectDestructiveNamedRangesForColumnShift(
-                  workbook, namesSheet, new ExcelColumnSpan(4, 4), 1));
+      assertDoesNotThrow(() ->
+          StructuralEdits.rejectDestructiveNamedRangesForRowDelete(
+              workbook, namesSheet, new ExcelRowSpan(4, 4)));
+      assertDoesNotThrow(() ->
+          StructuralEdits.rejectDestructiveNamedRangesForRowShift(
+              workbook, namesSheet, new ExcelRowSpan(4, 4), 1));
+      assertDoesNotThrow(() ->
+          StructuralEdits.rejectDestructiveNamedRangesForColumnDelete(
+              workbook, namesSheet, new ExcelColumnSpan(4, 4)));
+      assertDoesNotThrow(() ->
+          StructuralEdits.rejectDestructiveNamedRangesForColumnShift(
+              workbook, namesSheet, new ExcelColumnSpan(4, 4), 1));
     }
   }
 
@@ -222,7 +208,7 @@ class ExcelStructureGuardHelperCoverageTest extends ExcelRowColumnStructureTestS
               new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
               new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2")),
           resolved.getFirst().target());
-      assertEquals(new CellBounds(0, 1, 0, 1), resolved.getFirst().range());
+      assertEquals(new RangeRef(0, 1, 0, 1), resolved.getFirst().range());
     }
   }
 
@@ -230,51 +216,49 @@ class ExcelStructureGuardHelperCoverageTest extends ExcelRowColumnStructureTestS
   void shiftWouldCorruptRowsDistinguishesMovedPartialDestinationAndSafeRanges() {
     assertFalse(
         StructuralEdits.shiftWouldCorruptRows(
-            new CellBounds(2, 3, 0, 0), new ExcelRowSpan(2, 3), -2));
+            new RangeRef(2, 3, 0, 0), new ExcelRowSpan(2, 3), -2));
     assertTrue(
         StructuralEdits.shiftWouldCorruptRows(
-            new CellBounds(2, 4, 0, 0), new ExcelRowSpan(2, 3), -2));
+            new RangeRef(2, 4, 0, 0), new ExcelRowSpan(2, 3), -2));
     assertTrue(
         StructuralEdits.shiftWouldCorruptRows(
-            new CellBounds(0, 1, 0, 0), new ExcelRowSpan(2, 3), -2));
+            new RangeRef(0, 1, 0, 0), new ExcelRowSpan(2, 3), -2));
     assertFalse(
         StructuralEdits.shiftWouldCorruptRows(
-            new CellBounds(5, 6, 0, 0), new ExcelRowSpan(2, 3), -2));
+            new RangeRef(5, 6, 0, 0), new ExcelRowSpan(2, 3), -2));
   }
 
   @Test
   void shiftWouldCorruptColumnsDistinguishesMovedPartialDestinationAndSafeRanges() {
     assertFalse(
         StructuralEdits.shiftWouldCorruptColumns(
-            new CellBounds(0, 0, 2, 3), new ExcelColumnSpan(2, 3), -2));
+            new RangeRef(0, 0, 2, 3), new ExcelColumnSpan(2, 3), -2));
     assertTrue(
         StructuralEdits.shiftWouldCorruptColumns(
-            new CellBounds(0, 0, 2, 4), new ExcelColumnSpan(2, 3), -2));
+            new RangeRef(0, 0, 2, 4), new ExcelColumnSpan(2, 3), -2));
     assertTrue(
         StructuralEdits.shiftWouldCorruptColumns(
-            new CellBounds(0, 0, 0, 1), new ExcelColumnSpan(2, 3), -2));
+            new RangeRef(0, 0, 0, 1), new ExcelColumnSpan(2, 3), -2));
     assertFalse(
         StructuralEdits.shiftWouldCorruptColumns(
-            new CellBounds(0, 0, 5, 6), new ExcelColumnSpan(2, 3), -2));
+            new RangeRef(0, 0, 5, 6), new ExcelColumnSpan(2, 3), -2));
   }
 
   @Test
   void affectsRowsDetectsRangesBeforeAndAfterMovedBand() {
-    assertTrue(StructuralEdits.affectsRows(new CellBounds(2, 4, 0, 0), new ExcelRowSpan(1, 2), 2));
-    assertFalse(
-        StructuralEdits.affectsRows(new CellBounds(10, 12, 0, 0), new ExcelRowSpan(0, 0), 1));
-    assertFalse(
-        StructuralEdits.affectsRows(new CellBounds(0, 1, 0, 0), new ExcelRowSpan(10, 10), 1));
+    assertTrue(StructuralEdits.affectsRows(new RangeRef(2, 4, 0, 0), new ExcelRowSpan(1, 2), 2));
+    assertFalse(StructuralEdits.affectsRows(new RangeRef(10, 12, 0, 0), new ExcelRowSpan(0, 0), 1));
+    assertFalse(StructuralEdits.affectsRows(new RangeRef(0, 1, 0, 0), new ExcelRowSpan(10, 10), 1));
   }
 
   @Test
   void affectsColumnsDetectsRangesBeforeAndAfterMovedBand() {
     assertTrue(
-        StructuralEdits.affectsColumns(new CellBounds(0, 0, 2, 4), new ExcelColumnSpan(1, 2), 2));
+        StructuralEdits.affectsColumns(new RangeRef(0, 0, 2, 4), new ExcelColumnSpan(1, 2), 2));
     assertFalse(
-        StructuralEdits.affectsColumns(new CellBounds(0, 0, 10, 12), new ExcelColumnSpan(0, 0), 1));
+        StructuralEdits.affectsColumns(new RangeRef(0, 0, 10, 12), new ExcelColumnSpan(0, 0), 1));
     assertFalse(
-        StructuralEdits.affectsColumns(new CellBounds(0, 0, 0, 1), new ExcelColumnSpan(10, 10), 1));
+        StructuralEdits.affectsColumns(new RangeRef(0, 0, 0, 1), new ExcelColumnSpan(10, 10), 1));
   }
 
   private List<GuardCase> guardCases() {
@@ -304,60 +288,54 @@ class ExcelStructureGuardHelperCoverageTest extends ExcelRowColumnStructureTestS
             "DeleteRowTable",
             (workbook, sheet) -> seedTable(sheet, workbook, "DeleteRowTable"),
             sheet ->
-                runUnchecked(
-                    () ->
-                        StructuralEdits.rejectAffectedRowStructuresForDelete(
-                            sheet, new ExcelRowSpan(1, 1))),
+                runUnchecked(() ->
+                    StructuralEdits.rejectAffectedRowStructuresForDelete(
+                        sheet, new ExcelRowSpan(1, 1))),
             false,
             "table 'DeleteRowTable'"),
         new GuardCase(
             "DeleteRowAutofilter",
             (workbook, sheet) -> seedSheetAutofilter(sheet),
             sheet ->
-                runUnchecked(
-                    () ->
-                        StructuralEdits.rejectAffectedRowStructuresForDelete(
-                            sheet, new ExcelRowSpan(1, 1))),
+                runUnchecked(() ->
+                    StructuralEdits.rejectAffectedRowStructuresForDelete(
+                        sheet, new ExcelRowSpan(1, 1))),
             false,
             "sheet autofilter"),
         new GuardCase(
             "DeleteRowValidation",
             (workbook, sheet) -> seedDataValidation(sheet),
             sheet ->
-                runUnchecked(
-                    () ->
-                        StructuralEdits.rejectAffectedRowStructuresForDelete(
-                            sheet, new ExcelRowSpan(1, 1))),
+                runUnchecked(() ->
+                    StructuralEdits.rejectAffectedRowStructuresForDelete(
+                        sheet, new ExcelRowSpan(1, 1))),
             false,
             "data validation"),
         new GuardCase(
             "ShiftRowTable",
             (workbook, sheet) -> seedTable(sheet, workbook, "ShiftRowTable"),
             sheet ->
-                runUnchecked(
-                    () ->
-                        StructuralEdits.rejectAffectedRowStructuresForShift(
-                            sheet, new ExcelRowSpan(1, 1), 1)),
+                runUnchecked(() ->
+                    StructuralEdits.rejectAffectedRowStructuresForShift(
+                        sheet, new ExcelRowSpan(1, 1), 1)),
             false,
             "table 'ShiftRowTable'"),
         new GuardCase(
             "ShiftRowAutofilter",
             (workbook, sheet) -> seedSheetAutofilter(sheet),
             sheet ->
-                runUnchecked(
-                    () ->
-                        StructuralEdits.rejectAffectedRowStructuresForShift(
-                            sheet, new ExcelRowSpan(1, 1), 1)),
+                runUnchecked(() ->
+                    StructuralEdits.rejectAffectedRowStructuresForShift(
+                        sheet, new ExcelRowSpan(1, 1), 1)),
             false,
             "sheet autofilter"),
         new GuardCase(
             "ShiftRowValidation",
             (workbook, sheet) -> seedDataValidation(sheet),
             sheet ->
-                runUnchecked(
-                    () ->
-                        StructuralEdits.rejectAffectedRowStructuresForShift(
-                            sheet, new ExcelRowSpan(1, 1), 1)),
+                runUnchecked(() ->
+                    StructuralEdits.rejectAffectedRowStructuresForShift(
+                        sheet, new ExcelRowSpan(1, 1), 1)),
             false,
             "data validation"),
         new GuardCase(
@@ -388,60 +366,54 @@ class ExcelStructureGuardHelperCoverageTest extends ExcelRowColumnStructureTestS
             "DeleteColumnTable",
             (workbook, sheet) -> seedTable(sheet, workbook, "DeleteColumnTable"),
             sheet ->
-                runUnchecked(
-                    () ->
-                        StructuralEdits.rejectAffectedColumnStructuresForDelete(
-                            sheet, new ExcelColumnSpan(1, 1))),
+                runUnchecked(() ->
+                    StructuralEdits.rejectAffectedColumnStructuresForDelete(
+                        sheet, new ExcelColumnSpan(1, 1))),
             false,
             "table 'DeleteColumnTable'"),
         new GuardCase(
             "DeleteColumnAutofilter",
             (workbook, sheet) -> seedSheetAutofilter(sheet),
             sheet ->
-                runUnchecked(
-                    () ->
-                        StructuralEdits.rejectAffectedColumnStructuresForDelete(
-                            sheet, new ExcelColumnSpan(1, 1))),
+                runUnchecked(() ->
+                    StructuralEdits.rejectAffectedColumnStructuresForDelete(
+                        sheet, new ExcelColumnSpan(1, 1))),
             false,
             "sheet autofilter"),
         new GuardCase(
             "DeleteColumnValidation",
             (workbook, sheet) -> seedDataValidation(sheet),
             sheet ->
-                runUnchecked(
-                    () ->
-                        StructuralEdits.rejectAffectedColumnStructuresForDelete(
-                            sheet, new ExcelColumnSpan(0, 0))),
+                runUnchecked(() ->
+                    StructuralEdits.rejectAffectedColumnStructuresForDelete(
+                        sheet, new ExcelColumnSpan(0, 0))),
             false,
             "data validation"),
         new GuardCase(
             "ShiftColumnTable",
             (workbook, sheet) -> seedTable(sheet, workbook, "ShiftColumnTable"),
             sheet ->
-                runUnchecked(
-                    () ->
-                        StructuralEdits.rejectAffectedColumnStructuresForShift(
-                            sheet, new ExcelColumnSpan(1, 1), 1)),
+                runUnchecked(() ->
+                    StructuralEdits.rejectAffectedColumnStructuresForShift(
+                        sheet, new ExcelColumnSpan(1, 1), 1)),
             false,
             "table 'ShiftColumnTable'"),
         new GuardCase(
             "ShiftColumnAutofilter",
             (workbook, sheet) -> seedSheetAutofilter(sheet),
             sheet ->
-                runUnchecked(
-                    () ->
-                        StructuralEdits.rejectAffectedColumnStructuresForShift(
-                            sheet, new ExcelColumnSpan(0, 0), 1)),
+                runUnchecked(() ->
+                    StructuralEdits.rejectAffectedColumnStructuresForShift(
+                        sheet, new ExcelColumnSpan(0, 0), 1)),
             false,
             "sheet autofilter"),
         new GuardCase(
             "ShiftColumnValidation",
             (workbook, sheet) -> seedDataValidation(sheet),
             sheet ->
-                runUnchecked(
-                    () ->
-                        StructuralEdits.rejectAffectedColumnStructuresForShift(
-                            sheet, new ExcelColumnSpan(0, 0), 1)),
+                runUnchecked(() ->
+                    StructuralEdits.rejectAffectedColumnStructuresForShift(
+                        sheet, new ExcelColumnSpan(0, 0), 1)),
             false,
             "data validation"));
   }

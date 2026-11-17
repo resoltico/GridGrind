@@ -17,10 +17,11 @@ public final class ExcelSheetNames {
   public static void requireValid(String value, String fieldName) {
     Objects.requireNonNull(value, fieldName + " must not be null");
     violation(value)
-        .ifPresent(
-            violation -> {
-              throw new IllegalArgumentException(violation.message(fieldName));
-            });
+        .ifPresent(violation -> {
+          throw new dev.erst.gridgrind.core.problem.ValueInvariantException(
+              new dev.erst.gridgrind.core.problem.MessageInvariant(
+                  violation.message(fieldName), Optional.of(fieldName)));
+        });
   }
 
   /** Returns the first sheet-name rule violation, if any. */

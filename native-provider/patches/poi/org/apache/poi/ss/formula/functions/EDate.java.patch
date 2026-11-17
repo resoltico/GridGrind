@@ -1,0 +1,22 @@
+--- org/apache/poi/ss/formula/functions/EDate.java
++++ org/apache/poi/ss/formula/functions/EDate.java
+@@ -45,15 +45,15 @@
+             double startDateAsNumber = getValue(args[0]);
+             int offsetInMonthAsNumber = OperandResolver.coerceDoubleToInt(getValue(args[1]));
+ 
+-            if (startDateAsNumber < 0 || startDateAsNumber >= DateUtil.MAX_EXCEL_DATE_SERIAL + 1) {
++            if (startDateAsNumber < 0 || startDateAsNumber >= org.apache.poi.ss.usermodel.DateSystemContext.maximumSerial() + 1) {
+                 return ErrorEval.NUM_ERROR;
+             }
+-            Date startDate = DateUtil.getJavaDate(startDateAsNumber);
++            Date startDate = DateUtil.getJavaDate(startDateAsNumber, org.apache.poi.ss.usermodel.DateSystemContext.is1904());
+             Calendar calendar = LocaleUtil.getLocaleCalendar();
+             calendar.setTime(startDate);
+             calendar.add(Calendar.MONTH, offsetInMonthAsNumber);
+-            double result = DateUtil.getExcelDate(calendar.getTime());
+-            if (result < 0 || result >= DateUtil.MAX_EXCEL_DATE_SERIAL + 1) {
++            double result = DateUtil.getExcelDate(calendar.getTime(), org.apache.poi.ss.usermodel.DateSystemContext.is1904());
++            if (result < 0 || result >= org.apache.poi.ss.usermodel.DateSystemContext.maximumSerial() + 1) {
+                 return ErrorEval.NUM_ERROR;
+             }
+             return new NumberEval(result);

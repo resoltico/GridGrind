@@ -10,7 +10,6 @@ import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
 import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.value.CellReport;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -40,8 +39,18 @@ class ExcelWorkbookFormulasTest {
   void formulasSurfaceDelegatesToWorkbookFormulaOperations() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(2.0d));
+      workbook
+          .sheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new ResolvedFormula("A1*2"));
 
       FormulaAdapter formulas = workbook.formulas();
 
@@ -52,7 +61,12 @@ class ExcelWorkbookFormulasTest {
       assertEquals(
           4.0d,
           ((dev.erst.gridgrind.core.model.value.CellValue.NumberValue)
-                  ((CellReport.FormulaReport) workbook.sheet("Budget").cells().snapshotCell("B1"))
+                  ((CellReport.FormulaReport)
+                          workbook
+                              .sheet("Budget")
+                              .cells()
+                              .snapshotCell(
+                                  new dev.erst.gridgrind.core.vocabulary.CellAddress("B1")))
                       .value()
                       .orElseThrow())
               .value());
@@ -84,10 +98,25 @@ class ExcelWorkbookFormulasTest {
       throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       XssfSheet sheet = workbook.getOrCreateSheet("Budget");
-      sheet.cells().setCell("A1", new ResolvedFormula("A1+1"));
-      sheet.cells().setCell("B1", new ResolvedFormula("C1+1"));
-      sheet.cells().setCell("C1", new ResolvedFormula("B1+1"));
-      sheet.cells().setCell("D1", new ResolvedFormula("1/0"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedFormula("A1+1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new ResolvedFormula("C1+1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"),
+              new ResolvedFormula("B1+1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("D1"), new ResolvedFormula("1/0"));
 
       List<CalculationReport.FormulaCapability> assessments =
           workbook.formulas().assessAllCapabilities();
@@ -130,7 +159,11 @@ class ExcelWorkbookFormulasTest {
                 poiWorkbook,
                 FormulaRuntimeTestDouble.nullEvaluation(
                     poiWorkbook.getCreationHelper().createFormulaEvaluator()))) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("1+1"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), new ResolvedFormula("1+1"));
 
       assertEquals(
           List.of(
@@ -148,10 +181,12 @@ class ExcelWorkbookFormulasTest {
   void negationPrecedesExponentiationAsInExcel() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       var cells = workbook.getOrCreateSheet("Arithmetic").cells();
-      cells.setCell("A1", new ResolvedFormula("-2^2"));
-      cells.setCell("A2", new ResolvedFormula("-(2^2)"));
-      assertEquals(4.0d, cells.number("A1"));
-      assertEquals(-4.0d, cells.number("A2"));
+      cells.setCell(
+          new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), new ResolvedFormula("-2^2"));
+      cells.setCell(
+          new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"), new ResolvedFormula("-(2^2)"));
+      assertEquals(4.0d, cells.number(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
+      assertEquals(-4.0d, cells.number(new dev.erst.gridgrind.core.vocabulary.CellAddress("A2")));
     }
   }
 
@@ -162,13 +197,27 @@ class ExcelWorkbookFormulasTest {
     long divideBits = 0x3f9eb851eb851ebaL;
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       var cells = workbook.getOrCreateSheet("Precision").cells();
-      cells.setCell("B2", new CellValue.NumberValue(125000.25));
-      cells.setCell("B3", new CellValue.NumberValue(0.42));
-      cells.setCell("B4", new ResolvedFormula("B2*(1+B3)"));
-      cells.setCell("B5", new ResolvedFormula("(0.1+0.2)/10"));
+      cells.setCell(
+          new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+          new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(125000.25));
+      cells.setCell(
+          new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+          new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(0.42));
+      cells.setCell(
+          new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+          new ResolvedFormula("B2*(1+B3)"));
+      cells.setCell(
+          new dev.erst.gridgrind.core.vocabulary.CellAddress("B5"),
+          new ResolvedFormula("(0.1+0.2)/10"));
       workbook.formulas().evaluateAll();
-      assertEquals(multiplyBits, Double.doubleToRawLongBits(cells.number("B4")));
-      assertEquals(divideBits, Double.doubleToRawLongBits(cells.number("B5")));
+      assertEquals(
+          multiplyBits,
+          Double.doubleToRawLongBits(
+              cells.number(new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"))));
+      assertEquals(
+          divideBits,
+          Double.doubleToRawLongBits(
+              cells.number(new dev.erst.gridgrind.core.vocabulary.CellAddress("B5"))));
       var bytes = new java.io.ByteArrayOutputStream();
       workbook.xssfWorkbook().write(bytes);
       try (XssfWorkbook reopened =
@@ -187,7 +236,7 @@ class ExcelWorkbookFormulasTest {
                     .sheet("Precision")
                     .cells()
                     .snapshotCell(
-                        "B4",
+                        new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
                         dev.erst.gridgrind.core.plan.CellReadProjection.of(
                             dev.erst.gridgrind.core.plan.CellReadFacet.FORMAT));
         assertEquals("177500.355", displayed.displayValue().orElseThrow());

@@ -6,7 +6,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.register
 
 internal fun Project.registerGridGrindArchitectureCheck(): TaskProvider<Task> =
-    tasks.register("architectureCheck") { architectureTask ->
+    tasks.register("architectureCheck") { val architectureTask = this
         architectureTask.group = "verification"
         architectureTask.description =
             "Runs the mandatory bytecode-level product architecture rules."

@@ -27,30 +27,39 @@ class CellReportReadbackTest {
   void formulaAndValueFacetsStayIndependentAndMissingCellsRespectProjection() throws IOException {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       var cells = workbook.getOrCreateSheet("Data").cells();
-      cells.setCell("A1", new ResolvedFormula("1+2"));
+      cells.setCell(
+          new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), new ResolvedFormula("1+2"));
       var value =
           assertInstanceOf(
               CellReport.FormulaReport.class,
-              cells.snapshotCell("A1", CellReadProjection.of(CellReadFacet.VALUE)));
+              cells.snapshotCell(
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                  CellReadProjection.of(CellReadFacet.VALUE)));
       assertEquals(new CellValue.NumberValue(3), value.value().orElseThrow());
       assertTrue(value.formula().isEmpty());
       assertTrue(value.displayValue().isEmpty());
       var formula =
           assertInstanceOf(
               CellReport.FormulaReport.class,
-              cells.snapshotCell("A1", CellReadProjection.of(CellReadFacet.FORMULA)));
+              cells.snapshotCell(
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                  CellReadProjection.of(CellReadFacet.FORMULA)));
       assertEquals("1+2", formula.formula().orElseThrow());
       assertTrue(formula.value().isEmpty());
       var format =
           assertInstanceOf(
               CellReport.FormulaReport.class,
-              cells.snapshotCell("A1", CellReadProjection.of(CellReadFacet.FORMAT)));
+              cells.snapshotCell(
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                  CellReadProjection.of(CellReadFacet.FORMAT)));
       assertEquals("3", format.displayValue().orElseThrow());
       assertTrue(format.value().isEmpty());
       var blank =
           assertInstanceOf(
               CellReport.BlankReport.class,
-              cells.snapshotCell("Z20", CellReadProjection.of(CellReadFacet.FORMULA)));
+              cells.snapshotCell(
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress("Z20"),
+                  CellReadProjection.of(CellReadFacet.FORMULA)));
       assertTrue(blank.value().isEmpty());
       assertTrue(blank.style().isEmpty());
       assertTrue(blank.displayValue().isEmpty());
@@ -64,7 +73,7 @@ class CellReportReadbackTest {
       sheet
           .cells()
           .setCell(
-              "A1",
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
               new ResolvedRichText(
                   List.of(
                       new ResolvedRichTextRun("Hello", Optional.empty()),
@@ -79,9 +88,22 @@ class CellReportReadbackTest {
                                   Optional.empty(),
                                   Optional.empty(),
                                   Optional.empty()))))));
-      sheet.links().setHyperlink("A1", new HyperlinkTarget.Url("https://example.com"));
-      sheet.comments().setComment("A1", new ResolvedComment("Review", "Reader", true));
-      var minimal = sheet.cells().snapshotCell("A1", CellReadProjection.defaults());
+      sheet
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new HyperlinkTarget.Url("https://example.com"));
+      sheet
+          .comments()
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedComment("Review", "Reader", true));
+      var minimal =
+          sheet
+              .cells()
+              .snapshotCell(
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                  CellReadProjection.defaults());
       assertTrue(minimal.hyperlink().isEmpty());
       assertTrue(minimal.comment().isEmpty());
       assertTrue(minimal.style().isEmpty());
@@ -91,7 +113,7 @@ class CellReportReadbackTest {
               sheet
                   .cells()
                   .snapshotCell(
-                      "A1",
+                      new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
                       CellReadProjection.of(
                           CellReadFacet.VALUE,
                           CellReadFacet.RICH_TEXT_RUNS,
@@ -137,7 +159,7 @@ class CellReportReadbackTest {
               .sheetSchema(
                   workbook,
                   "Data",
-                  "A1",
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
                   2,
                   4,
                   CellReadProjection.of(CellReadFacet.TEMPORAL),
@@ -150,13 +172,24 @@ class CellReportReadbackTest {
           schema.columns().stream().map(SchemaColumnReport::headerDisplayValue).toList());
       var numeric =
           new WorkbookIntrospector()
-              .sheetSchema(workbook, "Data", "A1", 2, 4, CellReadProjection.defaults(), false);
+              .sheetSchema(
+                  workbook,
+                  "Data",
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                  2,
+                  4,
+                  CellReadProjection.defaults(),
+                  false);
       assertEquals(
           List.of("NUMBER", "NUMBER", "NUMBER", "NUMBER"),
           numeric.columns().stream().map(column -> column.dominantType().orElseThrow()).toList());
       assertEquals(
           42d,
-          assertInstanceOf(CellReport.NumberReport.class, sheet.cells().snapshotCell("D2"))
+          assertInstanceOf(
+                  CellReport.NumberReport.class,
+                  sheet
+                      .cells()
+                      .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("D2")))
               .value()
               .orElseThrow()
               .value());

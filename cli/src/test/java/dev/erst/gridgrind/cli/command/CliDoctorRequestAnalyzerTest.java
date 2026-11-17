@@ -242,18 +242,18 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
                             "{ \"type\": \"NEW\" }",
                             "{ \"type\": \"NONE\" }",
                             """
-                        [
-                          {
-                            "stepId": "duplicate",
-                            "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
-                            "action": { "type": "ENSURE_SHEET" }
-                          },
-                          {
-                            "stepId": "duplicate",
-                            "target": { "type": "SHEET_BY_NAME", "name": "Forecast" },
-                            "action": { "type": "ENSURE_SHEET" }
-                          }
-                        ]
+                            [
+                              {
+                                "stepId": "duplicate",
+                                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                                "action": { "type": "ENSURE_SHEET" }
+                              },
+                              {
+                                "stepId": "duplicate",
+                                "target": { "type": "SHEET_BY_NAME", "name": "Forecast" },
+                                "action": { "type": "ENSURE_SHEET" }
+                              }
+                            ]
                             """)
                         .getBytes(StandardCharsets.UTF_8)),
                 InputStream.nullInputStream());
@@ -280,7 +280,8 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
                 analysis(
                     minimalRequestJson(
                             "{ \"type\": \"EXISTING\", \"path\": \"input.xls\" }",
-                            "{ \"type\": \"SAVE_AS\", \"path\": \"output.txt\", \"ifExists\": \"REJECT\" }",
+                            "{ \"type\": \"SAVE_AS\", \"path\": \"output.txt\", \"ifExists\":"
+                                + " \"REJECT\" }",
                             "[]")
                         .getBytes(StandardCharsets.UTF_8)),
                 InputStream.nullInputStream());
@@ -312,7 +313,8 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
                 analysis(
                     minimalRequestJson(
                             "{ \"type\": \"NEW\" }",
-                            "{ \"type\": \"SAVE_AS\", \"path\": \"output.xlsx\", \"ifExists\": \"REPLACE\" }",
+                            "{ \"type\": \"SAVE_AS\", \"path\": \"output.xlsx\", \"ifExists\":"
+                                + " \"REPLACE\" }",
                             standardInputSteps())
                         .getBytes(StandardCharsets.UTF_8)),
                 InputStream.nullInputStream());
@@ -368,17 +370,17 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
   private static String standardInputSteps() {
     return """
-        [
-          {
-            "stepId": "set-title",
-            "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-            "action": {
-              "type": "SET_CELL",
-              "value": { "type": "TEXT", "value": { "type": "STANDARD_INPUT" } }
-            }
-          }
-        ]
-        """;
+    [
+      {
+        "stepId": "set-title",
+        "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+        "action": {
+          "type": "SET_CELL",
+          "value": { "type": "TEXT", "value": { "type": "STANDARD_INPUT" } }
+        }
+      }
+    ]
+    """;
   }
 
   private static RequestDoctorReport.Summary summaryFor(WorkbookPlan request) {

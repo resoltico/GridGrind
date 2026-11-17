@@ -18,15 +18,13 @@ public final class DataValidationFixtures {
         value.suppressDropDownArrow(),
         value
             .prompt()
-            .map(
-                prompt ->
-                    new DataValidationPromptReport(
-                        prompt.title(), prompt.text(), prompt.showPromptBox())),
+            .map(prompt ->
+                new DataValidationPromptReport(
+                    prompt.title(), prompt.text(), prompt.showPromptBox())),
         value
             .errorAlert()
-            .map(
-                error ->
-                    new DataValidationErrorAlertReport(
-                        error.style(), error.title(), error.text(), error.showErrorBox())));
+            .map(error ->
+                new DataValidationErrorAlertReport(
+                    error.style(), error.title(), error.text(), error.showErrorBox())));
   }
 }

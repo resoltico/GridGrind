@@ -19,9 +19,8 @@ public record ResolvedPicture(
     Objects.requireNonNull(format, "format must not be null");
     Objects.requireNonNull(anchor, "anchor must not be null");
     Objects.requireNonNull(description, "description must not be null");
-    description.ifPresent(
-        value -> {
-          TextValidation.requireNonBlank(value, "description");
-        });
+    description.ifPresent(value -> {
+      TextValidation.requireNonBlank(value, "description");
+    });
   }
 }

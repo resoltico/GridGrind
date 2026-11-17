@@ -67,6 +67,21 @@ public final class GridGrindCli {
       return runInternal(args, stdin, stdout, stderr, responsePathHint, prettyJsonHint);
     } catch (CliPrimaryOutputException ignored) {
       return 1;
+    } catch (dev.erst.gridgrind.cli.io.CliAuthorityDocumentException refusal) {
+      return CliAuthorityFailureSupport.write(
+          args,
+          responsePathHint,
+          prettyJsonHint,
+          stdout,
+          stderr,
+          refusal.authorityPath(),
+          refusal.refusal());
+    } catch (dev.erst.gridgrind.cli.io.CliAuthorityIOException failure) {
+      return CliAuthorityFailureSupport.write(
+          args, responsePathHint, prettyJsonHint, stdout, stderr, failure.authorityPath(), failure);
+    } catch (dev.erst.gridgrind.cli.io.CliAuthorityUnexpectedException failure) {
+      return CliAuthorityFailureSupport.write(
+          args, responsePathHint, prettyJsonHint, stdout, stderr, failure.authorityPath(), failure);
     } catch (Throwable exception) {
       return CliUnexpectedFailureSupport.emit(
           args, responsePathHint, prettyJsonHint, stdout, stderr, exception);

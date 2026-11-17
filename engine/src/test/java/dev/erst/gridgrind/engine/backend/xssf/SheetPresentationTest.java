@@ -27,10 +27,10 @@ import org.junit.jupiter.api.Test;
 /** Direct tests for authoritative sheet-presentation read and write behavior. */
 class SheetPresentationTest {
   @Test
-  void normalizesIgnoredErrorCoordinatesOnlyAtPoiBoundary() throws Exception {
+  void roundTripsCanonicalIgnoredErrorCoordinates() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       var sheet = workbook.createSheet("Budget");
-      var range = new dev.erst.gridgrind.core.vocabulary.RangeRef("B2:A1");
+      var range = new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2");
       var authored =
           new SheetPresentationSpec(
               SheetDisplaySpec.defaults(),
@@ -40,7 +40,7 @@ class SheetPresentationTest {
               List.of(new IgnoredErrorSpec(range, List.of(ExcelIgnoredErrorType.FORMULA))));
 
       LayoutAdapter.setPresentation(sheet, authored);
-      assertEquals("B2:A1", range.value());
+      assertEquals("A1:B2", range.value());
       assertEquals(
           "A1:B2", LayoutAdapter.presentation(sheet).ignoredErrors().getFirst().range().value());
     }

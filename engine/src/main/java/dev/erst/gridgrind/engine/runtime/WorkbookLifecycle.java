@@ -43,17 +43,7 @@ final class WorkbookLifecycle {
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile -> {
         Path sourcePath =
             ExecutionRequestPaths.normalizePath(existingFile.path(), bindings.workingDirectory());
-        Path materializedSource;
-        try {
-          materializedSource =
-              bindings
-                  .requestPathAccess()
-                  .materializeRead(
-                      existingFile.path(), "source", "gridgrind-source-workbook-", ".xlsx");
-        } catch (java.nio.file.NoSuchFileException exception) {
-          throw new dev.erst.gridgrind.engine.backend.xssf.WorkbookNotFoundException(
-              sourcePath, exception);
-        }
+        Path materializedSource = materializeSource(existingFile, bindings);
         try {
           yield XssfWorkbooks.open(
               materializedSource,
@@ -67,6 +57,21 @@ final class WorkbookLifecycle {
         }
       }
     };
+  }
+
+  /** Materializes an authorized source while retaining its original identity in failures. */
+  static Path materializeSource(
+      WorkbookPlan.WorkbookSource.ExistingFile source, ExecutionInputBindings bindings)
+      throws IOException {
+    try {
+      return bindings
+          .requestPathAccess()
+          .materializeRead(source.path(), "source", "gridgrind-source-workbook-", ".xlsx");
+    } catch (java.nio.file.NoSuchFileException exception) {
+      throw new dev.erst.gridgrind.engine.backend.xssf.WorkbookNotFoundException(
+          ExecutionRequestPaths.normalizePath(source.path(), bindings.workingDirectory()),
+          exception);
+    }
   }
 
   WorkbookResultPersistence.PersistenceOutcome persistWorkbook(
@@ -227,6 +232,7 @@ final class WorkbookLifecycle {
       try (XssfWorkbook reopened =
           XssfWorkbooks.open(materialized.workbookPath(), tempFileFactory::createTempFile)) {
         reopened.sheets().sheetCount();
+        bindings.publicationFacts().stagedVerified = true;
         Objects.requireNonNull(
                 stagedArtifactAcceptance, "stagedArtifactAcceptance must not be null")
             .verify(materialized.workbookPath());
@@ -253,10 +259,9 @@ final class WorkbookLifecycle {
       case OoxmlPersistenceEncryptionSpec.PreserveSource _ ->
           new ResolvedOpenSecurity.Encrypted(
               ExecutionRequestPaths.sourceEncryptionPassword(source, bindings)
-                  .orElseThrow(
-                      () ->
-                          new IllegalStateException(
-                              "preserved source encryption requires a verified source password")));
+                  .orElseThrow(() ->
+                      new IllegalStateException(
+                          "preserved source encryption requires a verified source password")));
     };
   }
 

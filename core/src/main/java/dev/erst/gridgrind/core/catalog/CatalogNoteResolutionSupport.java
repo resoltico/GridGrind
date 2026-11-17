@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 final class CatalogNoteResolutionSupport {
   private CatalogNoteResolutionSupport() {}
 
-  static List<CatalogNote> referencedNotes(Catalog catalog, Object value) {
+  static List<CatalogNote> referencedNotes(Catalog catalog, CatalogLookupValue value) {
     Objects.requireNonNull(catalog, "catalog must not be null");
     Objects.requireNonNull(value, "value must not be null");
     return referencedNotes(catalog, noteRefsFor(value));
@@ -64,40 +64,29 @@ final class CatalogNoteResolutionSupport {
     Objects.requireNonNull(noteRefs, "noteRefs must not be null");
     Set<String> uniqueNoteIds = new LinkedHashSet<>(noteRefs);
     return uniqueNoteIds.stream()
-        .map(
-            noteId ->
-                catalog
-                    .note(noteId)
-                    .orElseThrow(
-                        () ->
-                            new IllegalStateException(
-                                "Catalog note id " + noteId + " is not published")))
+        .map(noteId ->
+            catalog
+                .note(noteId)
+                .orElseThrow(() ->
+                    new IllegalStateException("Catalog note id " + noteId + " is not published")))
         .toList();
   }
 
-  private static List<String> noteRefsFor(Object value) {
+  private static List<String> noteRefsFor(CatalogLookupValue value) {
     Set<String> noteRefs = new LinkedHashSet<>();
     collectNoteRefs(value, noteRefs::add);
     return List.copyOf(noteRefs);
   }
 
-  private static void collectNoteRefs(Object value, Consumer<String> sink) {
+  private static void collectNoteRefs(CatalogLookupValue value, Consumer<String> sink) {
     Objects.requireNonNull(value, "value must not be null");
     Objects.requireNonNull(sink, "sink must not be null");
-    if (value instanceof TypeEntry entry) {
-      entry.noteRefs().forEach(sink);
-      return;
-    }
-    if (value instanceof NestedTypeGroup group) {
-      group.types().forEach(entry -> entry.noteRefs().forEach(sink));
-      return;
-    }
-    if (value instanceof PlainTypeGroup group) {
-      group.type().noteRefs().forEach(sink);
-      return;
-    }
-    if (value instanceof TopLevelTypeGroup group) {
-      group.types().forEach(entry -> entry.noteRefs().forEach(sink));
+    switch (value) {
+      case TypeEntry entry -> entry.noteRefs().forEach(sink);
+      case NestedTypeGroup group -> group.types().forEach(entry -> entry.noteRefs().forEach(sink));
+      case PlainTypeGroup group -> group.type().noteRefs().forEach(sink);
+      case TopLevelTypeGroup group ->
+          group.types().forEach(entry -> entry.noteRefs().forEach(sink));
     }
   }
 }

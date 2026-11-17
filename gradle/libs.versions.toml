@@ -1,47 +1,58 @@
 [versions]
-kotlin = "2.4.21"
 archunit = "1.5.1"
 junit-jupiter = "6.1.3"
 junit-platform-launcher = "6.1.3"
 junit-bom = "6.1.3"
-jackson-databind = "3.2.4"
-json-schema-validator = "3.0.8"
+jackson-databind = "3.3.0"
+json-schema-validator = "3.0.9"
 # Jackson 3.x keeps annotations on the Jackson 2.x coordinates and package namespace by design.
-jackson-annotations = "2.22"
+jackson-annotations = "2.23"
 log4j = "2.26.1"
 poi-ooxml = "6.0.0"
 jqf = "3.0"
-bouncycastle = "1.86"
-bouncycastle-pkix = "1.86"
+bouncycastle = "1.87"
+bouncycastle-pkix = "1.87"
 # Santuario xmlsec 4.x declares transitive JPMS requires on these APIs while publishing them as
 # provided dependencies, so GridGrind must own them explicitly for modular compile/runtime use.
 jakarta-activation = "2.1.4"
 jakarta-xml-bind = "4.0.5"
 xmlsec = "4.0.4"
 slf4j = "2.0.20"
-errorprone = "2.51.0"
-errorprone-plugin = "5.1.1"
+errorprone = "2.52.0"
+errorprone-plugin = "5.2.0"
 jspecify = "1.0.1"
-nullaway = "0.14.3"
-google-java-format = "1.37.0"
+nullaway = "0.14.4"
+google-java-format = "2.0.0"
 jacoco = "0.8.16"
-pmd = "7.28.0"
-pitest = "1.30.1"
+pmd = "7.29.0"
+pitest = "1.30.2"
 pitest-gradle-plugin = "1.19.0"
 pitest-junit5-plugin = "1.2.3"
 shadow = "9.6.1"
-spotless = "8.10.4"
+spotless = "8.11.0"
 
-commons-lang3 = "3.21.0"
+commons-lang3 = "3.22.0"
 woodstox-core = "7.3.0"
 stax2-api = "4.3.2"
 
 asm = "9.11.1"
 picocli = "4.7.7"
 eclipse-collections = "13.0.0"
-jackson-tooling = "2.22.4"
+jackson-tooling = "2.23.0"
 
 [libraries]
+bnd-annotations = { module = "biz.aQute.bnd:biz.aQute.bnd.annotation", version = "7.5.0" }
+osgi-resource = { module = "org.osgi:org.osgi.resource", version = "1.0.1" }
+commons-codec = { module = "commons-codec:commons-codec", version = "1.23.0" }
+commons-text = { module = "org.apache.commons:commons-text", version = "1.15.0" }
+guava = { module = "com.google.guava:guava", version = "33.8.0-jre" }
+java-diff-utils = { module = "io.github.java-diff-utils:java-diff-utils", version = "4.18" }
+jgit = { module = "org.eclipse.jgit:org.eclipse.jgit", version = "7.8.1.202611041320-r" }
+xz = { module = "org.tukaani:xz", version = "1.12" }
+snakeyaml-engine = { module = "org.snakeyaml:snakeyaml-engine", version = "3.2" }
+errorprone-annotations = { module = "com.google.errorprone:error_prone_annotations", version.ref = "errorprone" }
+asm-analysis = { module = "org.ow2.asm:asm-analysis", version.ref = "asm" }
+asm-util = { module = "org.ow2.asm:asm-util", version.ref = "asm" }
 asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
 asm-commons = { module = "org.ow2.asm:asm-commons", version.ref = "asm" }
 asm-tree = { module = "org.ow2.asm:asm-tree", version.ref = "asm" }
@@ -80,7 +91,6 @@ nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }
 
 [plugins]
 errorprone = { id = "net.ltgt.errorprone", version.ref = "errorprone-plugin" }
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 

@@ -138,6 +138,7 @@ class GridGrindEngineApiPreflightTest {
         temporaryDirectory,
         temporaryDirectory.resolve("temp-root"),
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(
                 new ExecutionGrant.ReadAuthority.File(temporaryDirectory.resolve("source.xlsx"))),
             List.of("SET_RANGE"),
@@ -149,72 +150,72 @@ class GridGrindEngineApiPreflightTest {
 
   private static String minimalRequest() {
     return """
-        {
-          "protocolVersion": 1,
-          "source": { "type": "NEW" },
-          "persistence": { "type": "NONE" },
-          "steps": []
-        }
-        """;
+    {
+      "protocolVersion": 1,
+      "source": { "type": "NEW" },
+      "persistence": { "type": "NONE" },
+      "steps": []
+    }
+    """;
   }
 
   private static String staticTargetMismatchRequest() {
     return """
+    {
+      "protocolVersion": 1,
+      "source": { "type": "NEW" },
+      "persistence": { "type": "NONE" },
+      "steps": [
         {
-          "protocolVersion": 1,
-          "source": { "type": "NEW" },
-          "persistence": { "type": "NONE" },
-          "steps": [
-            {
-              "stepId": "set-value",
-              "target": { "type": "WORKBOOK_CURRENT" },
-              "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "value": 1.0 } }
-            }
-          ]
+          "stepId": "set-value",
+          "target": { "type": "WORKBOOK_CURRENT" },
+          "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "value": 1.0 } }
         }
-        """;
+      ]
+    }
+    """;
   }
 
   private static String existingSourceRequest(String mode) {
     return """
-        {
-          "protocolVersion": 1,
-          "source": { "type": "EXISTING", "path": "source.xlsx" },
-          "persistence": { "type": "NONE" },
-          "execution": {
-            "mode": { "type": "%s" },
-            "journal": { "level": "VERBOSE" }
-          },
-          "steps": []
-        }
-        """
+    {
+      "protocolVersion": 1,
+      "source": { "type": "EXISTING", "path": "source.xlsx" },
+      "persistence": { "type": "NONE" },
+      "execution": {
+        "mode": { "type": "%s" },
+        "journal": { "level": "VERBOSE" }
+      },
+      "steps": []
+    }
+    """
         .formatted(mode);
   }
 
   private static String preflightFailureRequest() {
     return """
+    {
+      "protocolVersion": 1,
+      "source": { "type": "NEW" },
+      "persistence": { "type": "NONE" },
+      "steps": [
         {
-          "protocolVersion": 1,
-          "source": { "type": "NEW" },
-          "persistence": { "type": "NONE" },
-          "steps": [
-            {
-              "stepId": "set-values",
-              "target": { "type": "RANGE_BY_RANGE", "sheetName": "Budget", "range": "A1:B1" },
-              "action": {
-                "type": "SET_RANGE",
-                "rows": {
-                  "type": "TYPED",
-                  "cells": [[
-                    { "type": "TEXT", "value": { "type": "UTF8_FILE", "path": "missing-first.txt" } },
-                    { "type": "TEXT", "value": { "type": "UTF8_FILE", "path": "missing-second.txt" } }
-                  ]]
-                }
-              }
+          "stepId": "set-values",
+          "target": { "type": "RANGE_BY_RANGE", "sheetName": "Budget", "range": "A1:B1" },
+          "action": {
+            "type": "SET_RANGE",
+            "rows": {
+              "type": "TYPED",
+              "cells": [[
+                { "type": "TEXT", "value": { "type": "UTF8_FILE", "path": "missing-first.txt" } },
+                { "type": "TEXT", "value": { "type": "UTF8_FILE", "path": "missing-second.txt" } }
+              ]]
             }
-          ]
+          }
         }
-        """;
+      ]
+    }
+    """;
   }
 
   private static GridGrindProgressSink deleteSourceAfterPreflight(

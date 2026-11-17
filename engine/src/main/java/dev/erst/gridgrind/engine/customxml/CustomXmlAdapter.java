@@ -50,7 +50,16 @@ public final class CustomXmlAdapter {
         workbook,
         (mapping, output, encoding, validateSchema) ->
             new XSSFExportToXml(mapping).exportToXML(output, encoding, validateSchema),
-        (mapping, xml) -> new XSSFImportFromXML(mapping).importFromXML(xml));
+        (mapping, xml) ->
+            new XSSFImportFromXML(
+                    mapping,
+                    input ->
+                        MappedDates.serial(
+                            input,
+                            workbook.isDate1904()
+                                ? dev.erst.gridgrind.core.model.value.ExcelDateSystem.MAC_1904
+                                : dev.erst.gridgrind.core.model.value.ExcelDateSystem.WINDOWS_1900))
+                .importFromXML(xml));
   }
 
   public CustomXmlAdapter(

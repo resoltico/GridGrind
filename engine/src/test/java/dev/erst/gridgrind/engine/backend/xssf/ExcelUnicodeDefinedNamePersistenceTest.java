@@ -6,12 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.engine.poi.CellBounds;
 import dev.erst.gridgrind.engine.tables.TableAdapter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -134,7 +132,7 @@ class ExcelUnicodeDefinedNamePersistenceTest {
       XSSFWorkbook workbook,
       org.apache.poi.xssf.usermodel.XSSFSheet sheet,
       UnicodeNameFixture fixture) {
-    CellBounds parsed = CellBounds.parse(fixture.range());
+    RangeRef parsed = RangeRef.parse(fixture.range());
     var namedRange = workbook.createName();
     namedRange.setNameName(fixture.namedRangeName());
     namedRange.setRefersToFormula(
@@ -145,36 +143,38 @@ class ExcelUnicodeDefinedNamePersistenceTest {
   }
 
   private static void populateTableRange(XssfSheet sheet, String range) {
-    CellBounds parsed = CellBounds.parse(range);
+    RangeRef parsed = RangeRef.parse(range);
     sheet
         .cells()
         .setCell(
-            new org.apache.poi.ss.util.CellReference(parsed.firstRow(), parsed.firstColumn())
-                .formatAsString(),
-            new CellValue.Text("Header" + parsed.firstColumn()));
+            new dev.erst.gridgrind.core.vocabulary.CellAddress(
+                parsed.firstRow(), parsed.firstColumn()),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText(
+                "Header" + parsed.firstColumn()));
     sheet
         .cells()
         .setCell(
-            new org.apache.poi.ss.util.CellReference(parsed.firstRow(), parsed.lastColumn())
-                .formatAsString(),
-            new CellValue.Text("Value" + parsed.lastColumn()));
+            new dev.erst.gridgrind.core.vocabulary.CellAddress(
+                parsed.firstRow(), parsed.lastColumn()),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText(
+                "Value" + parsed.lastColumn()));
     sheet
         .cells()
         .setCell(
-            new org.apache.poi.ss.util.CellReference(parsed.lastRow(), parsed.firstColumn())
-                .formatAsString(),
-            new CellValue.Text("one"));
+            new dev.erst.gridgrind.core.vocabulary.CellAddress(
+                parsed.lastRow(), parsed.firstColumn()),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("one"));
     sheet
         .cells()
         .setCell(
-            new org.apache.poi.ss.util.CellReference(parsed.lastRow(), parsed.lastColumn())
-                .formatAsString(),
-            new CellValue.Text("two"));
+            new dev.erst.gridgrind.core.vocabulary.CellAddress(
+                parsed.lastRow(), parsed.lastColumn()),
+            new dev.erst.gridgrind.core.model.value.ResolvedCellText("two"));
   }
 
   private static void populateObservedTableRange(
       org.apache.poi.xssf.usermodel.XSSFSheet sheet, String range) {
-    CellBounds parsed = CellBounds.parse(range);
+    RangeRef parsed = RangeRef.parse(range);
     var header = sheet.getRow(parsed.firstRow());
     if (header == null) {
       header = sheet.createRow(parsed.firstRow());

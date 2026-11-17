@@ -17,14 +17,21 @@ import java.util.Set;
  */
 final class FaultInjectingSecureDirectoryStream implements SecureDirectoryStream<Path> {
   private final SecureDirectoryStream<Path> delegate;
-  private final boolean endReadsEarly;
+  private final java.util.function.UnaryOperator<SeekableByteChannel> channels;
   private final boolean failClose;
   private boolean closed;
 
   FaultInjectingSecureDirectoryStream(
       SecureDirectoryStream<Path> delegate, boolean endReadsEarly, boolean failClose) {
+    this(delegate, channel -> endReadsEarly ? new EndOfFileChannel(channel) : channel, failClose);
+  }
+
+  FaultInjectingSecureDirectoryStream(
+      SecureDirectoryStream<Path> delegate,
+      java.util.function.UnaryOperator<SeekableByteChannel> channels,
+      boolean failClose) {
     this.delegate = Objects.requireNonNull(delegate, "delegate must not be null");
-    this.endReadsEarly = endReadsEarly;
+    this.channels = Objects.requireNonNull(channels);
     this.failClose = failClose;
   }
 
@@ -46,7 +53,7 @@ final class FaultInjectingSecureDirectoryStream implements SecureDirectoryStream
       java.nio.file.attribute.FileAttribute<?>... attributes)
       throws IOException {
     SeekableByteChannel channel = delegate.newByteChannel(path, options, attributes);
-    return endReadsEarly ? new EndOfFileChannel(channel) : channel;
+    return channels.apply(channel);
   }
 
   @Override

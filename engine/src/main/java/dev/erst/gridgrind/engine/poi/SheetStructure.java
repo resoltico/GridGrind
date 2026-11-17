@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.engine.poi;
 
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -19,7 +20,7 @@ import org.jspecify.annotations.Nullable;
 public final class SheetStructure {
   private SheetStructure() {}
 
-  public static void requireNoMergedRegionOverlap(Sheet sheet, CellBounds excelRange) {
+  public static void requireNoMergedRegionOverlap(Sheet sheet, RangeRef excelRange) {
     for (int regionIndex = 0; regionIndex < sheet.getNumMergedRegions(); regionIndex++) {
       CellRangeAddress existing = sheet.getMergedRegion(regionIndex);
       if (intersects(existing, excelRange)) {
@@ -29,7 +30,7 @@ public final class SheetStructure {
     }
   }
 
-  public static int findMergedRegionIndex(Sheet sheet, CellBounds excelRange) {
+  public static int findMergedRegionIndex(Sheet sheet, RangeRef excelRange) {
     for (int regionIndex = 0; regionIndex < sheet.getNumMergedRegions(); regionIndex++) {
       if (matches(sheet.getMergedRegion(regionIndex), excelRange)) {
         return regionIndex;
@@ -38,7 +39,15 @@ public final class SheetStructure {
     return -1;
   }
 
-  public static CellRangeAddress toCellRangeAddress(CellBounds excelRange) {
+  /** Converts canonical concrete geometry without reparsing its A1 presentation. */
+  public static org.apache.poi.ss.util.AreaReference toAreaReference(RangeRef range) {
+    return new org.apache.poi.ss.util.AreaReference(
+        new org.apache.poi.ss.util.CellReference(range.firstRow(), range.firstColumn()),
+        new org.apache.poi.ss.util.CellReference(range.lastRow(), range.lastColumn()),
+        org.apache.poi.ss.SpreadsheetVersion.EXCEL2007);
+  }
+
+  public static CellRangeAddress toCellRangeAddress(RangeRef excelRange) {
     return new CellRangeAddress(
         excelRange.firstRow(),
         excelRange.lastRow(),
@@ -46,45 +55,42 @@ public final class SheetStructure {
         excelRange.lastColumn());
   }
 
-  public static Optional<CellBounds> parseOptionalRange(String range) {
+  public static Optional<RangeRef> parseOptionalRange(String range) {
     try {
-      return Optional.of(CellBounds.parse(range));
+      return Optional.of(RangeRef.parse(range));
     } catch (IllegalArgumentException exception) {
       return Optional.empty();
     }
   }
 
   /** Formats one parsed workbook range back to canonical A1-style text. */
-  public static String formatRange(CellBounds range) {
-    return toCellRangeAddress(range).formatAsString();
+  public static String formatRange(RangeRef range) {
+    return range.value();
   }
 
-  public static boolean matches(CellRangeAddress rangeAddress, CellBounds excelRange) {
+  public static boolean matches(CellRangeAddress rangeAddress, RangeRef excelRange) {
     return rangeAddress.getFirstRow() == excelRange.firstRow()
         && rangeAddress.getLastRow() == excelRange.lastRow()
         && rangeAddress.getFirstColumn() == excelRange.firstColumn()
         && rangeAddress.getLastColumn() == excelRange.lastColumn();
   }
 
-  public static boolean intersects(CellRangeAddress rangeAddress, CellBounds excelRange) {
+  public static boolean intersects(CellRangeAddress rangeAddress, RangeRef excelRange) {
     return rangeAddress.getFirstRow() <= excelRange.lastRow()
         && rangeAddress.getLastRow() >= excelRange.firstRow()
         && rangeAddress.getFirstColumn() <= excelRange.lastColumn()
         && rangeAddress.getLastColumn() >= excelRange.firstColumn();
   }
 
-  public static boolean intersects(CellBounds first, CellBounds second) {
-    return first.firstRow() <= second.lastRow()
-        && first.lastRow() >= second.firstRow()
-        && first.firstColumn() <= second.lastColumn()
-        && first.lastColumn() >= second.firstColumn();
+  public static boolean intersects(RangeRef first, RangeRef second) {
+    return first.intersects(second);
   }
 
   public static boolean hasHeaderValue(Cell cell) {
     return !headerText(cell).isBlank();
   }
 
-  public static boolean headerRowMissing(XSSFSheet sheet, CellBounds range) {
+  public static boolean headerRowMissing(XSSFSheet sheet, RangeRef range) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(range, "range must not be null");
     Row headerRow = sheet.getRow(range.firstRow());
@@ -126,7 +132,7 @@ public final class SheetStructure {
 
   /** Returns the normalized header texts contributed by one candidate header row range. */
   public static List<String> headerNames(
-      org.apache.poi.xssf.usermodel.XSSFSheet sheet, CellBounds range) {
+      org.apache.poi.xssf.usermodel.XSSFSheet sheet, RangeRef range) {
     Row headerRow = sheet.getRow(range.firstRow());
     List<String> headers = new ArrayList<>(range.columnCount());
     for (int columnIndex = range.firstColumn(); columnIndex <= range.lastColumn(); columnIndex++) {

@@ -83,9 +83,8 @@ class GridGrindRecipeDefinitionsTest {
 
     WorkbookPlan request =
         RecipeRegistry.recipeFor("DASHBOARD")
-            .filter(
-                recipe ->
-                    recipe.type() == dev.erst.gridgrind.core.discovery.RecipeType.TASK_STARTER)
+            .filter(recipe ->
+                recipe.type() == dev.erst.gridgrind.core.discovery.RecipeType.TASK_STARTER)
             .orElseThrow()
             .plan();
     org.junit.jupiter.api.Assertions.assertInstanceOf(

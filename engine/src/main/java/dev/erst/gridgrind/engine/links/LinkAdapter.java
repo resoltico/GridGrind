@@ -7,10 +7,10 @@ import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.TextValidation;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
 import dev.erst.gridgrind.engine.cells.CellAccess;
-import dev.erst.gridgrind.engine.poi.CellBounds;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -40,12 +40,12 @@ public final class LinkAdapter {
     this.sheet = Objects.requireNonNull(sheet, "sheet must not be null");
   }
 
-  public LinkAdapter setHyperlink(String address, HyperlinkTarget hyperlink) {
-    CellAccess.requireAddress(address);
+  public LinkAdapter setHyperlink(
+      dev.erst.gridgrind.core.vocabulary.CellAddress address, HyperlinkTarget hyperlink) {
+    Objects.requireNonNull(address, "address must not be null");
     Objects.requireNonNull(hyperlink, "hyperlink must not be null");
 
-    CellReference cellReference = CellAccess.parseCellReference(address);
-    Cell cell = CellAccess.getOrCreateCell(sheet, cellReference.getRow(), cellReference.getCol());
+    Cell cell = CellAccess.getOrCreateCell(sheet, address.rowIndex(), address.columnIndex());
     requireHyperlinkCapacity(cell);
     cell.removeHyperlink();
     org.apache.poi.ss.usermodel.Hyperlink poiHyperlink =
@@ -55,8 +55,8 @@ public final class LinkAdapter {
     return this;
   }
 
-  public LinkAdapter clearHyperlink(String address) {
-    CellAccess.requireAddress(address);
+  public LinkAdapter clearHyperlink(dev.erst.gridgrind.core.vocabulary.CellAddress address) {
+    Objects.requireNonNull(address, "address must not be null");
     CellAccess.optionalCell(sheet, address).ifPresent(Cell::removeHyperlink);
     return this;
   }
@@ -134,7 +134,7 @@ public final class LinkAdapter {
       List<dev.erst.gridgrind.core.vocabulary.CellAddress> addresses) {
     List<CellHyperlinkReport> hyperlinks = new ArrayList<>();
     for (dev.erst.gridgrind.core.vocabulary.CellAddress address : addresses) {
-      Cell cell = CellAccess.cellOrNull(sheet, address.value()).orElse(null);
+      Cell cell = CellAccess.optionalCell(sheet, address).orElse(null);
       if (cell == null) {
         continue;
       }
@@ -334,14 +334,13 @@ public final class LinkAdapter {
   private static String encodePath(String path) {
     StringBuilder builder = new StringBuilder(path.length());
     path.codePoints()
-        .forEach(
-            codePoint -> {
-              if (isPlainUriPathCodePoint(codePoint)) {
-                builder.appendCodePoint(codePoint);
-                return;
-              }
-              appendPercentEncoded(builder, codePoint);
-            });
+        .forEach(codePoint -> {
+          if (isPlainUriPathCodePoint(codePoint)) {
+            builder.appendCodePoint(codePoint);
+            return;
+          }
+          appendPercentEncoded(builder, codePoint);
+        });
     return builder.toString();
   }
 
@@ -543,11 +542,7 @@ public final class LinkAdapter {
     }
 
     try {
-      if (targetAddress.contains(":")) {
-        CellBounds.parse(targetAddress);
-      } else {
-        new CellReference(targetAddress);
-      }
+      RangeRef.parse(targetAddress);
     } catch (IllegalArgumentException exception) {
       findings.add(
           new AnalysisFindingReport(

@@ -32,7 +32,7 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.engine.backend.xssf.*;
-import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
+import dev.erst.gridgrind.engine.backend.xssf.CellNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.InvalidRangeAddressException;
 import dev.erst.gridgrind.engine.backend.xssf.NamedRangeNotFoundException;
 import dev.erst.gridgrind.engine.formulas.InvalidFormulaException;
@@ -232,8 +232,9 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
             "Budget", "C3", "SUM(", "bad formula", new IllegalArgumentException("bad"));
     NamedRangeNotFoundException missingNamedRange =
         new NamedRangeNotFoundException("BudgetTotal", new NamedRangeScopeReport.Workbook());
-    InvalidCellAddressException invalidAddress =
-        new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"));
+    CellNotFoundException missingCell =
+        WorkbookFailureFixtures.missingCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress(98, 1));
     InvalidRangeAddressException invalidRange =
         new InvalidRangeAddressException("A1:", new IllegalArgumentException("bad"));
 
@@ -245,13 +246,13 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                 new WorkbookMutationAction.EnsureSheet()),
             invalidFormula));
     assertEquals(
-        "BAD!",
+        "B99",
         addressFor(
             mutate(
                 new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
                     new DefinedName("BudgetTotal")),
                 new StructuredMutationAction.DeleteNamedRange()),
-            invalidAddress));
+            missingCell));
 
     assertEquals(
         "C1:D2",

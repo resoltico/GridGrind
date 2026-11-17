@@ -74,13 +74,12 @@ class ProtocolReportCoverageTest {
             new RangeLabel("A1:A3"), true, false, Optional.empty(), List.of(reportedFontColor));
 
     assertEquals(Optional.empty(), normalized.sortMethod());
-    assertDoesNotThrow(
-        () ->
-            new AutofilterSortStateReport(
-                new RangeLabel(" "),
-                false,
-                false,
-                Optional.of(ExcelAutofilterSortMethod.STROKE),
-                List.of()));
+    assertDoesNotThrow(() ->
+        new AutofilterSortStateReport(
+            new RangeLabel(" "),
+            false,
+            false,
+            Optional.of(ExcelAutofilterSortMethod.STROKE),
+            List.of()));
   }
 }

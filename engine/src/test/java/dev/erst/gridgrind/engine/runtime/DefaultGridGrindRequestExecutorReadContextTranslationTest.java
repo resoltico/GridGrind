@@ -12,7 +12,7 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.engine.backend.xssf.*;
-import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
+import dev.erst.gridgrind.engine.backend.xssf.CellNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.NamedRangeNotFoundException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -190,8 +190,9 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
   void extractsContextForReadOperations() {
     NamedRangeNotFoundException missingNamedRange =
         new NamedRangeNotFoundException("BudgetTotal", new NamedRangeScopeReport.Workbook());
-    InvalidCellAddressException invalidAddress =
-        new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"));
+    CellNotFoundException missingCell =
+        WorkbookFailureFixtures.missingCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress(98, 1));
     RuntimeException runtimeException = new RuntimeException("x");
 
     InspectionStep workbook =
@@ -356,7 +357,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
 
     assertEquals("BudgetTotal", namedRangeNameFor(workbook, missingNamedRange));
     assertEquals("BudgetTotal", namedRangeNameFor(namedRanges, missingNamedRange));
-    assertEquals("BAD!", addressFor(cells, invalidAddress));
+    assertEquals("B99", addressFor(cells, missingCell));
   }
 
   @Test
@@ -414,8 +415,9 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
 
   @Test
   void extractsReadContextFromExceptionsBeforeFallingBackToReadShape() {
-    InvalidCellAddressException invalidAddress =
-        new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"));
+    CellNotFoundException missingCell =
+        WorkbookFailureFixtures.missingCell(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress(98, 1));
     NamedRangeNotFoundException missingNamedRange =
         new NamedRangeNotFoundException("BudgetTotal", new NamedRangeScopeReport.Workbook());
 
@@ -427,7 +429,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
                 new RangeSelector.RectangularWindow(
                     new SheetName("Budget"), new CellAddress("C3"), 2, 2),
                 new InspectionSurfaceQuery.GetSheetSchema()),
-            invalidAddress));
+            missingCell));
     assertEquals(
         "BudgetTotal",
         namedRangeNameFor(

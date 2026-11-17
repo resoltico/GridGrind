@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -39,8 +38,6 @@ import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
-import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
-import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -88,27 +85,6 @@ import org.junit.jupiter.api.Test;
 
 /** Focused closure tests for runtime seams left uncovered by broader end-to-end suites. */
 class RuntimeResidualCoverageTest {
-
-  @Test
-  void converterNullBranchesAndResolvedPromptFieldsStayTyped() {
-    assertTrue(MutationResolution.toResolvedValidationPrompt(null).isEmpty());
-    assertTrue(MutationResolution.toResolvedValidationErrorAlert(null).isEmpty());
-
-    Optional<ResolvedValidationPrompt> prompt =
-        MutationResolution.toResolvedValidationPrompt(
-            new DataValidationPromptSpec(
-                TextSourceSpec.inline("Prompt title"), TextSourceSpec.inline("Prompt text"), true));
-    Optional<ResolvedValidationErrorAlert> alert =
-        MutationResolution.toResolvedValidationErrorAlert(
-            new DataValidationErrorAlertSpec(
-                ExcelDataValidationErrorStyle.WARNING,
-                TextSourceSpec.inline("Alert title"),
-                TextSourceSpec.inline("Alert text"),
-                true));
-
-    assertEquals("Prompt title", prompt.orElseThrow().title());
-    assertEquals(ExcelDataValidationErrorStyle.WARNING, alert.orElseThrow().style());
-  }
 
   @Test
   void sourceBackedRequirementsCoverResidualDispatchBranches() {

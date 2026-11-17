@@ -22,14 +22,14 @@ class GridGrindMutationConventionsPluginTest {
     Files.createDirectories(projectDirectory.resolve("gradle"));
     Files.writeString(
         projectDirectory.resolve("settings.gradle"), "rootProject.name = 'fixture'\n");
-    Files.writeString(projectDirectory.resolve("gradle.properties"), "gridgrindJavaVersion=27\ngridgrindJavaTargetVersion=26\n");
+    Files.writeString(
+        projectDirectory.resolve("gradle.properties"),
+        "gridgrindJavaVersion=27\ngridgrindJavaTargetVersion=26\n");
     Files.writeString(
         projectDirectory.resolve("gradle/libs.versions.toml"),
-        """
-        [versions]
-        pitest = "1.30.1"
-        pitest-junit5-plugin = "1.2.3"
-        """);
+        Files.readString(
+            Path.of(System.getProperty("gridgrind.repository.root"))
+                .resolve("gradle/libs.versions.toml")));
     Files.writeString(
         projectDirectory.resolve("build.gradle"),
         """
@@ -65,7 +65,7 @@ class GridGrindMutationConventionsPluginTest {
         """);
 
     BuildResult policy = runner("printMutationPolicy", "--max-workers=1").build();
-    assertTrue(policy.getOutput().contains("pitestVersion=1.30.1"));
+    assertTrue(policy.getOutput().contains("pitestVersion=1.30.2"));
     assertTrue(policy.getOutput().contains("junit5PluginVersion=1.2.3"));
     assertTrue(policy.getOutput().contains("mutators=[STRONGER]"));
     assertTrue(policy.getOutput().contains("mutationThresholdConfigured=false"));

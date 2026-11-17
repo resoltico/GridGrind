@@ -2,7 +2,7 @@ package dev.erst.gridgrind.engine.backend.xssf;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.engine.poi.CellBounds;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.engine.poi.SheetStructure;
 import java.lang.reflect.Proxy;
 import java.util.Objects;
@@ -43,25 +43,25 @@ class ExcelSheetStructureSupportTest {
       var sheet = workbook.createSheet("Ops");
       sheet.createRow(1).createCell(0).setCellValue("Ada");
 
-      assertTrue(SheetStructure.headerRowMissing(sheet, CellBounds.parse("A1:B2")));
+      assertTrue(SheetStructure.headerRowMissing(sheet, RangeRef.parse("A1:B2")));
 
       var headerRow = sheet.createRow(0);
       headerRow.createCell(0).setCellValue("Owner");
 
-      assertFalse(SheetStructure.headerRowMissing(sheet, CellBounds.parse("A1:B2")));
+      assertFalse(SheetStructure.headerRowMissing(sheet, RangeRef.parse("A1:B2")));
     }
   }
 
   @Test
   void parseAndIntersectHandleInvalidAndBoundaryRanges() {
     assertTrue(SheetStructure.parseOptionalRange("A0:B2").isEmpty());
-    assertEquals("A1:B2", SheetStructure.formatRange(CellBounds.parse("A1:B2")));
+    assertEquals("A1:B2", SheetStructure.formatRange(RangeRef.parse("A1:B2")));
 
-    CellBounds first = CellBounds.parse("A1:B2");
-    CellBounds beforeFirst = CellBounds.parse("A5:B6");
-    CellBounds touching = CellBounds.parse("B2:C3");
-    CellBounds noColumnOverlap = CellBounds.parse("C1:D2");
-    CellBounds noRowOverlap = CellBounds.parse("A3:B4");
+    RangeRef first = RangeRef.parse("A1:B2");
+    RangeRef beforeFirst = RangeRef.parse("A5:B6");
+    RangeRef touching = RangeRef.parse("B2:C3");
+    RangeRef noColumnOverlap = RangeRef.parse("C1:D2");
+    RangeRef noRowOverlap = RangeRef.parse("A3:B4");
 
     assertFalse(SheetStructure.intersects(beforeFirst, first));
     assertTrue(SheetStructure.intersects(first, touching));

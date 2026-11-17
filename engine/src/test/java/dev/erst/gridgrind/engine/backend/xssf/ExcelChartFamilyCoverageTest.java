@@ -307,10 +307,9 @@ class ExcelChartFamilyCoverageTest {
               .allMatch(snapshot -> snapshot.supported() && snapshot.plotTypeTokens().size() == 1));
       assertTrue(
           drawingCharts.stream()
-              .anyMatch(
-                  snapshot ->
-                      "ScatterOps".equals(snapshot.name())
-                          && snapshot.plotTypeTokens().equals(List.of("SCATTER"))));
+              .anyMatch(snapshot ->
+                  "ScatterOps".equals(snapshot.name())
+                      && snapshot.plotTypeTokens().equals(List.of("SCATTER"))));
     }
   }
 

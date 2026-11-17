@@ -9,7 +9,7 @@ import java.util.Optional;
 public final class GridGrindRequestInputs {
   private final Path workingDirectory;
   private final Path tempRoot;
-  private final Optional<byte[]> standardInputBytes;
+  private final Optional<GridGrindPayloadOpener> standardInputSource;
   private final ExecutionGrant executionGrant;
   private final Optional<GridGrindSecretResolver> secretResolver;
 
@@ -35,7 +35,7 @@ public final class GridGrindRequestInputs {
     this(
         workingDirectory,
         tempRoot,
-        Optional.of(Objects.requireNonNull(standardInputBytes, "standardInputBytes").clone()),
+        Optional.of(bytesSource(standardInputBytes, executionGrant)),
         Objects.requireNonNull(executionGrant, "executionGrant"),
         Optional.empty());
   }
@@ -50,7 +50,7 @@ public final class GridGrindRequestInputs {
     this(
         workingDirectory,
         tempRoot,
-        Optional.of(Objects.requireNonNull(standardInputBytes, "standardInputBytes").clone()),
+        Optional.of(bytesSource(standardInputBytes, executionGrant)),
         Objects.requireNonNull(executionGrant, "executionGrant"),
         Optional.of(Objects.requireNonNull(secretResolver, "secretResolver")));
   }
@@ -72,17 +72,17 @@ public final class GridGrindRequestInputs {
   private GridGrindRequestInputs(
       Path workingDirectory,
       Path tempRoot,
-      Optional<byte[]> standardInputBytes,
+      Optional<GridGrindPayloadOpener> standardInputSource,
       ExecutionGrant executionGrant,
       Optional<GridGrindSecretResolver> secretResolver) {
     Objects.requireNonNull(workingDirectory, "workingDirectory must not be null");
     Objects.requireNonNull(tempRoot, "tempRoot must not be null");
-    Objects.requireNonNull(standardInputBytes, "standardInputBytes must not be null");
+    Objects.requireNonNull(standardInputSource, "standardInputSource must not be null");
     Objects.requireNonNull(executionGrant, "executionGrant must not be null");
     Objects.requireNonNull(secretResolver, "secretResolver must not be null");
     this.workingDirectory = workingDirectory.toAbsolutePath().normalize();
     this.tempRoot = tempRoot.toAbsolutePath().normalize();
-    this.standardInputBytes = standardInputBytes.map(byte[]::clone);
+    this.standardInputSource = standardInputSource;
     this.executionGrant = executionGrant;
     this.secretResolver = secretResolver;
   }
@@ -99,12 +99,34 @@ public final class GridGrindRequestInputs {
 
   /** Returns true when stdin bytes are available to STANDARD_INPUT-authored sources. */
   public boolean hasStandardInput() {
-    return standardInputBytes.isPresent();
+    return standardInputSource.isPresent();
   }
 
-  /** Returns one defensive copy of the bound stdin bytes when a stdin binding is present. */
-  public Optional<byte[]> standardInputBytes() {
-    return standardInputBytes.map(byte[]::clone);
+  /** Returns the lazy host payload capability; obtaining it does not open or consume input. */
+  public Optional<GridGrindPayloadOpener> standardInputSource() {
+    return standardInputSource;
+  }
+
+  /** Creates execution inputs with a lazy payload and optional host-owned secret resolver. */
+  public GridGrindRequestInputs(
+      Path workingDirectory,
+      Path tempRoot,
+      GridGrindPayloadOpener standardInputSource,
+      ExecutionGrant executionGrant,
+      Optional<GridGrindSecretResolver> secretResolver) {
+    this(
+        workingDirectory,
+        tempRoot,
+        Optional.of(Objects.requireNonNull(standardInputSource)),
+        executionGrant,
+        secretResolver);
+  }
+
+  private static GridGrindPayloadOpener bytesSource(byte[] bytes, ExecutionGrant grant) {
+    Objects.requireNonNull(grant)
+        .requireInputSnapshotBytes(0, Objects.requireNonNull(bytes).length);
+    byte[] snapshot = Objects.requireNonNull(bytes, "standardInputBytes must not be null").clone();
+    return () -> new java.io.ByteArrayInputStream(snapshot);
   }
 
   /** Returns the trusted host grant required for this execution. */

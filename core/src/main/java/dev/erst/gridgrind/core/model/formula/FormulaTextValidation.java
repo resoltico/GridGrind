@@ -20,6 +20,17 @@ public final class FormulaTextValidation {
       throw new InvalidFormulaInputException(
           fieldName + " must be scalar; use SET_ARRAY_FORMULA for an array formula", fieldName);
     }
+    try {
+      OoxmlTextValidation.requireXml10CharacterData(normalized, fieldName);
+    } catch (IllegalArgumentException invalid) {
+      var translated =
+          new InvalidFormulaInputException(
+              Objects.requireNonNull(invalid.getMessage(), "validation message must not be null"),
+              fieldName);
+      translated.initCause(invalid);
+      throw translated;
+    }
+    FormulaInputSecurity.rejectDde(normalized);
     return normalized;
   }
 

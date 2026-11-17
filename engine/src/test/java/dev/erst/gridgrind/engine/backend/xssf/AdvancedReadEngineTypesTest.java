@@ -452,18 +452,16 @@ class AdvancedReadEngineTypesTest {
         () ->
             new AutofilterSortConditionReport.Icon(
                 new dev.erst.gridgrind.core.vocabulary.RangeLabel("A2:A5"), true, -1));
-    assertDoesNotThrow(
-        () ->
-            new AutofilterSortConditionReport.Value(
-                new dev.erst.gridgrind.core.vocabulary.RangeLabel(" "), false));
-    assertDoesNotThrow(
-        () ->
-            new AutofilterSortStateReport(
-                new dev.erst.gridgrind.core.vocabulary.RangeLabel(" "),
-                true,
-                false,
-                java.util.Optional.empty(),
-                List.of(sortCondition)));
+    assertDoesNotThrow(() ->
+        new AutofilterSortConditionReport.Value(
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel(" "), false));
+    assertDoesNotThrow(() ->
+        new AutofilterSortStateReport(
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel(" "),
+            true,
+            false,
+            java.util.Optional.empty(),
+            List.of(sortCondition)));
     assertThrows(
         NullPointerException.class,
         () ->

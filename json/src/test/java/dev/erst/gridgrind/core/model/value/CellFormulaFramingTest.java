@@ -121,22 +121,22 @@ class CellFormulaFramingTest {
 
   private static String requestWithFormula(String type, String formula) {
     return """
+    {
+      "protocolVersion": 1,
+      "source": { "type": "NEW" },
+      "persistence": { "type": "NONE" },
+      "steps": [
         {
-          "protocolVersion": 1,
-          "source": { "type": "NEW" },
-          "persistence": { "type": "NONE" },
-          "steps": [
-            {
-              "stepId": "set-formula",
-              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-              "action": {
-                "type": "SET_CELL",
-                "value": { "type": "%s", "value": { "type": "INLINE", "text": "%s" } }
-              }
-            }
-          ]
+          "stepId": "set-formula",
+          "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+          "action": {
+            "type": "SET_CELL",
+            "value": { "type": "%s", "value": { "type": "INLINE", "text": "%s" } }
+          }
         }
-        """
+      ]
+    }
+    """
         .formatted(type, formula.replace("\u0001", "\\u0001"));
   }
 }

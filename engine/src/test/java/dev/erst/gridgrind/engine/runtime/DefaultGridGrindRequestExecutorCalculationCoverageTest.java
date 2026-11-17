@@ -73,7 +73,11 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                         new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(1.0)))));
     WorkbookResult.Failure failure =
         failure(
-            ExecutionContextFixtureSupport.execute(new DefaultGridGrindRequestExecutor(), request));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
+                request));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("VALIDATE_REQUEST", failure.problem().context().type());
@@ -120,7 +124,11 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
     WorkbookResult.Success success =
         assertInstanceOf(
             WorkbookResult.Success.class,
-            ExecutionContextFixtureSupport.execute(new DefaultGridGrindRequestExecutor(), request));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
+                request));
 
     assertEquals(CalculationExecutionStatus.PARTIAL, success.calculation().execution().status());
     assertEquals(GridGrindWarningCode.FORMULA_NOT_EVALUATED, success.warnings().getFirst().code());
@@ -158,7 +166,11 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
 
     WorkbookResult.Failure failure =
         failure(
-            ExecutionContextFixtureSupport.execute(new DefaultGridGrindRequestExecutor(), request));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
+                request));
 
     assertEquals(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, failure.problem().code());
     ProblemContext.ExecuteStep context =
@@ -191,7 +203,11 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
     WorkbookResult.Success success =
         assertInstanceOf(
             WorkbookResult.Success.class,
-            ExecutionContextFixtureSupport.execute(new DefaultGridGrindRequestExecutor(), request));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
+                request));
 
     assertEquals(
         CalculationExecutionStatus.NOT_REQUESTED, success.calculation().execution().status());
@@ -209,7 +225,9 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                 ignored -> {},
                 writer -> {
                   throw new IllegalStateException("streaming calculation failed");
-                }));
+                }),
+            NativeInvocationContext.enterOwned(
+                dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD));
 
     WorkbookResult.Failure failure =
         failure(
@@ -251,7 +269,12 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             java.util.List.of());
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.sheet("Ops").cells().setCell("A1", new ResolvedFormula("TEXTAFTER(\"a,b\",\",\")"));
+      workbook
+          .sheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedFormula("TEXTAFTER(\"a,b\",\",\")"));
 
       CalculationWorkflow.CalculationExecutionOutcome preflightOutcome =
           calculationSupport.executeCalculationPolicy(
@@ -409,7 +432,12 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             java.util.List.of());
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.sheet("Ops").cells().setCell("A1", new ResolvedFormula("TEXTAFTER(\"a,b\",\",\")"));
+      workbook
+          .sheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedFormula("TEXTAFTER(\"a,b\",\",\")"));
 
       CalculationWorkflow.CalculationExecutionOutcome outcome =
           calculationSupport.executeCalculationPolicy(

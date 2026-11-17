@@ -23,10 +23,9 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     GridGrindCli cli =
-        GridGrindCli.forTesting(
-            (request, bindings, sink) -> {
-              throw new UnsupportedOperationException("boom");
-            });
+        GridGrindCli.forTesting((request, bindings, sink) -> {
+          throw new UnsupportedOperationException("boom");
+        });
     Path grantPath = CliGrantFixtureSupport.noPublication(List.of());
 
     int exitCode =

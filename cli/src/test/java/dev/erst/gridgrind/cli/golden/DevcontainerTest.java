@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.cli.golden;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
@@ -22,8 +23,7 @@ class DevcontainerTest {
   @BeforeAll
   void buildContributorImage(@TempDir Path directory) throws Exception {
     docker = new DockerFixture(directory);
-    Path context = GoldenLauncher.REPOSITORY.resolve(".devcontainer");
-    docker.build(context, List.of("--file", context.resolve("Dockerfile").toString()));
+    docker.build(GoldenLauncher.REPOSITORY, List.of("--target", "contributor"));
   }
 
   @AfterAll
@@ -40,7 +40,12 @@ class DevcontainerTest {
         config
             .path("features")
             .has(
-                "ghcr.io/devcontainers/features/docker-outside-of-docker:1.10.1@sha256:698f5900fac471e046c6e9d4333fec88c0e8d952c713494fa0712dce80baeca0"));
+                "ghcr.io/devcontainers/features/docker-outside-of-docker:1.10.2@sha256:661b0fd4c57a7e0bd14d99701ab9bc824719678a9319118728f8d9c59441b7e4"));
+    var feature = config.path("features").properties().iterator().next().getValue();
+    assertEquals("none", feature.path("dockerDashComposeVersion").asText());
+    assertFalse(feature.path("installDockerBuildx").asBoolean());
+    assertFalse(feature.path("installDockerComposeSwitch").asBoolean());
+    assertFalse(feature.path("moby").asBoolean());
     assertEquals("vscode", config.path("remoteUser").asText());
     assertEquals("/workspaces/gridgrind", config.path("workspaceFolder").asText());
     assertEquals(
@@ -61,16 +66,31 @@ class DevcontainerTest {
     boolean defaultRuntime = false;
     for (var runtime : editor.path("settings").path("java.configuration.runtimes")) {
       defaultRuntime |=
-          "/usr/lib/jvm/zulu-27".equals(runtime.path("path").asText())
+          "/opt/java/openjdk".equals(runtime.path("path").asText())
               && runtime.path("default").asBoolean();
     }
     assertTrue(defaultRuntime);
-    DockerFixture.assertSuccess(
-        docker.run(
-            List.of(),
-            "bash",
-            "-lc",
-            "set -euo pipefail; . /etc/os-release; case \"$ID\" in ubuntu|debian) ;; *) exit 1;; esac; java -XshowSettings:properties -version 2>&1 | grep -F 'java.vendor = Azul Systems, Inc.'; java --version | grep -E '27(\\.|\\+| )'; javac --version | grep -E '^javac 27(\\.|$)'; git --version; python3 --version; shellcheck --version; fc-match 'DejaVu Sans'"));
+    String tools =
+        DockerFixture.assertSuccess(
+            docker.run(
+                List.of(),
+                "bash",
+                "-lc",
+                "set -euo pipefail; . /etc/os-release; test \"$ID\" = ubuntu; test \"$VERSION_ID\""
+                    + " = 26.04; java -XshowSettings:properties -version 2>&1 | grep -F"
+                    + " 'java.vendor = Eclipse Adoptium'; java --version; javac --version; git"
+                    + " --version; python3 --version; shellcheck --version; fc-match 'DejaVu Sans';"
+                    + " docker --version; docker buildx version; if command -v docker-compose ||"
+                    + " docker compose version >/dev/null 2>&1; then exit 1; fi"));
+    var pins = new java.util.Properties();
+    try (var input =
+        Files.newInputStream(
+            GoldenLauncher.REPOSITORY.resolve("release/container-runtime.properties"))) {
+      pins.load(input);
+    }
+    assertTrue(tools.contains("build " + pins.getProperty("TEMURIN_VERSION")), tools);
+    assertTrue(tools.contains("Docker version " + pins.getProperty("DOCKER_CLI_VERSION")), tools);
+    assertTrue(tools.contains("buildx v" + pins.getProperty("BUILDX_VERSION")), tools);
   }
 
   @Test
@@ -88,7 +108,9 @@ class DevcontainerTest {
                 cache + ":/home/vscode/.cache"),
             "bash",
             "-lc",
-            "set -euo pipefail; install -d -o root -g root /home/vscode/.gradle/wrapper /home/vscode/.cache/probe; touch /home/vscode/.gradle/wrapper/root-owned-marker /home/vscode/.cache/probe/root-owned-marker"));
+            "set -euo pipefail; install -d -o root -g root /home/vscode/.gradle/wrapper"
+                + " /home/vscode/.cache/probe; touch /home/vscode/.gradle/wrapper/root-owned-marker"
+                + " /home/vscode/.cache/probe/root-owned-marker"));
     DockerFixture.assertSuccess(
         docker.run(
             List.of(
@@ -100,6 +122,8 @@ class DevcontainerTest {
                 GoldenLauncher.REPOSITORY + ":/workspace:ro"),
             "bash",
             "-lc",
-            "set -euo pipefail; /workspace/scripts/devcontainer-prepare-user-home.sh; touch /home/vscode/.gradle/wrapper/user-writable-marker /home/vscode/.cache/probe/user-writable-marker"));
+            "set -euo pipefail; /workspace/scripts/devcontainer-prepare-user-home.sh; touch"
+                + " /home/vscode/.gradle/wrapper/user-writable-marker"
+                + " /home/vscode/.cache/probe/user-writable-marker"));
   }
 }

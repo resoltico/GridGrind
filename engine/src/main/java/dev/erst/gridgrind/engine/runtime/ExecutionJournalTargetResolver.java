@@ -45,18 +45,15 @@ final class ExecutionJournalTargetResolver {
     }
     if (selector instanceof CellSelector.ByAddresses byAddresses) {
       return byAddresses.addresses().stream()
-          .map(
-              address ->
-                  new ExecutionJournal.Target(
-                      "CELL", "Cell " + byAddresses.sheetName() + "!" + address))
+          .map(address ->
+              new ExecutionJournal.Target(
+                  "CELL", "Cell " + byAddresses.sheetName() + "!" + address))
           .toList();
     }
     if (selector instanceof RangeSelector.ByRanges byRanges) {
       return byRanges.ranges().stream()
-          .map(
-              range ->
-                  new ExecutionJournal.Target(
-                      "RANGE", "Range " + byRanges.sheetName() + "!" + range))
+          .map(range ->
+              new ExecutionJournal.Target("RANGE", "Range " + byRanges.sheetName() + "!" + range))
           .toList();
     }
     if (selector instanceof TableSelector.ByNames byNames) {

@@ -88,15 +88,15 @@ public final class SecurityAdapter {
       ResolvedOpenSecurity openOptions,
       WorkbookTempFileFactory tempFileFactory)
       throws IOException {
-    try (ReadableWorkbook materialized =
-        materializeReadableWorkbook(workbookPath, openOptions, tempFileFactory)) {
-      return XssfWorkbooks.openMaterializedWorkbook(
-          materialized.workbookPath(),
-          formulaEnvironment,
-          Optional.of(workbookPath.toAbsolutePath().normalize()),
-          materialized.packageSecurity(),
-          materialized.sourceEncryptionPassword());
-    }
+    return openAndRelease(
+        materializeReadableWorkbook(workbookPath, openOptions, tempFileFactory),
+        materialized ->
+            XssfWorkbooks.openMaterializedWorkbook(
+                materialized.workbookPath(),
+                formulaEnvironment,
+                Optional.of(workbookPath.toAbsolutePath().normalize()),
+                materialized.packageSecurity(),
+                materialized.sourceEncryptionPassword()));
   }
 
   /**
@@ -105,14 +105,47 @@ public final class SecurityAdapter {
   public static XssfWorkbook openWorkbook(
       Path workbookPath, ResolvedOpenSecurity openOptions, WorkbookTempFileFactory tempFileFactory)
       throws IOException {
-    try (ReadableWorkbook materialized =
-        materializeReadableWorkbook(workbookPath, openOptions, tempFileFactory)) {
-      return XssfWorkbooks.openMaterializedWorkbook(
-          materialized.workbookPath(),
-          Optional.of(workbookPath.toAbsolutePath().normalize()),
-          materialized.packageSecurity(),
-          materialized.sourceEncryptionPassword());
+    return openAndRelease(
+        materializeReadableWorkbook(workbookPath, openOptions, tempFileFactory),
+        materialized ->
+            XssfWorkbooks.openMaterializedWorkbook(
+                materialized.workbookPath(),
+                Optional.of(workbookPath.toAbsolutePath().normalize()),
+                materialized.packageSecurity(),
+                materialized.sourceEncryptionPassword()));
+  }
+
+  /** Releases the intermediate plaintext only after acquiring its replacement owner. */
+  static <T extends AutoCloseable> T openAndRelease(
+      ReadableWorkbook materialized, ReadableOpener<T> opener) throws IOException {
+    T opened;
+    try {
+      opened = Objects.requireNonNull(opener.open(materialized));
+    } catch (IOException | RuntimeException | Error failure) {
+      closeAfterFailure(materialized, failure);
+      throw failure;
     }
+    try {
+      materialized.close();
+      return opened;
+    } catch (IOException | RuntimeException | Error failure) {
+      closeAfterFailure(opened, failure);
+      throw failure;
+    }
+  }
+
+  private static void closeAfterFailure(AutoCloseable resource, Throwable failure) {
+    try {
+      resource.close();
+    } catch (Exception cleanup) {
+      if (!failure.equals(cleanup) && failure.getSuppressed().length < 8)
+        failure.addSuppressed(cleanup);
+    }
+  }
+
+  @FunctionalInterface
+  interface ReadableOpener<T> {
+    T open(ReadableWorkbook materialized) throws IOException;
   }
 
   /** Materializes one readable plain `.xlsx` path from a plain or encrypted source workbook. */
@@ -136,7 +169,7 @@ public final class SecurityAdapter {
               inspectPackageSecurity(absolutePath, new OoxmlEncryptionReport.None()),
               Optional.empty(),
               Optional.empty());
-      case OLE2 -> decryptWorkbook(absolutePath, effectiveOpenOptions);
+      case OLE2 -> decryptWorkbook(absolutePath, effectiveOpenOptions, tempFileFactory);
       default ->
           throw new WorkbookNotOpenableException(
               absolutePath,
@@ -176,7 +209,7 @@ public final class SecurityAdapter {
     }
 
     try (PrivateWorkbookFile privateWorkbook =
-        PrivateWorkbookFile.create("gridgrind-ooxml-security-", ".xlsx")) {
+        PrivateWorkbookFile.create("gridgrind-ooxml-security-", ".xlsx", tempFileFactory)) {
       Path plainWorkbookPath =
           WorkbookTempFileFactory.prepareCreateNewTarget(privateWorkbook.workbookPath());
       workbook
@@ -231,20 +264,34 @@ public final class SecurityAdapter {
     private final Path workbookPath;
     private final OoxmlPackageSecurityReport packageSecurity;
     private final Optional<String> sourceEncryptionPassword;
-    private final Optional<Path> cleanupRoot;
+    private final Cleanup cleanup;
 
     ReadableWorkbook(
         Path workbookPath,
         OoxmlPackageSecurityReport packageSecurity,
         Optional<String> sourceEncryptionPassword,
         Optional<Path> cleanupRoot) {
+      this(
+          workbookPath,
+          packageSecurity,
+          sourceEncryptionPassword,
+          Objects.requireNonNull(cleanupRoot, "cleanupRoot must not be null")
+              .<Cleanup>map(path -> () -> WorkbookFiles.deleteTreeIfExists(path))
+              .orElse(() -> {}));
+    }
+
+    ReadableWorkbook(
+        Path workbookPath,
+        OoxmlPackageSecurityReport packageSecurity,
+        Optional<String> sourceEncryptionPassword,
+        Cleanup cleanup) {
       this.workbookPath = Objects.requireNonNull(workbookPath, "workbookPath must not be null");
       this.packageSecurity =
           Objects.requireNonNull(packageSecurity, "packageSecurity must not be null");
       this.sourceEncryptionPassword =
           Objects.requireNonNull(
               sourceEncryptionPassword, "sourceEncryptionPassword must not be null");
-      this.cleanupRoot = Objects.requireNonNull(cleanupRoot, "cleanupRoot must not be null");
+      this.cleanup = Objects.requireNonNull(cleanup, "cleanup must not be null");
     }
 
     public Path workbookPath() {
@@ -260,10 +307,13 @@ public final class SecurityAdapter {
     }
 
     @Override
-    public void close() {
-      if (cleanupRoot.isPresent()) {
-        WorkbookFiles.deleteTreeIfExists(cleanupRoot.orElseThrow());
-      }
+    public void close() throws IOException {
+      cleanup.close();
+    }
+
+    @FunctionalInterface
+    interface Cleanup {
+      void close() throws IOException;
     }
   }
 
@@ -439,23 +489,21 @@ public final class SecurityAdapter {
     return new ResolvedEncryption(
         sourceEncryptionPassword.orElseThrow(),
         toWriteCipher(sourceEncryption.cipherAlgorithm())
-            .orElseThrow(
-                () ->
-                    new UnsupportedSourceEncryptionPreservationException(
-                        "Source workbook encryption cipher "
-                            + sourceEncryption.cipherAlgorithm()
-                            + " is readable but not auto-preservable on write;"
-                            + " set persistence.security.encryption explicitly to author a"
-                            + " supported AGILE package instead.")),
+            .orElseThrow(() ->
+                new UnsupportedSourceEncryptionPreservationException(
+                    "Source workbook encryption cipher "
+                        + sourceEncryption.cipherAlgorithm()
+                        + " is readable but not auto-preservable on write;"
+                        + " set persistence.security.encryption explicitly to author a"
+                        + " supported AGILE package instead.")),
         toWriteHash(sourceEncryption.hashAlgorithm())
-            .orElseThrow(
-                () ->
-                    new UnsupportedSourceEncryptionPreservationException(
-                        "Source workbook encryption hash "
-                            + sourceEncryption.hashAlgorithm()
-                            + " is readable but not auto-preservable on write;"
-                            + " set persistence.security.encryption explicitly to author a"
-                            + " supported AGILE package instead.")));
+            .orElseThrow(() ->
+                new UnsupportedSourceEncryptionPreservationException(
+                    "Source workbook encryption hash "
+                        + sourceEncryption.hashAlgorithm()
+                        + " is readable but not auto-preservable on write;"
+                        + " set persistence.security.encryption explicitly to author a"
+                        + " supported AGILE package instead.")));
   }
 
   /** Reads one workbook package's signature state alongside its already-known encryption facts. */
@@ -616,34 +664,40 @@ public final class SecurityAdapter {
     return openOptions == null ? new ResolvedOpenSecurity.Unencrypted() : openOptions;
   }
 
-  static ReadableWorkbook decryptWorkbook(Path workbookPath, ResolvedOpenSecurity openOptions)
+  static ReadableWorkbook decryptWorkbook(
+      Path workbookPath, ResolvedOpenSecurity openOptions, WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     try (PrivateWorkbookFile privateWorkbook =
-            PrivateWorkbookFile.create("gridgrind-ooxml-decrypted-", ".xlsx");
-        POIFSFileSystem fileSystem = new POIFSFileSystem(workbookPath.toFile())) {
-      if (!isEncryptedOoxmlPackage(fileSystem)) {
-        throw new WorkbookNotOpenableException(
-            workbookPath,
-            new IllegalArgumentException("Only encrypted OOXML .xlsx packages are supported"));
+        PrivateWorkbookFile.create("gridgrind-ooxml-decrypted-", ".xlsx", tempFileFactory)) {
+      String password;
+      OoxmlEncryptionReport encryption;
+      try (POIFSFileSystem fileSystem = new POIFSFileSystem(workbookPath.toFile())) {
+        if (!isEncryptedOoxmlPackage(fileSystem)) {
+          throw new WorkbookNotOpenableException(
+              workbookPath,
+              new IllegalArgumentException("Only encrypted OOXML .xlsx packages are supported"));
+        }
+        password = openPassword(openOptions);
+        EncryptionInfo encryptionInfo = readEncryptionInfo(fileSystem, workbookPath);
+        Decryptor decryptor = Decryptor.getInstance(encryptionInfo);
+        if (!verifyPassword(decryptor::verifyPassword, password, workbookPath)) {
+          throw new InvalidWorkbookPasswordException();
+        }
+        materializeDecryptedWorkbook(
+            () -> decryptor.getDataStream(fileSystem),
+            privateWorkbook.workbookPath(),
+            workbookPath);
+        encryption = encryptionSnapshot(encryptionInfo);
       }
-      String password = openPassword(openOptions);
-      EncryptionInfo encryptionInfo = readEncryptionInfo(fileSystem, workbookPath);
-
-      Decryptor decryptor = Decryptor.getInstance(encryptionInfo);
-      boolean unlocked = verifyPassword(decryptor::verifyPassword, password, workbookPath);
-      if (!unlocked) {
-        throw new InvalidWorkbookPasswordException();
-      }
-
-      materializeDecryptedWorkbook(
-          () -> decryptor.getDataStream(fileSystem), privateWorkbook.workbookPath(), workbookPath);
-
-      OoxmlEncryptionReport encryption = encryptionSnapshot(encryptionInfo);
-      return new ReadableWorkbook(
-          privateWorkbook.workbookPath(),
-          inspectPackageSecurity(privateWorkbook.workbookPath(), encryption),
-          Optional.of(password),
-          Optional.of(privateWorkbook.releaseRoot()));
+      // Transfer only after all acquisition-side resources closed and the replacement owner exists.
+      ReadableWorkbook readable =
+          new ReadableWorkbook(
+              privateWorkbook.workbookPath(),
+              inspectPackageSecurity(privateWorkbook.workbookPath(), encryption),
+              Optional.of(password),
+              Optional.of(privateWorkbook.root()));
+      privateWorkbook.releaseRoot();
+      return readable;
     }
   }
 

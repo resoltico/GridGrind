@@ -11,7 +11,8 @@ plugins {
 
 description = "Product architecture rules and their focused negative controls"
 
-val productProjects = rootProject.subprojects.filter { it != project }.sortedBy { it.path }
+// Resource-only native repairs have no parent-loaded product classes to scan.
+val productProjects = rootProject.subprojects.filter { it != project && it.name != "native-provider" }.sortedBy { it.path }
 val sourceSets = extensions.getByType<SourceSetContainer>()
 val mainSourceSet = sourceSets.getByName("main")
 val architectureSourceSet = sourceSets.create("architectureTest") {
@@ -20,6 +21,10 @@ val architectureSourceSet = sourceSets.create("architectureTest") {
 }
 
 dependencies {
+    constraints {
+        implementation(libs.slf4j.api)
+        add(architectureSourceSet.implementationConfigurationName, libs.slf4j.api)
+    }
     implementation(platform(libs.junit.bom))
     implementation(libs.archunit.junit6)
     productProjects.forEach { implementation(project(it.path)) }

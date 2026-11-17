@@ -8,7 +8,6 @@ import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -112,9 +111,8 @@ class GridGrindProtocolCatalogStepTemplateContractTest {
                 List.of()));
     ArrayNode steps = request.putArray("steps");
     steps.add(tree(template.template()));
-    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-    GridGrindJsonOutput.writeCatalogLookupValue(buffer, request);
-    return buffer.toByteArray();
+    return dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.WIRE_JSON_MAPPER
+        .writeValueAsBytes(request);
   }
 
   private static TypeEntry typeEntry(List<TypeEntry> entries, String id) {

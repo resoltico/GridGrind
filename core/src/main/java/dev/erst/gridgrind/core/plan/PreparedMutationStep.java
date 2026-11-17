@@ -2,22 +2,31 @@ package dev.erst.gridgrind.core.plan;
 
 import java.util.Objects;
 
-/** A mutation with materialized non-secret operands and its original diagnostic identity. */
-public record PreparedMutationStep(MutationStep authoredStep, PreparedMutationAction action)
-    implements PreparedStep {
-  public PreparedMutationStep {
-    Objects.requireNonNull(authoredStep, "authoredStep must not be null");
-    Objects.requireNonNull(action, "action must not be null");
-    boolean matches =
-        switch (action) {
-          case ResolvedMutationAction resolved ->
-              resolved.authoredType().isInstance(authoredStep.action());
-          case WorkbookMutationAction.SetSheetProtection protection ->
-              protection.equals(authoredStep.action());
-          case WorkbookMutationAction.SetWorkbookProtection protection ->
-              protection.equals(authoredStep.action());
-        };
-    if (!matches)
-      throw new IllegalArgumentException("Prepared action must match its authored mutation");
+/** A mutation's original provenance and bound selector/action, with no second authored step. */
+public final class PreparedMutationStep implements PreparedStep {
+  private final MutationStep authoredStep;
+  private final Selector target;
+  private final PreparedMutationAction action;
+
+  PreparedMutationStep(MutationStep authoredStep, MutationStep bound) {
+    this.authoredStep = Objects.requireNonNull(authoredStep, "authoredStep must not be null");
+    SourceBindingRelationship.requireBinding(authoredStep, bound);
+    this.target = bound.target();
+    this.action = MutationPreparation.prepare(bound.action());
+  }
+
+  @Override
+  public MutationStep authoredStep() {
+    return authoredStep;
+  }
+
+  /** Returns the selector with external key operands bound, before workbook-state resolution. */
+  public Selector target() {
+    return target;
+  }
+
+  /** Returns validated materialized operands; secret references remain unacquired. */
+  public PreparedMutationAction action() {
+    return action;
   }
 }

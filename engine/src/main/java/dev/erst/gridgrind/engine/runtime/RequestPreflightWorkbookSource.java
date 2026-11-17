@@ -12,27 +12,74 @@ import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import dev.erst.gridgrind.engine.security.SecurityAdapter;
 import java.util.List;
 
-/**
- * Opens an existing source only long enough to validate non-mutating source-dependent constraints.
- */
+/** Prepares the selected source path and validates facts required by that concrete strategy. */
 final class RequestPreflightWorkbookSource {
   private RequestPreflightWorkbookSource() {}
 
-  static void verify(
+  static PreparedWorkbookSource prepare(
       WorkbookPlan request,
       ExecutionInputBindings bindings,
       List<GridGrindProblemDetail.Problem> problems) {
-    if (!(request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile)) {
-      return;
+    return prepare(
+        request,
+        bindings,
+        problems,
+        (plan, inputs) ->
+            new WorkbookLifecycle(inputs.tempFileFactory())
+                .openWorkbook(
+                    plan.source(), problems.isEmpty() ? plan.formulaEnvironment() : null, inputs));
+  }
+
+  @SuppressWarnings(
+      "PMD.CloseResource") // Both native handles transfer immediately to the session-owned prepared
+  // source.
+  static PreparedWorkbookSource prepare(
+      WorkbookPlan request,
+      ExecutionInputBindings bindings,
+      List<GridGrindProblemDetail.Problem> problems,
+      XssfOpener opener) {
+    var prepared =
+        new PreparedWorkbookSource(
+            dev.erst.gridgrind.core.semantics.BackendCapabilities.executionStrategy(
+                request, bindings.executionGrant()));
+    bindings.own(prepared::close);
+    if (!(request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existing)) {
+      prepared.newWorkbookCalendar();
+      return prepared;
     }
     var context = RequestPreflight.openWorkbookContext(request, bindings);
-    WorkbookLifecycle workbookSupport = new WorkbookLifecycle(bindings.tempFileFactory());
-    try (XssfWorkbook workbook = workbookSupport.openWorkbook(request.source(), null, bindings)) {
-      validateSourcePersistencePolicy(request, workbook);
-      addFormulaColumnViolations(request, bindings, workbook, problems);
+    try {
+      if (prepared.strategy().backend()
+          == dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Backend.EVENT_READ) {
+        var materialized =
+            dev.erst.gridgrind.engine.backend.xssf.WorkbookArtifactIo.materializeWorkbook(
+                WorkbookLifecycle.materializeSource(existing, bindings),
+                ExecutionRequestPaths.materializeOpenSecurity(
+                    existing.security().orElse(null), bindings),
+                bindings.tempFileFactory()::createTempFile);
+        prepared.retain(materialized);
+        // EVENT_READ admits inspection steps only. The formula/column-edit rule has no
+        // applicable mutation here; security and workbook metadata still require validation.
+        new dev.erst.gridgrind.engine.backend.eventread.EventWorkbookReader()
+            .apply(materialized.workbookPath(), List.of());
+      } else {
+        XssfWorkbook workbook = opener.open(request, bindings);
+        prepared.retain(workbook);
+        validateSourcePersistencePolicy(request, workbook);
+        addFormulaColumnViolations(request, bindings, workbook, problems);
+      }
     } catch (Exception exception) {
       problems.add(GridGrindProblems.fromException(exception, context));
     }
+    return prepared;
+  }
+
+  /** Package-local native opening seam for source-lifetime and strategy regression controls. */
+  @FunctionalInterface
+  interface XssfOpener {
+    /** Opens a source whose exclusive close obligation transfers to the prepared-source owner. */
+    XssfWorkbook open(WorkbookPlan request, ExecutionInputBindings bindings)
+        throws java.io.IOException;
   }
 
   private static void addFormulaColumnViolations(

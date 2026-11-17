@@ -40,19 +40,18 @@ final class CatalogStepTemplateSupport {
         GridGrindProtocolTypeNames.workbookStepTypeName(
             stepType.asSubclass(dev.erst.gridgrind.core.plan.WorkbookStep.class));
     return entries.stream()
-        .map(
-            entry ->
-                new TypeEntry(
-                    entry.id(),
-                    entry.summary(),
-                    entry.fields(),
-                    entry.targetSelectors(),
-                    entry.targetSelectorRule(),
-                    entry.noteRefs(),
-                    entry.preconditions(),
-                    entry.effects(),
-                    entry.effectFootprint(),
-                    Optional.of(buildTemplate(catalog, entry, stepKind, bodyField))))
+        .map(entry ->
+            new TypeEntry(
+                entry.id(),
+                entry.summary(),
+                entry.fields(),
+                entry.targetSelectors(),
+                entry.targetSelectorRule(),
+                entry.noteRefs(),
+                entry.preconditions(),
+                entry.effects(),
+                entry.effectFootprint(),
+                Optional.of(buildTemplate(catalog, entry, stepKind, bodyField))))
         .toList();
   }
 
@@ -96,10 +95,9 @@ final class CatalogStepTemplateSupport {
               .min(
                   java.util.Comparator.comparingInt(
                       target -> CatalogStepTemplateDefaults.selectorPreference(target.id())))
-              .orElseThrow(
-                  () ->
-                      new IllegalStateException(
-                          "Catalog target selector ids did not resolve for " + entry.id()));
+              .orElseThrow(() ->
+                  new IllegalStateException(
+                      "Catalog target selector ids did not resolve for " + entry.id()));
       if (targetIds.size() > 1) {
         notes.add(
             "Replace the placeholder target when needed; "
@@ -119,10 +117,9 @@ final class CatalogStepTemplateSupport {
     return typeTemplate(
         catalog,
         findTypeEntryById(catalog, "WORKBOOK_CURRENT")
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "Catalog is missing WORKBOOK_CURRENT for dynamic target placeholder")),
+            .orElseThrow(() ->
+                new IllegalStateException(
+                    "Catalog is missing WORKBOOK_CURRENT for dynamic target placeholder")),
         TypePlacement.topLevel(),
         new LinkedHashSet<>(),
         notes);
@@ -296,24 +293,19 @@ final class CatalogStepTemplateSupport {
       List<TypeEntry> entries, Set<String> recursionGuard, String groupName) {
     return entries.stream()
         .sorted(
-            java.util.Comparator.comparingInt(
-                candidate ->
-                    CatalogStepTemplateDefaults.entryPreference(groupName, candidate.id())))
+            java.util.Comparator.comparingInt(candidate ->
+                CatalogStepTemplateDefaults.entryPreference(groupName, candidate.id())))
         .filter(candidate -> !recursionGuard.contains(candidate.id()))
         .findFirst()
-        .orElseGet(
-            () ->
-                entries.stream()
-                    .sorted(
-                        java.util.Comparator.comparingInt(
-                            candidate ->
-                                CatalogStepTemplateDefaults.entryPreference(
-                                    groupName, candidate.id())))
-                    .findFirst()
-                    .orElseThrow(
-                        () ->
-                            new IllegalStateException(
-                                "Catalog group " + groupName + " did not expose any entries")));
+        .orElseGet(() ->
+            entries.stream()
+                .sorted(
+                    java.util.Comparator.comparingInt(candidate ->
+                        CatalogStepTemplateDefaults.entryPreference(groupName, candidate.id())))
+                .findFirst()
+                .orElseThrow(() ->
+                    new IllegalStateException(
+                        "Catalog group " + groupName + " did not expose any entries")));
   }
 
   private static List<TypeEntry> topLevelEntries(Catalog catalog, String typeSet) {

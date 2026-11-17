@@ -34,7 +34,8 @@ public sealed interface CellGradientFillSpec
   @Variant(
       id = "LINEAR",
       summary =
-          "Write one linear gradient fill with ordered stops. degree is optional when Excel's default angle is acceptable.")
+          "Write one linear gradient fill with ordered stops. degree is optional when Excel's"
+              + " default angle is acceptable.")
   record Linear(Optional<Double> degree, List<CellGradientStopSpec> stops)
       implements CellGradientFillSpec {
     public Linear {
@@ -48,7 +49,8 @@ public sealed interface CellGradientFillSpec
   @Variant(
       id = "PATH",
       summary =
-          "Write one path gradient fill with ordered stops. Each edge offset is optional and omitted offsets preserve Excel's default path geometry.")
+          "Write one path gradient fill with ordered stops. Each edge offset is optional and"
+              + " omitted offsets preserve Excel's default path geometry.")
   record Path(
       Optional<Double> left,
       Optional<Double> right,
@@ -70,12 +72,11 @@ public sealed interface CellGradientFillSpec
   }
 
   private static void requireFinite(Optional<Double> value, String fieldName) {
-    value.ifPresent(
-        actual -> {
-          if (!Double.isFinite(actual)) {
-            throw new IllegalArgumentException(fieldName + " must be finite");
-          }
-        });
+    value.ifPresent(actual -> {
+      if (!Double.isFinite(actual)) {
+        throw new IllegalArgumentException(fieldName + " must be finite");
+      }
+    });
   }
 
   private static List<CellGradientStopSpec> copyStops(List<CellGradientStopSpec> stops) {

@@ -452,13 +452,17 @@ class ExecutionJournalCoverageTest {
         assertInstanceOf(
             WorkbookResult.Success.class,
             execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 planForJournalLevel(ExecutionJournalLevel.SUMMARY)));
     WorkbookResult.Success secondResponse =
         assertInstanceOf(
             WorkbookResult.Success.class,
             execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 planForJournalLevel(ExecutionJournalLevel.SUMMARY)));
 
     ExecutionJournal.Step firstStep = firstResponse.journal().steps().getFirst();

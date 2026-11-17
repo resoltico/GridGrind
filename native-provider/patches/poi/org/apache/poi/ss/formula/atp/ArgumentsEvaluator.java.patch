@@ -1,0 +1,17 @@
+--- org/apache/poi/ss/formula/atp/ArgumentsEvaluator.java
++++ org/apache/poi/ss/formula/atp/ArgumentsEvaluator.java
+@@ -61,12 +61,12 @@
+                 result = dVal;
+             } else {
+                 LocalDate date = DateParser.parseLocalDate(strVal);
+-                result = DateUtil.getExcelDate(date, false);
++                result = DateUtil.getExcelDate(date, org.apache.poi.ss.usermodel.DateSystemContext.is1904());
+             }
+         } else {
+             result = OperandResolver.coerceValueToDouble(ve);
+         }
+-        if (result < 0 || result >= DateUtil.MAX_EXCEL_DATE_SERIAL + 1) {
++        if (result < 0 || result >= org.apache.poi.ss.usermodel.DateSystemContext.maximumSerial() + 1) {
+             // not a date Excel can work with
+             throw new EvaluationException(ErrorEval.NUM_ERROR);
+         }

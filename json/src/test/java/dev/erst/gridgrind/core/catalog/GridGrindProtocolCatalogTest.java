@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -198,8 +199,7 @@ class GridGrindProtocolCatalogTest {
     for (TargetSelectorEntry targetSelector : assertionType.targetSelectors()) {
       for (String typeId : targetSelector.typeIds()) {
         String previousFamily = familyByTypeId.putIfAbsent(typeId, targetSelector.family());
-        assertEquals(
-            null,
+        assertNull(
             previousFamily,
             () ->
                 assertionType.id()
@@ -560,7 +560,8 @@ class GridGrindProtocolCatalogTest {
         List.of(
             new EnumValueDocEntry(
                 "VALUE",
-                "Project the factual effective scalar in value, including formula results and blank values."),
+                "Project the factual effective scalar in value, including formula results and blank"
+                    + " values."),
             new EnumValueDocEntry("STYLE", "Project the style report for each returned cell."),
             new EnumValueDocEntry(
                 "FORMAT", "Project displayValue using Excel's formatted display text."),

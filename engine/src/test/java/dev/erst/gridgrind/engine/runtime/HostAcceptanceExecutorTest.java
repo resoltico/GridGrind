@@ -46,10 +46,16 @@ class HostAcceptanceExecutorTest {
       workbook.getOrCreateSheet("Budget");
       HostAcceptanceSnapshot snapshot =
           executor.captureBeforeMutation(
-              policy, workbook, new WorkbookLocation.UnsavedWorkbook(), null);
+              policy, policy, workbook, new WorkbookLocation.UnsavedWorkbook(), null);
       HostAcceptanceVerification verification =
           executor.verifyWorkbook(
-              policy, snapshot, workbook, new WorkbookLocation.UnsavedWorkbook());
+              policy,
+              policy,
+              snapshot,
+              workbook,
+              new WorkbookLocation.UnsavedWorkbook(),
+              new java.util.ArrayList<>(),
+              new java.util.ArrayList<>());
 
       assertEquals(1, verification.assertions().size());
       assertEquals(
@@ -72,16 +78,27 @@ class HostAcceptanceExecutorTest {
         new AcceptancePolicy.RequireAll(List.of(terminalSheetAssertion()));
     HostAcceptanceVerification terminalVerification =
         executor.verifyMaterializedTerminalAcceptance(
-            policy, workbookPath, new WorkbookLocation.UnsavedWorkbook());
+            policy,
+            policy,
+            workbookPath,
+            new WorkbookLocation.UnsavedWorkbook(),
+            new java.util.ArrayList<>());
     HostAcceptanceVerification minimumVerification =
         executor.verifyMaterializedTerminalAcceptance(
-            AcceptancePolicy.minimum(), workbookPath, new WorkbookLocation.UnsavedWorkbook());
+            AcceptancePolicy.minimum(),
+            AcceptancePolicy.minimum(),
+            workbookPath,
+            new WorkbookLocation.UnsavedWorkbook(),
+            new java.util.ArrayList<>());
     HostAcceptanceVerification calculationOnlyVerification =
         executor.verifyMaterializedTerminalAcceptance(
             new AcceptancePolicy.RequireAll(
                 List.of(new AcceptancePolicy.Requirement.RequireCalculation())),
+            new AcceptancePolicy.RequireAll(
+                List.of(new AcceptancePolicy.Requirement.RequireCalculation())),
             workbookPath,
-            new WorkbookLocation.UnsavedWorkbook());
+            new WorkbookLocation.UnsavedWorkbook(),
+            new java.util.ArrayList<>());
 
     assertEquals(1, terminalVerification.assertions().size());
     assertEquals(0, minimumVerification.assertions().size());
@@ -103,11 +120,14 @@ class HostAcceptanceExecutorTest {
           IOException.class,
           () ->
               executor.captureBeforeMutation(
-                  opaque, workbook, new WorkbookLocation.UnsavedWorkbook(), null));
+                  opaque, opaque, workbook, new WorkbookLocation.UnsavedWorkbook(), null));
       assertEquals(
           List.of(),
           executor.verifyStagedArtifact(
-              AcceptancePolicy.minimum(), HostAcceptanceSnapshot.empty(), root));
+              AcceptancePolicy.minimum(),
+              HostAcceptanceSnapshot.empty(),
+              root,
+              new java.util.ArrayList<>()));
     }
   }
 
@@ -129,7 +149,9 @@ class HostAcceptanceExecutorTest {
         List.of("/customXml/item1.xml"),
         assertInstanceOf(
                 WorkbookExecutionEvidence.Preservation.ByteEstablished.class,
-                executor.verifyStagedArtifact(policy, snapshot, staged).getFirst())
+                executor
+                    .verifyStagedArtifact(policy, snapshot, staged, new java.util.ArrayList<>())
+                    .getFirst())
             .partNames());
   }
 
@@ -146,6 +168,63 @@ class HostAcceptanceExecutorTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new HostAcceptanceSnapshot.SemanticPreservation(semantic, List.of()));
+  }
+
+  @Test
+  void terminalFailureRetainsEarlierSuccessfulHostAssertionsInTheDestination() throws Exception {
+    var first = terminalSheetAssertion().assertions().getFirst();
+    var missing =
+        new AssertionStep(
+            new StepId("assert-missing"),
+            new SheetSelector.ByName(new SheetName("Missing")),
+            new PresenceAssertion.SheetPresent());
+    var policy =
+        new AcceptancePolicy.RequireAll(
+            List.of(new AcceptancePolicy.Requirement.TerminalAssertions(List.of(first, missing))));
+    var recorded = new java.util.ArrayList<dev.erst.gridgrind.core.plan.AssertionResult>();
+    var executor = new HostAcceptanceExecutor(stepSupport());
+    Path path = writeWorkbook();
+    assertThrows(
+        AssertionFailedException.class,
+        () ->
+            executor.verifyMaterializedTerminalAcceptance(
+                policy, policy, path, new WorkbookLocation.UnsavedWorkbook(), recorded));
+    assertEquals(
+        List.of(first.stepId()),
+        recorded.stream().map(dev.erst.gridgrind.core.plan.AssertionResult::stepId).toList());
+  }
+
+  @Test
+  void rejectsUnrelatedOrWeakenedBoundHostPolicyBeforeOpeningAnArtifact() throws Exception {
+    var executor = new HostAcceptanceExecutor(stepSupport());
+    var original = new AcceptancePolicy.RequireAll(List.of(terminalSheetAssertion()));
+    var changed =
+        new AcceptancePolicy.RequireAll(
+            List.of(
+                new AcceptancePolicy.Requirement.TerminalAssertions(
+                    List.of(
+                        new AssertionStep(
+                            new StepId("assert-budget"),
+                            new SheetSelector.ByName(new SheetName("Unrelated")),
+                            new PresenceAssertion.SheetPresent())))));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.verifyMaterializedTerminalAcceptance(
+                original,
+                changed,
+                root.resolve("unopened.xlsx"),
+                new WorkbookLocation.UnsavedWorkbook(),
+                new java.util.ArrayList<>()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            executor.verifyMaterializedTerminalAcceptance(
+                original,
+                AcceptancePolicy.minimum(),
+                root.resolve("unopened.xlsx"),
+                new WorkbookLocation.UnsavedWorkbook(),
+                new java.util.ArrayList<>()));
   }
 
   private AcceptancePolicy.Requirement.TerminalAssertions terminalSheetAssertion() {

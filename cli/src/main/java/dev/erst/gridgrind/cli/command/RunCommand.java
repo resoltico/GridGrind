@@ -156,6 +156,8 @@ final class RunCommand {
                   command.secretsProviderPath(),
                   stdin,
                   new CliProgressJsonlSink(stderr)));
+    } catch (dev.erst.gridgrind.cli.io.CliAuthorityIOException authorityIo) {
+      throw authorityIo;
     } catch (IOException exception) {
       return CliRequestReadFailureSupport.write(
           responseWriter,
@@ -199,15 +201,39 @@ final class RunCommand {
       return 1;
     }
     try (reservation) {
-      WorkbookResult response = executeReservedRequest(command, stdin, stderr, request, analysis);
-      return responseWriter.writeReserved(
-          reservation,
-          stdout,
-          stderr,
-          response,
-          CliExitCodes.forWorkbookResult(response),
-          requestRedactor,
-          prettyJson);
+      try {
+        WorkbookResult response = executeReservedRequest(command, stdin, stderr, request, analysis);
+        return responseWriter.writeReserved(
+            reservation,
+            stdout,
+            stderr,
+            response,
+            CliExitCodes.forWorkbookResult(response),
+            requestRedactor,
+            prettyJson);
+      } catch (dev.erst.gridgrind.cli.io.CliAuthorityDocumentException refusal) {
+        return responseWriter.writeReservedCommandError(
+            reservation,
+            stdout,
+            stderr,
+            CliAuthorityFailureSupport.commandError(
+                "run", refusal.authorityPath(), refusal.refusal()),
+            prettyJson);
+      } catch (dev.erst.gridgrind.cli.io.CliAuthorityIOException failure) {
+        return responseWriter.writeReservedCommandError(
+            reservation,
+            stdout,
+            stderr,
+            CliAuthorityFailureSupport.commandError("run", failure.authorityPath(), failure),
+            prettyJson);
+      } catch (dev.erst.gridgrind.cli.io.CliAuthorityUnexpectedException failure) {
+        return responseWriter.writeReservedCommandError(
+            reservation,
+            stdout,
+            stderr,
+            CliAuthorityFailureSupport.commandError("run", failure.authorityPath(), failure),
+            prettyJson);
+      }
     }
   }
 
@@ -216,7 +242,8 @@ final class RunCommand {
       InputStream stdin,
       OutputStream stderr,
       WorkbookPlan request,
-      RequestIntake analysis) {
+      RequestIntake analysis)
+      throws IOException {
     try {
       return CliResponseWriter.withTransportWarnings(
           CliExecutionFailureSupport.executeStarted(
@@ -232,9 +259,11 @@ final class RunCommand {
                   stdin,
                   new CliProgressJsonlSink(stderr))),
           analysis);
+    } catch (dev.erst.gridgrind.cli.io.CliAuthorityIOException authorityIo) {
+      throw authorityIo;
     } catch (IOException exception) {
       return CliResponseWriter.withTransportWarnings(
-          CliExecutionFailureSupport.failure(request, exception), analysis);
+          CliExecutionFailureSupport.failureBeforeExecution(request, exception), analysis);
     }
   }
 

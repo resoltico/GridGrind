@@ -39,29 +39,20 @@ final class CatalogRefResolutionSupport {
   static List<CatalogLookupRef> allLookupRefs(Catalog catalog) {
     return Stream.of(
             allEntryRefs(catalog).stream()
-                .map(
-                    entryRef ->
-                        new CatalogLookupRef(
-                            entryRef.group(),
-                            entryRef.entry().id(),
-                            entryRef.qualifiedId(),
-                            new CatalogEntryLookupValue(entryRef.entry()))),
+                .map(entryRef ->
+                    new CatalogLookupRef(
+                        entryRef.group(),
+                        entryRef.entry().id(),
+                        entryRef.qualifiedId(),
+                        entryRef.entry())),
             catalog.nestedTypes().stream()
-                .map(
-                    group ->
-                        new CatalogLookupRef(
-                            "nestedTypes",
-                            group.group(),
-                            "nestedTypes:" + group.group(),
-                            new CatalogNestedGroupLookupValue(group))),
+                .map(group ->
+                    new CatalogLookupRef(
+                        "nestedTypes", group.group(), "nestedTypes:" + group.group(), group)),
             catalog.plainTypes().stream()
-                .map(
-                    group ->
-                        new CatalogLookupRef(
-                            "plainTypes",
-                            group.group(),
-                            "plainTypes:" + group.group(),
-                            new CatalogPlainGroupLookupValue(group))),
+                .map(group ->
+                    new CatalogLookupRef(
+                        "plainTypes", group.group(), "plainTypes:" + group.group(), group)),
             topLevelGroupRefs(catalog).stream())
         .flatMap(Function.identity())
         .toList();
@@ -69,13 +60,8 @@ final class CatalogRefResolutionSupport {
 
   private static List<CatalogLookupRef> topLevelGroupRefs(Catalog catalog) {
     return catalog.topLevelGroups().stream()
-        .map(group -> topLevelGroupRef(group.group(), group.types()))
+        .map(group -> new CatalogLookupRef(group.group(), group.group(), group.group(), group))
         .toList();
-  }
-
-  private static CatalogLookupRef topLevelGroupRef(String group, List<TypeEntry> types) {
-    return new CatalogLookupRef(
-        group, group, group, new CatalogTopLevelGroupLookupValue(group, types));
   }
 
   static List<CatalogEntryRef> matchingEntryRefs(Catalog catalog, String idOrQualifiedId) {
@@ -106,9 +92,8 @@ final class CatalogRefResolutionSupport {
         return List.of();
       }
       return allLookupRefs(catalog).stream()
-          .filter(
-              lookupRef ->
-                  lookupRef.catalogGroup().equals(group) && lookupRef.lookupId().equals(id))
+          .filter(lookupRef ->
+              lookupRef.catalogGroup().equals(group) && lookupRef.lookupId().equals(id))
           .toList();
     }
     return allLookupRefs(catalog).stream()

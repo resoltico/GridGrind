@@ -14,19 +14,69 @@ import java.util.Optional;
 /** Runs contract-derived linting for one authored request without mutating workbook sources. */
 public final class GridGrindRequestDoctor {
   private final StaticRequestValidator staticValidator;
+  private final NativeInvocationContext nativeContext;
 
   /** Creates the production doctor backed by the same request validator used for execution. */
-  public GridGrindRequestDoctor() {
-    this(new StaticRequestValidator());
+  public GridGrindRequestDoctor(NativeInvocationContext context) {
+    this(new StaticRequestValidator(), context);
   }
 
-  GridGrindRequestDoctor(StaticRequestValidator staticValidator) {
+  GridGrindRequestDoctor(
+      StaticRequestValidator staticValidator, NativeInvocationContext nativeContext) {
+    this.nativeContext = Objects.requireNonNull(nativeContext);
     this.staticValidator =
         Objects.requireNonNull(staticValidator, "staticValidator must not be null");
   }
 
+  /** Diagnoses tolerant authored input and closes the invocation before returning its report. */
+  public RequestDoctorReport diagnose(RequestIntake analysis, RequestInput input) {
+    return within(() -> diagnoseAnalysis(analysis, input));
+  }
+
+  /** Diagnoses authored input with host bindings and invocation-owned native preflight. */
+  public RequestDoctorReport diagnose(
+      RequestIntake analysis, RequestInput input, ExecutionInputBindings inputs) {
+    return within(() -> diagnoseAnalysis(analysis, input, inputs));
+  }
+
+  /** Diagnoses a complete plan without source preflight. */
+  public RequestDoctorReport diagnose(WorkbookPlan request) {
+    return within(() -> diagnoseStatic(request));
+  }
+
+  /** Diagnoses a complete plan with host-bound source preflight. */
+  public RequestDoctorReport diagnose(WorkbookPlan request, ExecutionInputBindings inputs) {
+    return within(() -> diagnoseBound(request, inputs));
+  }
+
+  private RequestDoctorReport within(java.util.function.Supplier<RequestDoctorReport> work) {
+    nativeContext.requireOpen();
+    RequestDoctorReport report;
+    try {
+      report = work.get();
+    } catch (RuntimeException | Error primary) {
+      nativeContext.closePreserving(primary);
+      throw primary;
+    }
+    try {
+      nativeContext.close();
+      return report;
+    } catch (RuntimeException cleanup) {
+      var problems = new java.util.ArrayList<>(report.problems());
+      problems.add(
+          GridGrindProblems.problem(
+              dev.erst.gridgrind.core.problem.GridGrindProblemCode.INTERNAL_ERROR,
+              "Native execution context cleanup failed.",
+              new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteRequest(
+                  dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
+                      .unknown()),
+              cleanup));
+      return RequestDoctorReport.invalid(report.summary(), report.warnings(), problems);
+    }
+  }
+
   /** Returns all independently provable static findings from one tolerant request analysis. */
-  public RequestDoctorReport diagnose(RequestIntake analysis, RequestInput requestInput) {
+  private RequestDoctorReport diagnoseAnalysis(RequestIntake analysis, RequestInput requestInput) {
     Objects.requireNonNull(analysis, "analysis must not be null");
     Objects.requireNonNull(requestInput, "requestInput must not be null");
     List<GridGrindProblemDetail.Problem> problems =
@@ -35,11 +85,11 @@ public final class GridGrindRequestDoctor {
       return invalidAnalysisReport(analysis, problems);
     }
     WorkbookPlan request = analysis.requireCompletePlan();
-    return diagnose(request);
+    return diagnoseStatic(request);
   }
 
   /** Returns static and source/input preflight findings from one tolerant request analysis. */
-  public RequestDoctorReport diagnose(
+  private RequestDoctorReport diagnoseAnalysis(
       RequestIntake analysis, RequestInput requestInput, ExecutionInputBindings bindings) {
     Objects.requireNonNull(analysis, "analysis must not be null");
     Objects.requireNonNull(requestInput, "requestInput must not be null");
@@ -53,7 +103,7 @@ public final class GridGrindRequestDoctor {
   }
 
   /** Returns one machine-readable lint report for the supplied request. */
-  public RequestDoctorReport diagnose(WorkbookPlan request) {
+  private RequestDoctorReport diagnoseStatic(WorkbookPlan request) {
     return diagnose(Objects.requireNonNull(request, "request must not be null"), Optional.empty());
   }
 
@@ -61,7 +111,7 @@ public final class GridGrindRequestDoctor {
    * Returns one machine-readable lint report for the supplied request using the provided authored
    * input bindings when input resolution should be validated as part of linting.
    */
-  public RequestDoctorReport diagnose(WorkbookPlan request, ExecutionInputBindings bindings) {
+  private RequestDoctorReport diagnoseBound(WorkbookPlan request, ExecutionInputBindings bindings) {
     return diagnose(
         Objects.requireNonNull(request, "request must not be null"),
         Optional.of(Objects.requireNonNull(bindings, "bindings must not be null")));
@@ -81,18 +131,27 @@ public final class GridGrindRequestDoctor {
     List<RequestWarning> warnings =
         new java.util.ArrayList<>(GridGrindRequestWarnings.collect(request));
     List<GridGrindProblemDetail.Problem> problems = new java.util.ArrayList<>(staticProblems);
-    if (bindings.isPresent()) {
-      ExecutionInputBindings boundInputs = bindings.orElseThrow();
-      RequestPreflight.Result preflight =
-          analysis
-              .map(value -> RequestPreflight.verify(request, boundInputs, value))
-              .orElseGet(() -> RequestPreflight.verify(request, boundInputs));
-      try {
-        problems.addAll(preflight.problems());
-        warnings.addAll(preflight.warnings());
-      } finally {
-        preflight.release();
-      }
+    if (bindings.isPresent() && staticProblems.isEmpty()) {
+      ExecutionInputBindings boundInputs = bindings.orElseThrow().forRun();
+      dev.erst.gridgrind.engine.backend.xssf.WorkbookTempScope.call(
+          boundInputs.tempFileFactory()::createTempFile,
+          () -> {
+            try (ExecutionSession _ = boundInputs.session()) {
+              RequestPreflight.Result preflight =
+                  analysis
+                      .map(value -> RequestPreflight.verify(request, boundInputs, value))
+                      .orElseGet(() -> RequestPreflight.verify(request, boundInputs));
+              problems.addAll(preflight.problems());
+              warnings.addAll(preflight.warnings());
+            } catch (java.io.IOException cleanup) {
+              problems.add(
+                  GridGrindProblems.fromException(
+                      cleanup,
+                      new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteRequest(
+                          ExecutionRequestPaths.requestShape(request))));
+            }
+            return Boolean.TRUE;
+          });
     }
     if (!problems.isEmpty()) {
       return RequestDoctorReport.invalid(summary, warnings, problems);
@@ -107,10 +166,9 @@ public final class GridGrindRequestDoctor {
       RequestIntake analysis, List<GridGrindProblemDetail.Problem> problems) {
     return analysis
         .completePlan()
-        .map(
-            request ->
-                RequestDoctorReport.invalid(
-                    summaryFor(request), GridGrindRequestWarnings.collect(request), problems))
+        .map(request ->
+            RequestDoctorReport.invalid(
+                summaryFor(request), GridGrindRequestWarnings.collect(request), problems))
         .orElseGet(() -> RequestDoctorReport.invalid(Optional.empty(), List.of(), problems));
   }
 

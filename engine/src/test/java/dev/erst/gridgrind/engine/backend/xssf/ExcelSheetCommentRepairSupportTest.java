@@ -12,7 +12,6 @@ import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.engine.comments.CommentAdapter;
 import java.io.IOException;
@@ -163,7 +162,12 @@ class ExcelSheetCommentRepairSupportTest {
   void replaceCommentsSupportsRawPlainAndRichComments() throws Exception {
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.sheet("Ops").cells().setCell("C3", new CellValue.Text("Existing"));
+      workbook
+          .sheet("Ops")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C3"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Existing"));
 
       CommentAdapter support = new CommentAdapter(workbook.sheet("Ops").xssfSheet());
       List<RichTextRunReport> richText =
@@ -186,15 +190,25 @@ class ExcelSheetCommentRepairSupportTest {
       support.replaceComments(
           List.of(
               new CommentAdapter.CommentRewriteSnapshot(
-                  "B4", "Plain raw", "", true, Optional.empty(), Optional.empty()),
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
+                  "Plain raw",
+                  "",
+                  true,
+                  Optional.empty(),
+                  Optional.empty()),
               new CommentAdapter.CommentRewriteSnapshot(
-                  "C3", null, "", false, Optional.of(richText), Optional.of(explicitAnchor))));
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress("C3"),
+                  null,
+                  "",
+                  false,
+                  Optional.of(richText),
+                  Optional.of(explicitAnchor))));
 
       assertEquals(
           Map.of(
               "B4",
                   new CommentAdapter.CommentRewriteSnapshot(
-                      "B4",
+                      new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
                       "Plain raw",
                       "",
                       true,
@@ -202,7 +216,7 @@ class ExcelSheetCommentRepairSupportTest {
                       Optional.of(new CommentAnchorReport(1, 3, 4, 6))),
               "C3",
                   new CommentAdapter.CommentRewriteSnapshot(
-                      "C3",
+                      new dev.erst.gridgrind.core.vocabulary.CellAddress("C3"),
                       "Raw rich",
                       "",
                       false,
@@ -227,7 +241,7 @@ class ExcelSheetCommentRepairSupportTest {
       CommentAdapter.CommentRewriteSnapshot snapshot =
           CommentAdapter.CommentRewriteSnapshot.from(new CellAddress("A1"), anchorless, workbook);
 
-      assertEquals("A1", snapshot.address());
+      assertEquals("A1", snapshot.address().value());
       assertEquals("", snapshot.text());
       assertEquals("GridGrind", snapshot.author());
       assertFalse(snapshot.visible());
@@ -237,13 +251,28 @@ class ExcelSheetCommentRepairSupportTest {
 
     CommentAdapter.CommentRewriteSnapshot normalized =
         new CommentAdapter.CommentRewriteSnapshot(
-            "B2", null, null, true, Optional.empty(), Optional.empty());
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+            null,
+            null,
+            true,
+            Optional.empty(),
+            Optional.empty());
     CommentAdapter.CommentRewriteSnapshot missingAuthor =
         new CommentAdapter.CommentRewriteSnapshot(
-            "B2", "Text", "", true, Optional.empty(), Optional.empty());
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+            "Text",
+            "",
+            true,
+            Optional.empty(),
+            Optional.empty());
     CommentAdapter.CommentRewriteSnapshot compatible =
         new CommentAdapter.CommentRewriteSnapshot(
-            "B2", "Text", "GridGrind", true, Optional.empty(), Optional.empty());
+            new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+            "Text",
+            "GridGrind",
+            true,
+            Optional.empty(),
+            Optional.empty());
 
     assertEquals("", normalized.text());
     assertEquals("", normalized.author());
@@ -265,11 +294,15 @@ class ExcelSheetCommentRepairSupportTest {
       workbook
           .sheet("LL")
           .comments()
-          .setComment("E2", new ResolvedComment("Note BudgetTotal", "GridGrind", true));
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("E2"),
+              new ResolvedComment("Note BudgetTotal", "GridGrind", true));
       workbook
           .sheet("LL")
           .comments()
-          .setComment("A2", new ResolvedComment("Note Report_Value", "GridGrind", true));
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new ResolvedComment("Note Report_Value", "GridGrind", true));
       workbook.getOrCreateSheet("LL");
       workbook.sheet("LL").columns().delete(new ExcelColumnSpan(1, 3));
       workbook.sheet("LL").columns().delete(new ExcelColumnSpan(0, 0));
@@ -304,11 +337,15 @@ class ExcelSheetCommentRepairSupportTest {
       workbook
           .sheet("Ops")
           .comments()
-          .setComment("A2", new ResolvedComment("Stationary", "GridGrind", true));
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new ResolvedComment("Stationary", "GridGrind", true));
       workbook
           .sheet("Ops")
           .comments()
-          .setComment("C2", new ResolvedComment("Shifted", "GridGrind", true));
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C2"),
+              new ResolvedComment("Shifted", "GridGrind", true));
       workbook.sheet("Ops").columns().insert(1, 1);
 
       assertVisibleComments(
@@ -350,11 +387,15 @@ class ExcelSheetCommentRepairSupportTest {
       workbook
           .sheet("Ops")
           .comments()
-          .setComment("A2", new ResolvedComment("Stationary", "GridGrind", true));
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new ResolvedComment("Stationary", "GridGrind", true));
       workbook
           .sheet("Ops")
           .comments()
-          .setComment("B2", new ResolvedComment("Moving", "GridGrind", true));
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new ResolvedComment("Moving", "GridGrind", true));
       workbook.sheet("Ops").columns().shift(new ExcelColumnSpan(1, 1), -1);
 
       assertVisibleComments(
@@ -387,11 +428,15 @@ class ExcelSheetCommentRepairSupportTest {
       workbook
           .sheet("Ops")
           .comments()
-          .setComment("A2", new ResolvedComment("Moving", "GridGrind", true));
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
+              new ResolvedComment("Moving", "GridGrind", true));
       workbook
           .sheet("Ops")
           .comments()
-          .setComment("B2", new ResolvedComment("Stationary", "GridGrind", true));
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new ResolvedComment("Stationary", "GridGrind", true));
       workbook.sheet("Ops").columns().shift(new ExcelColumnSpan(0, 0), 1);
 
       assertVisibleComments(

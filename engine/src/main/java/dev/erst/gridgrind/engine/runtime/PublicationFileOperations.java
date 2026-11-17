@@ -37,12 +37,19 @@ final class PublicationFileOperations {
 
   static PublicationOutcome.DurabilityEvidence forcePublishedArtifact(
       RequestPathBinding binding, DirectoryForcer directoryForcer) throws IOException {
+    return forcePublishedArtifact(binding, channel -> channel.force(true), directoryForcer);
+  }
+
+  static PublicationOutcome.DurabilityEvidence forcePublishedArtifact(
+      RequestPathBinding binding, FileForcer fileForcer, DirectoryForcer directoryForcer)
+      throws IOException {
     Objects.requireNonNull(binding, "binding must not be null");
+    Objects.requireNonNull(fileForcer, "fileForcer must not be null");
     Objects.requireNonNull(directoryForcer, "directoryForcer must not be null");
     try (FileChannel fileChannel =
         requireFileChannel(
             binding.openPublishedReadChannel(), binding.resolvedPath(), binding.resolvedPath())) {
-      fileChannel.force(true);
+      fileForcer.force(fileChannel);
     }
     try {
       directoryForcer.force(binding.parentPath());
@@ -52,7 +59,7 @@ final class PublicationFileOperations {
     }
   }
 
-  private static void forceDirectory(Path directoryPath) throws IOException {
+  static void forceDirectory(Path directoryPath) throws IOException {
     try (FileChannel directory = FileChannel.open(directoryPath, StandardOpenOption.READ)) {
       directory.force(true);
     }
@@ -203,6 +210,13 @@ final class PublicationFileOperations {
         throw new IllegalArgumentException("byteSize must be >= 0");
       }
     }
+  }
+
+  /** Synchronizes the published file before directory durability is assessed. */
+  @FunctionalInterface
+  interface FileForcer {
+    /** Forces the verified destination's data through its retained file descriptor. */
+    void force(FileChannel channel) throws IOException;
   }
 
   /**

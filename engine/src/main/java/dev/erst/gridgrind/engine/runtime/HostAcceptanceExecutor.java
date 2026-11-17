@@ -23,61 +23,94 @@ final class HostAcceptanceExecutor {
   }
 
   HostAcceptanceSnapshot captureBeforeMutation(
+      AcceptancePolicy authoredPolicy,
       AcceptancePolicy policy,
       XssfWorkbook workbook,
       WorkbookLocation workbookLocation,
       @Nullable Path materializedSourceArtifact)
       throws IOException {
     Objects.requireNonNull(workbook, "workbook must not be null");
+    requirePolicyBinding(authoredPolicy, policy);
     return switch (Objects.requireNonNull(policy, "policy must not be null")) {
       case AcceptancePolicy.MinimumOnly _ -> HostAcceptanceSnapshot.empty();
       case AcceptancePolicy.RequireAll requireAll ->
           captureWorkbookRequirements(
-              requireAll, workbook, workbookLocation, materializedSourceArtifact);
+              requireAllPolicy(authoredPolicy, policy),
+              requireAll,
+              workbook,
+              workbookLocation,
+              materializedSourceArtifact);
     };
   }
 
   HostAcceptanceVerification verifyWorkbook(
+      AcceptancePolicy authoredPolicy,
       AcceptancePolicy policy,
       HostAcceptanceSnapshot snapshot,
       XssfWorkbook workbook,
-      WorkbookLocation workbookLocation)
+      WorkbookLocation workbookLocation,
+      List<AssertionResult> assertions,
+      List<WorkbookExecutionEvidence.Preservation> preservation)
       throws IOException, AssertionFailedException, PreservationFailedException {
+    requirePolicyBinding(authoredPolicy, policy);
     return switch (Objects.requireNonNull(policy, "policy must not be null")) {
       case AcceptancePolicy.MinimumOnly _ -> verifyMinimumOnly();
       case AcceptancePolicy.RequireAll requireAll ->
-          verifyWorkbook(requireAll, snapshot, workbook, workbookLocation);
+          verifyRequiredWorkbook(
+              requireAllPolicy(authoredPolicy, policy),
+              requireAll,
+              snapshot,
+              workbook,
+              workbookLocation,
+              assertions,
+              preservation);
     };
   }
 
   /** Establishes any host-required opaque-part byte identity against a verified staged package. */
   List<WorkbookExecutionEvidence.Preservation> verifyStagedArtifact(
-      AcceptancePolicy policy, HostAcceptanceSnapshot snapshot, Path stagedWorkbookArtifact)
+      AcceptancePolicy policy,
+      HostAcceptanceSnapshot snapshot,
+      Path stagedWorkbookArtifact,
+      List<WorkbookExecutionEvidence.Preservation> preservation)
       throws IOException, PreservationFailedException {
     Objects.requireNonNull(snapshot, "snapshot must not be null");
     Objects.requireNonNull(stagedWorkbookArtifact, "stagedWorkbookArtifact must not be null");
     return switch (Objects.requireNonNull(policy, "policy must not be null")) {
       case AcceptancePolicy.MinimumOnly _ -> List.of();
       case AcceptancePolicy.RequireAll requireAll ->
-          verifyStagedOpaquePartPreservation(requireAll, snapshot, stagedWorkbookArtifact);
+          verifyStagedOpaquePartPreservation(
+              requireAll, snapshot, stagedWorkbookArtifact, preservation);
     };
   }
 
-  HostAcceptanceVerification verifyWorkbook(
+  private HostAcceptanceVerification verifyRequiredWorkbook(
+      AcceptancePolicy.RequireAll authoredPolicy,
       AcceptancePolicy.RequireAll requireAll,
       HostAcceptanceSnapshot snapshot,
       XssfWorkbook workbook,
-      WorkbookLocation workbookLocation)
+      WorkbookLocation workbookLocation,
+      List<AssertionResult> assertions,
+      List<WorkbookExecutionEvidence.Preservation> preservation)
       throws IOException, AssertionFailedException, PreservationFailedException {
-    List<AssertionResult> assertions = new ArrayList<>();
-    List<WorkbookExecutionEvidence.Preservation> preservation = new ArrayList<>();
-    for (AcceptancePolicy.Requirement requirement : requireAll.requirements()) {
+    Objects.requireNonNull(assertions, "assertions must not be null");
+    Objects.requireNonNull(preservation, "preservation must not be null");
+    for (int requirementIndex = 0;
+        requirementIndex < requireAll.requirements().size();
+        requirementIndex++) {
+      var requirement = requireAll.requirements().get(requirementIndex);
+      var original = originalRequirement(authoredPolicy, requireAll, requirementIndex);
       switch (requirement) {
         case AcceptancePolicy.Requirement.TerminalAssertions terminalAssertions -> {
-          for (var assertion : terminalAssertions.assertions()) {
+          var originalAssertions =
+              ((AcceptancePolicy.Requirement.TerminalAssertions) original).assertions();
+          for (int index = 0; index < terminalAssertions.assertions().size(); index++) {
+            var assertion = terminalAssertions.assertions().get(index);
             assertions.add(
                 stepSupport.executeAssertionStep(
-                    assertion,
+                    (dev.erst.gridgrind.core.plan.PreparedAssertionStep)
+                        dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+                            originalAssertions.get(index), assertion),
                     workbook,
                     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null"),
                     new ExecutionModeSpec.FullXssf()));
@@ -85,7 +118,12 @@ final class HostAcceptanceExecutor {
         }
         case AcceptancePolicy.Requirement.PreserveInspectionFacts facts ->
             verifyWorkbookSemanticPreservation(
-                facts, snapshot, workbook, workbookLocation, preservation);
+                (AcceptancePolicy.Requirement.PreserveInspectionFacts) original,
+                facts,
+                snapshot,
+                workbook,
+                workbookLocation,
+                preservation);
         case AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts _ -> {}
         case AcceptancePolicy.Requirement.RequireCalculation _ -> {}
       }
@@ -98,18 +136,38 @@ final class HostAcceptanceExecutor {
    * event-read or streaming-write execution.
    */
   HostAcceptanceVerification verifyMaterializedTerminalAcceptance(
-      AcceptancePolicy policy, Path workbookPath, WorkbookLocation workbookLocation)
+      AcceptancePolicy authoredPolicy,
+      AcceptancePolicy policy,
+      Path workbookPath,
+      WorkbookLocation workbookLocation,
+      List<AssertionResult> assertions)
       throws IOException, AssertionFailedException {
-    List<AssertionResult> assertions = new ArrayList<>();
-    if (policy instanceof AcceptancePolicy.RequireAll requireAll) {
-      for (AcceptancePolicy.Requirement requirement : requireAll.requirements()) {
-        if (requirement instanceof AcceptancePolicy.Requirement.TerminalAssertions terminal) {
-          for (var assertion : terminal.assertions()) {
-            assertions.add(
-                stepSupport.executeAssertionAgainstMaterializedPath(
-                    assertion,
-                    Objects.requireNonNull(workbookLocation, "workbookLocation must not be null"),
-                    workbookPath));
+    requirePolicyBinding(authoredPolicy, policy);
+    Objects.requireNonNull(assertions, "assertions must not be null");
+    if (policy instanceof AcceptancePolicy.RequireAll requireAll
+        && requireAll.requirements().stream()
+            .anyMatch(AcceptancePolicy.Requirement.TerminalAssertions.class::isInstance)) {
+      // Every terminal requirement observes the same completed artifact.
+      try (var view =
+          stepSupport.openReadView(
+              workbookPath,
+              Objects.requireNonNull(workbookLocation, "workbookLocation must not be null"))) {
+        var originals = requireAllPolicy(authoredPolicy, policy);
+        for (int requirementIndex = 0;
+            requirementIndex < requireAll.requirements().size();
+            requirementIndex++) {
+          var requirement = requireAll.requirements().get(requirementIndex);
+          var original = originalRequirement(originals, requireAll, requirementIndex);
+          if (requirement instanceof AcceptancePolicy.Requirement.TerminalAssertions terminal) {
+            var originalAssertions =
+                ((AcceptancePolicy.Requirement.TerminalAssertions) original).assertions();
+            for (int index = 0; index < terminal.assertions().size(); index++) {
+              var prepared =
+                  (dev.erst.gridgrind.core.plan.PreparedAssertionStep)
+                      dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+                          originalAssertions.get(index), terminal.assertions().get(index));
+              assertions.add(view.assertThat(prepared));
+            }
           }
         }
       }
@@ -117,11 +175,76 @@ final class HostAcceptanceExecutor {
     return new HostAcceptanceVerification(assertions, List.of());
   }
 
+  private static void requirePolicyBinding(AcceptancePolicy authored, AcceptancePolicy bound) {
+    Objects.requireNonNull(authored, "authored policy must not be null");
+    Objects.requireNonNull(bound, "bound policy must not be null");
+    if (authored.getClass() != bound.getClass())
+      throw new IllegalArgumentException("Bound host policy must retain its authored kind");
+    if (bound instanceof AcceptancePolicy.RequireAll prepared) {
+      var original = requireAllPolicy(authored, bound);
+      for (int index = 0; index < prepared.requirements().size(); index++)
+        originalRequirement(original, prepared, index);
+    }
+  }
+
+  private static AcceptancePolicy.RequireAll requireAllPolicy(
+      AcceptancePolicy authored, AcceptancePolicy bound) {
+    if (!(authored instanceof AcceptancePolicy.RequireAll original)
+        || !(bound instanceof AcceptancePolicy.RequireAll prepared)
+        || original.requirements().size() != prepared.requirements().size()) {
+      throw new IllegalArgumentException(
+          "Bound host requirements must retain their authored structure");
+    }
+    return original;
+  }
+
+  private static AcceptancePolicy.Requirement originalRequirement(
+      AcceptancePolicy.RequireAll authored, AcceptancePolicy.RequireAll bound, int index) {
+    var original = authored.requirements().get(index);
+    var prepared = bound.requirements().get(index);
+    if (original.getClass() != prepared.getClass())
+      throw new IllegalArgumentException("Bound host requirement kind must match its author");
+    switch (prepared) {
+      case AcceptancePolicy.Requirement.TerminalAssertions terminal -> {
+        var originalSteps =
+            ((AcceptancePolicy.Requirement.TerminalAssertions) original).assertions();
+        requireSameStepCount(originalSteps.size(), terminal.assertions().size());
+        for (int step = 0; step < originalSteps.size(); step++)
+          dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+              originalSteps.get(step), terminal.assertions().get(step));
+      }
+      case AcceptancePolicy.Requirement.PreserveInspectionFacts facts -> {
+        var originalSteps =
+            ((AcceptancePolicy.Requirement.PreserveInspectionFacts) original).inspections();
+        requireSameStepCount(originalSteps.size(), facts.inspections().size());
+        for (int step = 0; step < originalSteps.size(); step++)
+          dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+              originalSteps.get(step), facts.inspections().get(step));
+      }
+      case AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts ignored -> {
+        if (!original.equals(prepared))
+          throw new IllegalArgumentException("Bound host requirement must match its author");
+      }
+      case AcceptancePolicy.Requirement.RequireCalculation ignored -> {
+        if (!original.equals(prepared))
+          throw new IllegalArgumentException("Bound host requirement must match its author");
+      }
+    }
+    return original;
+  }
+
+  private static void requireSameStepCount(int authored, int bound) {
+    if (authored != bound)
+      throw new IllegalArgumentException(
+          "Bound host checks must retain their authored order and count");
+  }
+
   HostAcceptanceVerification verifyMinimumOnly() {
     return HostAcceptanceVerification.minimumOnly();
   }
 
   private HostAcceptanceSnapshot captureWorkbookRequirements(
+      AcceptancePolicy.RequireAll authoredPolicy,
       AcceptancePolicy.RequireAll requireAll,
       XssfWorkbook workbook,
       WorkbookLocation workbookLocation,
@@ -129,12 +252,20 @@ final class HostAcceptanceExecutor {
       throws IOException {
     List<HostAcceptanceSnapshot.SemanticPreservation> baselines = new ArrayList<>();
     List<HostAcceptanceSnapshot.OpaquePartPreservation> opaquePartBaselines = new ArrayList<>();
-    for (AcceptancePolicy.Requirement requirement : requireAll.requirements()) {
+    for (int requirementIndex = 0;
+        requirementIndex < requireAll.requirements().size();
+        requirementIndex++) {
+      var requirement = requireAll.requirements().get(requirementIndex);
+      var original = originalRequirement(authoredPolicy, requireAll, requirementIndex);
       if (requirement instanceof AcceptancePolicy.Requirement.PreserveInspectionFacts facts) {
         baselines.add(
             new HostAcceptanceSnapshot.SemanticPreservation(
                 facts,
-                captureWorkbookInspections(facts.inspections(), workbook, workbookLocation)));
+                captureWorkbookInspections(
+                    ((AcceptancePolicy.Requirement.PreserveInspectionFacts) original).inspections(),
+                    facts.inspections(),
+                    workbook,
+                    workbookLocation)));
       }
       if (requirement instanceof AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts parts) {
         if (materializedSourceArtifact == null) {
@@ -151,9 +282,9 @@ final class HostAcceptanceExecutor {
   private static List<WorkbookExecutionEvidence.Preservation> verifyStagedOpaquePartPreservation(
       AcceptancePolicy.RequireAll requireAll,
       HostAcceptanceSnapshot snapshot,
-      Path stagedWorkbookArtifact)
+      Path stagedWorkbookArtifact,
+      List<WorkbookExecutionEvidence.Preservation> preservation)
       throws IOException, PreservationFailedException {
-    List<WorkbookExecutionEvidence.Preservation> preservation = new ArrayList<>();
     for (AcceptancePolicy.Requirement requirement : requireAll.requirements()) {
       if (requirement instanceof AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts parts) {
         preservation.add(
@@ -165,6 +296,7 @@ final class HostAcceptanceExecutor {
   }
 
   private void verifyWorkbookSemanticPreservation(
+      AcceptancePolicy.Requirement.PreserveInspectionFacts original,
       AcceptancePolicy.Requirement.PreserveInspectionFacts facts,
       HostAcceptanceSnapshot snapshot,
       XssfWorkbook workbook,
@@ -172,7 +304,8 @@ final class HostAcceptanceExecutor {
       List<WorkbookExecutionEvidence.Preservation> preservation)
       throws IOException, PreservationFailedException {
     List<InspectionResult> observed =
-        captureWorkbookInspections(facts.inspections(), workbook, workbookLocation);
+        captureWorkbookInspections(
+            original.inspections(), facts.inspections(), workbook, workbookLocation);
     establishSemanticPreservation(facts, snapshot.baselineFor(facts), observed, preservation);
   }
 
@@ -193,15 +326,22 @@ final class HostAcceptanceExecutor {
   }
 
   private List<InspectionResult> captureWorkbookInspections(
+      List<dev.erst.gridgrind.core.plan.InspectionStep> originals,
       List<dev.erst.gridgrind.core.plan.InspectionStep> inspections,
       XssfWorkbook workbook,
       WorkbookLocation workbookLocation)
       throws IOException {
     List<InspectionResult> results = new ArrayList<>(inspections.size());
-    for (var inspection : inspections) {
+    for (int index = 0; index < inspections.size(); index++) {
+      var inspection = inspections.get(index);
       results.add(
           stepSupport.executeInspectionStep(
-              inspection, workbook, workbookLocation, new ExecutionModeSpec.FullXssf()));
+              (dev.erst.gridgrind.core.plan.PreparedInspectionStep)
+                  dev.erst.gridgrind.core.plan.PreparedStep.prepare(
+                      originals.get(index), inspection),
+              workbook,
+              workbookLocation,
+              new ExecutionModeSpec.FullXssf()));
     }
     return List.copyOf(results);
   }

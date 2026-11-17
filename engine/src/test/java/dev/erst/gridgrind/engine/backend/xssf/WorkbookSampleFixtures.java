@@ -41,7 +41,6 @@ import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
-import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -337,8 +336,13 @@ final class WorkbookSampleFixtures {
             new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
             new ResolvedMutationAction.SetRange(
                 List.of(
-                    List.of(new CellValue.Text("Item"), new CellValue.NumberValue(49.0d)),
-                    List.of(new CellValue.Text("Tax"), new CellValue.NumberValue(10.0d))))),
+                    List.of(
+                        new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"),
+                        new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(49.0d)),
+                    List.of(
+                        new dev.erst.gridgrind.core.model.value.ResolvedCellText("Tax"),
+                        new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(
+                            10.0d))))),
         new ResolvedStep(
             new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("C1:C2")),
             new CellMutationAction.ClearRange()),
@@ -511,7 +515,8 @@ final class WorkbookSampleFixtures {
                 new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"))),
         new ResolvedStep(
             new SheetSelector.ByName(new SheetName("Budget")),
-            new ResolvedMutationAction.AppendRow(List.of(new CellValue.Text("Item")))),
+            new ResolvedMutationAction.AppendRow(
+                List.of(new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item")))),
         new ResolvedStep(
             new SheetSelector.ByName(new SheetName("Budget")),
             new WorkbookMutationAction.AutoSizeColumns()));

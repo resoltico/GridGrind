@@ -68,10 +68,11 @@ public sealed interface DrawingObjectReport
       DrawingAnchorReport anchor,
       boolean supported,
       List<String> plotTypeTokens,
-      String title)
+      dev.erst.gridgrind.core.model.chart.ChartReport.Title title)
       implements DrawingObjectReport {
     public Chart {
-      validateCommon(name, anchor);
+      Objects.requireNonNull(name, "name must not be null");
+      Objects.requireNonNull(anchor, "anchor must not be null");
       plotTypeTokens = copyNonBlankStrings(plotTypeTokens, "plotTypeTokens");
       Objects.requireNonNull(title, "title must not be null");
     }
@@ -190,18 +191,16 @@ public sealed interface DrawingObjectReport
       }
       widthPixels = requireOptional(widthPixels, "widthPixels");
       heightPixels = requireOptional(heightPixels, "heightPixels");
-      widthPixels.ifPresent(
-          width -> {
-            if (width < 0) {
-              throw new IllegalArgumentException("previewWidthPixels must not be negative");
-            }
-          });
-      heightPixels.ifPresent(
-          height -> {
-            if (height < 0) {
-              throw new IllegalArgumentException("previewHeightPixels must not be negative");
-            }
-          });
+      widthPixels.ifPresent(width -> {
+        if (width < 0) {
+          throw new IllegalArgumentException("previewWidthPixels must not be negative");
+        }
+      });
+      heightPixels.ifPresent(height -> {
+        if (height < 0) {
+          throw new IllegalArgumentException("previewHeightPixels must not be negative");
+        }
+      });
     }
   }
 

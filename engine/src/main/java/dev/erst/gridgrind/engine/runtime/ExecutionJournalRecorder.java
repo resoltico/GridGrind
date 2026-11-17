@@ -20,6 +20,8 @@ final class ExecutionJournalRecorder {
   private final ExecutionJournalLevel level;
   private final ExecutionJournal.SourceSummary source;
   private final ExecutionProgressSink sink;
+  private boolean sinkFailed;
+  private boolean planCompleted;
   private final long planStartNanos;
   private final List<ExecutionJournal.Step> steps = new ArrayList<>();
   private ExecutionJournal.Phase validation = ExecutionJournal.Phase.notStarted();
@@ -122,7 +124,7 @@ final class ExecutionJournalRecorder {
   }
 
   ExecutionJournal buildSuccess(int plannedStepCount) {
-    return buildSuccess(plannedStepCount, true);
+    return buildSuccess(plannedStepCount, false);
   }
 
   ExecutionJournal buildSuccess(int plannedStepCount, boolean emitPlanOutcomeEvent) {
@@ -153,7 +155,7 @@ final class ExecutionJournalRecorder {
       GridGrindProblemCode failureCode,
       @Nullable Integer failedStepIndex,
       @Nullable StepId failedStepId) {
-    return buildFailure(plannedStepCount, failureCode, failedStepIndex, failedStepId, true);
+    return buildFailure(plannedStepCount, failureCode, failedStepIndex, failedStepId, false);
   }
 
   ExecutionJournal buildFailure(
@@ -194,17 +196,16 @@ final class ExecutionJournalRecorder {
     return switch (level) {
       case SUMMARY ->
           steps.stream()
-              .map(
-                  step ->
-                      new ExecutionJournal.Step(
-                          step.stepIndex(),
-                          step.stepId(),
-                          step.stepKind(),
-                          step.stepType(),
-                          step.resolvedTargets(),
-                          phaseWithoutTiming(step.phase()),
-                          step.outcome(),
-                          step.failure()))
+              .map(step ->
+                  new ExecutionJournal.Step(
+                      step.stepIndex(),
+                      step.stepId(),
+                      step.stepKind(),
+                      step.stepType(),
+                      step.resolvedTargets(),
+                      phaseWithoutTiming(step.phase()),
+                      step.outcome(),
+                      step.failure()))
               .toList();
       case NORMAL, VERBOSE -> List.copyOf(steps);
     };
@@ -226,34 +227,65 @@ final class ExecutionJournalRecorder {
             .count();
   }
 
+  dev.erst.gridgrind.core.result.ExecutionJournal completePlan(
+      dev.erst.gridgrind.core.result.WorkbookResult result, int count) {
+    if (planCompleted) throw new IllegalStateException("Plan outcome is already complete");
+    planCompleted = true;
+    return switch (result) {
+      case dev.erst.gridgrind.core.result.WorkbookResult.Success _ -> buildSuccess(count, true);
+      case dev.erst.gridgrind.core.result.WorkbookResult.Failure failure -> {
+        var failedStep =
+            failure.journal().outcome() instanceof ExecutionJournal.Outcome.Failed outcome
+                ? outcome.failedStep()
+                : Optional.<ExecutionJournal.FailureStep>empty();
+        yield buildFailure(
+            count,
+            failure.problem().code(),
+            failedStep.map(ExecutionJournal.FailureStep::failedStepIndex).orElse(null),
+            failedStep.map(ExecutionJournal.FailureStep::failedStepId).orElse(null),
+            true);
+      }
+    };
+  }
+
   private void emit(
       ExecutionProgressEvent.Category category,
       ExecutionProgressEvent.Status status,
       @Nullable GridGrindProblemCode problemCode,
       @Nullable Integer stepIndex,
       @Nullable StepId stepId) {
-    if (level != ExecutionJournalLevel.VERBOSE) {
+    if (level != ExecutionJournalLevel.VERBOSE || sinkFailed) {
       return;
     }
     String timestamp = Instant.now().toString();
     Optional<Integer> optionalStepIndex = Optional.ofNullable(stepIndex);
     Optional<StepId> optionalStepId = Optional.ofNullable(stepId);
-    sink.emit(
-        switch (status) {
-          case STARTED ->
-              ExecutionProgressEvent.started(
-                  timestamp, category, optionalStepIndex, optionalStepId);
-          case SUCCEEDED ->
-              ExecutionProgressEvent.succeeded(
-                  timestamp, category, optionalStepIndex, optionalStepId);
-          case FAILED ->
-              ExecutionProgressEvent.failed(
-                  timestamp,
-                  category,
-                  Objects.requireNonNull(problemCode, "problemCode must not be null"),
-                  optionalStepIndex,
-                  optionalStepId);
-        });
+    try {
+      sink.emit(
+          switch (status) {
+            case STARTED ->
+                ExecutionProgressEvent.started(
+                    timestamp, category, optionalStepIndex, optionalStepId);
+            case SUCCEEDED ->
+                ExecutionProgressEvent.succeeded(
+                    timestamp, category, optionalStepIndex, optionalStepId);
+            case FAILED ->
+                ExecutionProgressEvent.failed(
+                    timestamp,
+                    category,
+                    Objects.requireNonNull(problemCode, "problemCode must not be null"),
+                    optionalStepIndex,
+                    optionalStepId);
+          });
+    } catch (RuntimeException failure) {
+      sinkFailed = true;
+    }
+  }
+
+  List<dev.erst.gridgrind.core.problem.RequestWarning> diagnostics() {
+    return sinkFailed
+        ? List.of(dev.erst.gridgrind.core.problem.RequestWarning.progressSinkFailed())
+        : List.of();
   }
 
   private static long elapsedMillis(long startedAtNanos) {

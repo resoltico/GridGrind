@@ -2,7 +2,6 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.engine.backend.xssf.CellNotFoundException;
-import dev.erst.gridgrind.engine.backend.xssf.InvalidCellAddressException;
 import dev.erst.gridgrind.engine.backend.xssf.InvalidRangeAddressException;
 import dev.erst.gridgrind.engine.backend.xssf.NamedRangeNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.SheetNotFoundException;
@@ -15,6 +14,11 @@ final class ExecutionExceptionDiagnosticFields {
 
   static Optional<String> sheetNameFor(Exception exception) {
     return switch (exception) {
+      case dev.erst.gridgrind.engine.backend.xssf.WorkbookContentRefusalException refusal ->
+          refusal
+              .location()
+              .flatMap(dev.erst.gridgrind.core.problem.WorkbookContentLocation::sheetName)
+              .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::value);
       case FormulaException formulaException -> Optional.ofNullable(formulaException.sheetName());
       case SheetNotFoundException sheetNotFoundException ->
           Optional.ofNullable(sheetNotFoundException.sheetName());
@@ -33,8 +37,6 @@ final class ExecutionExceptionDiagnosticFields {
       case FormulaException formulaException -> Optional.ofNullable(formulaException.address());
       case CellNotFoundException cellNotFoundException ->
           Optional.ofNullable(cellNotFoundException.address());
-      case InvalidCellAddressException invalidCellAddressException ->
-          Optional.ofNullable(invalidCellAddressException.address());
       default -> Optional.empty();
     };
   }

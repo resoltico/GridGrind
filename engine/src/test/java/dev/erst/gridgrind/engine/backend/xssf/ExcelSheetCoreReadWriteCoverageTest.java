@@ -74,8 +74,8 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertSame(
           cells,
           cells.appendRow(
-              new CellValue.Text("Name"),
-              new CellValue.NumberValue(42.5),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Name"),
+              new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(42.5),
               new CellValue.BooleanValue(true),
               new ResolvedFormula("B1*2"),
               new ResolvedFormula("TRUE()"),
@@ -87,10 +87,26 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
               new CellValueSpec.Date(LocalDate.of(2026, 3, 23)),
               new CellValueSpec.DateTime(LocalDateTime.of(2026, 3, 23, 14, 15, 16)),
               new ResolvedFormula("1/0"));
-      sheet.cells().setCell("A3", new ResolvedFormula("B3+1"));
-      sheet.cells().setCell("B3", new CellValueSpec.Date(LocalDate.of(2026, 3, 24)));
-      sheet.cells().setCell("C3", new CellValueSpec.DateTime(LocalDateTime.of(2026, 3, 24, 9, 0)));
-      sheet.cells().setCell("D3", new ResolvedFormula("D3+1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A3"),
+              new ResolvedFormula("B3+1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B3"),
+              new CellValueSpec.Date(LocalDate.of(2026, 3, 24)));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C3"),
+              new CellValueSpec.DateTime(LocalDateTime.of(2026, 3, 24, 9, 0)));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("D3"),
+              new ResolvedFormula("D3+1"));
       sheet.columns().autoSize();
 
       Row errorRow = poiSheet.createRow(3);
@@ -98,36 +114,45 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       errorCell.setCellErrorValue(FormulaError.DIV0.getCode());
 
       assertEquals("Budget", sheet.name());
-      assertEquals("Name", sheet.cells().text("A1"));
-      assertEquals(85.0, sheet.cells().number("D1"));
-      assertTrue(sheet.cells().bool("C1"));
-      assertTrue(sheet.cells().bool("E1"));
-      assertEquals("B1*2", sheet.cells().formula("D1"));
+      assertEquals(
+          "Name", sheet.cells().text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
+      assertEquals(
+          85.0, sheet.cells().number(new dev.erst.gridgrind.core.vocabulary.CellAddress("D1")));
+      assertTrue(sheet.cells().bool(new dev.erst.gridgrind.core.vocabulary.CellAddress("C1")));
+      assertTrue(sheet.cells().bool(new dev.erst.gridgrind.core.vocabulary.CellAddress("E1")));
+      assertEquals(
+          "B1*2", sheet.cells().formula(new dev.erst.gridgrind.core.vocabulary.CellAddress("D1")));
       assertEquals(4, sheet.rows().physicalCount());
       assertEquals(3, sheet.rows().lastIndex());
       assertEquals(5, sheet.columns().lastIndex());
 
-      CellReport.TextReport textSnapshot = (CellReport.TextReport) sheet.cells().snapshotCell("A1");
+      CellReport.TextReport textSnapshot =
+          (CellReport.TextReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       assertEquals("TEXT", textSnapshot.type());
       assertEquals("Name", textSnapshot.value().orElseThrow().value());
       assertTrue(textSnapshot.runs().isEmpty());
 
       CellReport.NumberReport numberSnapshot =
-          (CellReport.NumberReport) sheet.cells().snapshotCell("B1");
+          (CellReport.NumberReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"));
       assertEquals("NUMBER", numberSnapshot.type());
       assertEquals(42.5, numberSnapshot.value().orElseThrow().value());
 
       CellReport.BooleanReport booleanSnapshot =
-          (CellReport.BooleanReport) sheet.cells().snapshotCell("C1");
+          (CellReport.BooleanReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"));
       assertEquals("BOOLEAN", booleanSnapshot.type());
       assertTrue(booleanSnapshot.value().orElseThrow().value());
 
       CellReport.BlankReport blankSnapshot =
-          (CellReport.BlankReport) sheet.cells().snapshotCell("A2");
+          (CellReport.BlankReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"));
       assertEquals("BLANK", blankSnapshot.type());
 
       CellReport.FormulaReport stringFormulaSnapshot =
-          (CellReport.FormulaReport) sheet.cells().snapshotCell("F1");
+          (CellReport.FormulaReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("F1"));
       assertEquals("FORMULA", stringFormulaSnapshot.type());
       assertEquals("\"Hi\"", stringFormulaSnapshot.formula().orElseThrow());
       assertEquals(
@@ -137,7 +162,8 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
               .value());
 
       CellReport.FormulaReport errorFormulaSnapshot =
-          (CellReport.FormulaReport) sheet.cells().snapshotCell("D2");
+          (CellReport.FormulaReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("D2"));
       assertEquals("FORMULA", errorFormulaSnapshot.type());
       assertEquals(
           "#DIV/0!",
@@ -146,11 +172,13 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
               .value());
 
       CellReport.ErrorReport errorSnapshot =
-          (CellReport.ErrorReport) sheet.cells().snapshotCell("A4");
+          (CellReport.ErrorReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A4"));
       assertEquals("ERROR", errorSnapshot.type());
       assertEquals("#DIV/0!", errorSnapshot.value().orElseThrow().value());
       CellReport.FormulaReport circularFormulaSnapshot =
-          (CellReport.FormulaReport) sheet.cells().snapshotCell("D3");
+          (CellReport.FormulaReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("D3"));
       assertEquals(
           "#CIRCULAR_REF!",
           ((dev.erst.gridgrind.core.model.value.CellValue.ErrorValue)
@@ -173,21 +201,30 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       CellsAdapter cells =
           new XssfSheet(poiSheet, new StyleAdapter(poiWorkbook), evaluator).cells();
-      cells.setCell("A1", new ResolvedFormula("1+1"));
+      cells.setCell(
+          new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), new ResolvedFormula("1+1"));
 
       CellReadProjection formulaOnly =
           new CellReadProjection(List.copyOf(Set.of(CellReadFacet.FORMULA)));
       CellReadProjection formatOnly =
           new CellReadProjection(List.copyOf(Set.of(CellReadFacet.FORMAT)));
       CellReport.FormulaReport formulaOnlySnapshot =
-          (CellReport.FormulaReport) cells.snapshotCell("A1", formulaOnly);
+          (CellReport.FormulaReport)
+              cells.snapshotCell(
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), formulaOnly);
       CellReport.FormulaReport formatOnlySnapshot =
-          (CellReport.FormulaReport) cells.snapshotCell("A1", formatOnly);
+          (CellReport.FormulaReport)
+              cells.snapshotCell(
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), formatOnly);
 
       assertTrue(formulaOnlySnapshot.value().isEmpty());
       assertTrue(formatOnlySnapshot.displayValue().isPresent());
       assertTrue(formatOnlySnapshot.value().isEmpty());
-      assertEquals(1, cells.snapshotCells(List.of("A1")).size());
+      assertEquals(
+          1,
+          cells
+              .snapshotCells(List.of(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")))
+              .size());
     }
   }
 
@@ -199,25 +236,39 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       XssfSheet sheet = new XssfSheet(poiSheet, new StyleAdapter(poiWorkbook), evaluator);
 
       assertThrows(
-          NullPointerException.class, () -> sheet.cells().setCell(null, new CellValue.Text("x")));
-      assertThrows(
-          IllegalArgumentException.class,
-          () -> sheet.cells().setCell(" ", new CellValue.Text("x")));
-      assertThrows(NullPointerException.class, () -> sheet.cells().setCell("A1", null));
+          NullPointerException.class,
+          () ->
+              sheet
+                  .cells()
+                  .setCell(null, new dev.erst.gridgrind.core.model.value.ResolvedCellText("x")));
       assertThrows(
           NullPointerException.class,
-          () -> sheet.cells().setRange(null, List.of(List.of(new CellValue.Text("x")))));
+          () ->
+              sheet
+                  .cells()
+                  .setCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), null));
+      assertThrows(
+          NullPointerException.class,
+          () ->
+              sheet
+                  .cells()
+                  .setRange(
+                      null,
+                      List.of(
+                          List.of(new dev.erst.gridgrind.core.model.value.ResolvedCellText("x")))));
+      assertThrows(
+          NullPointerException.class,
+          () ->
+              sheet.cells().setRange(new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"), null));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.cells().setRange(" ", List.of(List.of(new CellValue.Text("x")))));
-      assertThrows(NullPointerException.class, () -> sheet.cells().setRange("A1", null));
-      assertThrows(IllegalArgumentException.class, () -> sheet.cells().setRange("A1", List.of()));
+          () ->
+              sheet
+                  .cells()
+                  .setRange(new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"), List.of()));
       assertThrows(NullPointerException.class, () -> sheet.cells().clearRange(null));
-      assertThrows(IllegalArgumentException.class, () -> sheet.cells().clearRange(" "));
       assertThrows(NullPointerException.class, () -> sheet.layout().mergeCells(null));
-      assertThrows(IllegalArgumentException.class, () -> sheet.layout().mergeCells(" "));
       assertThrows(NullPointerException.class, () -> sheet.layout().unmergeCells(null));
-      assertThrows(IllegalArgumentException.class, () -> sheet.layout().unmergeCells(" "));
       assertThrows(IllegalArgumentException.class, () -> sheet.columns().setWidth(-1, 0, 16.0));
       assertThrows(IllegalArgumentException.class, () -> sheet.columns().setWidth(1, 0, 16.0));
       assertThrows(IllegalArgumentException.class, () -> sheet.columns().setWidth(0, 0, 0.0));
@@ -272,113 +323,60 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                           Optional.empty(),
                           Optional.empty())));
       assertThrows(
-          IllegalArgumentException.class,
+          NullPointerException.class,
           () ->
               sheet
                   .cells()
-                  .applyStyle(
-                      " ",
-                      new CellStylePatch(
-                          Optional.of("0"),
-                          Optional.empty(),
-                          Optional.empty(),
-                          Optional.empty(),
-                          Optional.empty(),
-                          Optional.empty())));
-      assertThrows(NullPointerException.class, () -> sheet.cells().applyStyle("A1", null));
+                  .applyStyle(new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"), null));
       assertThrows(
           NullPointerException.class,
           () -> sheet.links().setHyperlink(null, new HyperlinkTarget.Url("https://example.com")));
       assertThrows(
-          IllegalArgumentException.class,
-          () -> sheet.links().setHyperlink(" ", new HyperlinkTarget.Url("https://example.com")));
-      assertThrows(NullPointerException.class, () -> sheet.links().setHyperlink("A1", null));
+          NullPointerException.class,
+          () ->
+              sheet
+                  .links()
+                  .setHyperlink(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), null));
       assertThrows(NullPointerException.class, () -> sheet.links().clearHyperlink(null));
-      assertThrows(IllegalArgumentException.class, () -> sheet.links().clearHyperlink(" "));
       assertThrows(
           NullPointerException.class,
           () ->
               sheet.comments().setComment(null, new ResolvedComment("Review", "GridGrind", false)));
       assertThrows(
-          IllegalArgumentException.class,
+          NullPointerException.class,
           () ->
-              sheet.comments().setComment(" ", new ResolvedComment("Review", "GridGrind", false)));
-      assertThrows(NullPointerException.class, () -> sheet.comments().setComment("A1", null));
+              sheet
+                  .comments()
+                  .setComment(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), null));
       assertThrows(NullPointerException.class, () -> sheet.comments().clearComment(null));
-      assertThrows(IllegalArgumentException.class, () -> sheet.comments().clearComment(" "));
       assertThrows(
           NullPointerException.class, () -> sheet.cells().appendRow((ResolvedCellWrite[]) null));
       assertThrows(
-          NullPointerException.class, () -> sheet.cells().appendRow(new CellValue.Text("x"), null));
+          NullPointerException.class,
+          () ->
+              sheet
+                  .cells()
+                  .appendRow(new dev.erst.gridgrind.core.model.value.ResolvedCellText("x"), null));
     }
   }
 
   @Test
-  void validatesAddressAndRangeParsing() throws Exception {
-    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
-      Sheet poiSheet = poiWorkbook.createSheet("Budget");
-      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
-      XssfSheet sheet = new XssfSheet(poiSheet, new StyleAdapter(poiWorkbook), evaluator);
-
+  void rejectsMissingCoordinatesAndInvalidNativeMergeOperations() throws Exception {
+    try (var workbook = XssfWorkbooks.create()) {
+      var sheet = workbook.getOrCreateSheet("Grid");
       assertThrows(NullPointerException.class, () -> sheet.cells().snapshotCell(null));
-      assertThrows(IllegalArgumentException.class, () -> sheet.cells().snapshotCell(" "));
-      InvalidCellAddressException invalidSetCell =
-          assertThrows(
-              InvalidCellAddressException.class,
-              () -> sheet.cells().setCell(":", new CellValue.Text("x")));
-      assertEquals(":", invalidSetCell.address());
-      InvalidCellAddressException invalidSnapshotCell =
-          assertThrows(InvalidCellAddressException.class, () -> sheet.cells().snapshotCell(":"));
-      assertEquals(":", invalidSnapshotCell.address());
-      InvalidCellAddressException badAddrSnapshot =
-          assertThrows(
-              InvalidCellAddressException.class, () -> sheet.cells().snapshotCell("BADADDR"));
-      assertEquals("BADADDR", badAddrSnapshot.address());
-      InvalidCellAddressException a0Snapshot =
-          assertThrows(InvalidCellAddressException.class, () -> sheet.cells().snapshotCell("A0"));
-      assertEquals("A0", a0Snapshot.address());
-      InvalidCellAddressException numericOnlySnapshot =
-          assertThrows(InvalidCellAddressException.class, () -> sheet.cells().snapshotCell("1"));
-      assertEquals("1", numericOnlySnapshot.address());
-      InvalidCellAddressException outOfBoundsRow =
-          assertThrows(
-              InvalidCellAddressException.class, () -> sheet.cells().snapshotCell("A1048577"));
-      assertEquals("A1048577", outOfBoundsRow.address());
-      InvalidCellAddressException outOfBoundsCol =
-          assertThrows(InvalidCellAddressException.class, () -> sheet.cells().snapshotCell("XFE1"));
-      assertEquals("XFE1", outOfBoundsCol.address());
-      InvalidRangeAddressException invalidRangeSet =
-          assertThrows(
-              InvalidRangeAddressException.class,
-              () -> sheet.cells().setRange("A1:", List.of(List.of(new CellValue.Text("x")))));
-      assertEquals("A1:", invalidRangeSet.range());
-      InvalidRangeAddressException invalidRangeClear =
-          assertThrows(
-              InvalidRangeAddressException.class, () -> sheet.cells().clearRange("A1:B2:C3"));
-      assertEquals("A1:B2:C3", invalidRangeClear.range());
-      InvalidRangeAddressException invalidRangeMerge =
-          assertThrows(InvalidRangeAddressException.class, () -> sheet.layout().mergeCells("A1:"));
-      assertEquals("A1:", invalidRangeMerge.range());
-      InvalidRangeAddressException invalidRangeUnmerge =
-          assertThrows(
-              InvalidRangeAddressException.class, () -> sheet.layout().unmergeCells("A1:"));
-      assertEquals("A1:", invalidRangeUnmerge.range());
       assertThrows(
-          InvalidRangeAddressException.class,
+          IllegalArgumentException.class,
           () ->
               sheet
-                  .cells()
-                  .applyStyle(
-                      "A1:",
-                      new CellStylePatch(
-                          Optional.of("0"),
-                          Optional.empty(),
-                          Optional.empty(),
-                          Optional.empty(),
-                          Optional.empty(),
-                          Optional.empty())));
-      assertThrows(IllegalArgumentException.class, () -> sheet.layout().mergeCells("A1"));
-      assertThrows(IllegalArgumentException.class, () -> sheet.layout().unmergeCells("A1:B2"));
+                  .layout()
+                  .mergeCells(new dev.erst.gridgrind.core.vocabulary.RangeRef(0, 0, 0, 0)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              sheet
+                  .layout()
+                  .unmergeCells(new dev.erst.gridgrind.core.vocabulary.RangeRef(0, 1, 0, 1)));
     }
   }
 
@@ -391,7 +389,11 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       RowAdapter rows = sheet.rows();
       ColumnAdapter columns = sheet.columns();
 
-      sheet.cells().setCell("A1", new CellValue.Text("Header"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Header"));
 
       assertSame(rows, rows.group(new ExcelRowSpan(1, 3), true));
       assertSame(columns, columns.group(new ExcelColumnSpan(1, 3), true));
@@ -417,20 +419,44 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertThrows(IllegalArgumentException.class, () -> sheet.cells().preview(1, 0));
       assertEquals(List.of(), sheet.cells().preview(3, 3));
       CellNotFoundException missingCell =
-          assertThrows(CellNotFoundException.class, () -> sheet.cells().text("A1"));
+          assertThrows(
+              CellNotFoundException.class,
+              () -> sheet.cells().text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
       assertEquals("A1", missingCell.address());
-      assertThrows(IllegalArgumentException.class, () -> sheet.cells().text(" "));
 
-      sheet.cells().setCell("A1", new CellValue.Text("Name"));
-      sheet.cells().setCell("B1", new ResolvedFormula("TRUE()"));
-      sheet.cells().setCell("C1", new ResolvedFormula("1+1"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Name"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B1"),
+              new ResolvedFormula("TRUE()"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"), new ResolvedFormula("1+1"));
 
-      assertThrows(CellNotFoundException.class, () -> sheet.cells().text("B2"));
-      assertThrows(CellNotFoundException.class, () -> sheet.cells().text("D1"));
-      assertThrows(IllegalStateException.class, () -> sheet.cells().number("A1"));
-      assertThrows(IllegalStateException.class, () -> sheet.cells().number("B1"));
-      assertThrows(IllegalStateException.class, () -> sheet.cells().bool("C1"));
-      assertThrows(IllegalStateException.class, () -> sheet.cells().formula("A1"));
+      assertThrows(
+          CellNotFoundException.class,
+          () -> sheet.cells().text(new dev.erst.gridgrind.core.vocabulary.CellAddress("B2")));
+      assertThrows(
+          CellNotFoundException.class,
+          () -> sheet.cells().text(new dev.erst.gridgrind.core.vocabulary.CellAddress("D1")));
+      assertThrows(
+          IllegalStateException.class,
+          () -> sheet.cells().number(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
+      assertThrows(
+          IllegalStateException.class,
+          () -> sheet.cells().number(new dev.erst.gridgrind.core.vocabulary.CellAddress("B1")));
+      assertThrows(
+          IllegalStateException.class,
+          () -> sheet.cells().bool(new dev.erst.gridgrind.core.vocabulary.CellAddress("C1")));
+      assertThrows(
+          IllegalStateException.class,
+          () -> sheet.cells().formula(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1")));
     }
   }
 
@@ -445,14 +471,18 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertSame(
           cells,
           cells.setRange(
-              "B2:A1",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
               List.of(
-                  List.of(new CellValue.Text("Item"), new CellValue.NumberValue(42.0)),
-                  List.of(new CellValue.Text("Tax"), new CellValue.NumberValue(8.0)))));
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(42.0)),
+                  List.of(
+                      new dev.erst.gridgrind.core.model.value.ResolvedCellText("Tax"),
+                      new dev.erst.gridgrind.core.model.value.CellValueSpec.NumberValue(8.0)))));
       sheet
           .cells()
           .applyStyle(
-              "A1:B1",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B1"),
               new CellStylePatch(
                   Optional.of("#,##0.00"),
                   Optional.of(
@@ -477,7 +507,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       sheet
           .cells()
           .applyStyle(
-              "C1",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("C1"),
               new CellStylePatch(
                   Optional.empty(),
                   Optional.empty(),
@@ -494,7 +524,8 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                   Optional.empty(),
                   Optional.empty()));
 
-      CellReport styledValue = sheet.cells().snapshotCell("A1");
+      CellReport styledValue =
+          sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       assertEquals("#,##0.00", styledValue.style().orElseThrow().numberFormat());
       assertTrue(styledValue.style().orElseThrow().font().bold());
       assertTrue(styledValue.style().orElseThrow().alignment().wrapText());
@@ -525,12 +556,25 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertTrue(
           preview.getFirst().cells().stream()
               .anyMatch(cell -> "C1".equals(cell.address().value())));
-      assertEquals("BLANK", sheet.cells().snapshotCell("C1").type());
-      assertTrue(sheet.cells().snapshotCell("C1").style().orElseThrow().font().italic());
+      assertEquals(
+          "BLANK",
+          sheet
+              .cells()
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"))
+              .type());
+      assertTrue(
+          sheet
+              .cells()
+              .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("C1"))
+              .style()
+              .orElseThrow()
+              .font()
+              .italic());
 
-      sheet.cells().clearRange("A2:B2");
+      sheet.cells().clearRange(new dev.erst.gridgrind.core.vocabulary.RangeRef("A2:B2"));
 
-      CellReport cleared = sheet.cells().snapshotCell("A2");
+      CellReport cleared =
+          sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"));
       assertEquals("BLANK", cleared.type());
       assertEquals("General", cleared.style().orElseThrow().numberFormat());
       assertFalse(cleared.style().orElseThrow().font().bold());
@@ -559,36 +603,55 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
 
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.cells().setRange("A1:B2", List.of(List.of(new CellValue.Text("x")))));
-      assertThrows(
-          IllegalArgumentException.class,
-          () ->
-              sheet
-                  .cells()
-                  .setRange("A1:B2", List.of(List.of(), List.of(new CellValue.Text("x")))));
-      assertThrows(
-          IllegalArgumentException.class,
           () ->
               sheet
                   .cells()
                   .setRange(
-                      "A1:B2",
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
                       List.of(
-                          List.of(new CellValue.Text("x")),
-                          List.of(new CellValue.Text("y"), new CellValue.Text("z")))));
+                          List.of(new dev.erst.gridgrind.core.model.value.ResolvedCellText("x")))));
       assertThrows(
           IllegalArgumentException.class,
           () ->
               sheet
                   .cells()
                   .setRange(
-                      "A1:B2",
-                      List.of(List.of(new CellValue.Text("x")), List.of(new CellValue.Text("y")))));
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
+                      List.of(
+                          List.of(),
+                          List.of(new dev.erst.gridgrind.core.model.value.ResolvedCellText("x")))));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              sheet
+                  .cells()
+                  .setRange(
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
+                      List.of(
+                          List.of(new dev.erst.gridgrind.core.model.value.ResolvedCellText("x")),
+                          List.of(
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("y"),
+                              new dev.erst.gridgrind.core.model.value.ResolvedCellText("z")))));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              sheet
+                  .cells()
+                  .setRange(
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
+                      List.of(
+                          List.of(new dev.erst.gridgrind.core.model.value.ResolvedCellText("x")),
+                          List.of(new dev.erst.gridgrind.core.model.value.ResolvedCellText("y")))));
       List<List<ResolvedCellWrite>> rowsWithNull = new ArrayList<>();
       List<ResolvedCellWrite> rowWithNull = new ArrayList<>();
       rowWithNull.add(null);
       rowsWithNull.add(rowWithNull);
-      assertThrows(NullPointerException.class, () -> sheet.cells().setRange("A1", rowsWithNull));
+      assertThrows(
+          NullPointerException.class,
+          () ->
+              sheet
+                  .cells()
+                  .setRange(new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"), rowsWithNull));
     }
   }
 
@@ -599,11 +662,15 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       XssfSheet sheet = new XssfSheet(poiSheet, new StyleAdapter(poiWorkbook), evaluator);
 
-      sheet.cells().setCell("A1", new CellValue.Text("Item"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Item"));
       sheet
           .cells()
           .applyStyle(
-              "A1",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"),
               new CellStylePatch(
                   Optional.empty(),
                   Optional.of(
@@ -636,7 +703,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       sheet
           .cells()
           .applyStyle(
-              "A1",
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"),
               new CellStylePatch(
                   Optional.empty(),
                   Optional.empty(),
@@ -659,7 +726,8 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                           Optional.empty())),
                   Optional.empty()));
 
-      CellReport styled = sheet.cells().snapshotCell("A1");
+      CellReport styled =
+          sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       assertTrue(styled.style().orElseThrow().font().bold());
       assertFalse(styled.style().orElseThrow().font().italic());
       assertTrue(styled.style().orElseThrow().alignment().wrapText());
@@ -691,10 +759,20 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       XssfSheet sheet = new XssfSheet(poiSheet, new StyleAdapter(poiWorkbook), evaluator);
 
-      sheet.links().setHyperlink("A1", new HyperlinkTarget.Url("https://example.com/report"));
-      sheet.comments().setComment("A1", new ResolvedComment("Review", "GridGrind", true));
+      sheet
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new HyperlinkTarget.Url("https://example.com/report"));
+      sheet
+          .comments()
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedComment("Review", "GridGrind", true));
 
-      CellReport.BlankReport snapshot = (CellReport.BlankReport) sheet.cells().snapshotCell("A1");
+      CellReport.BlankReport snapshot =
+          (CellReport.BlankReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       assertEquals(
           new HyperlinkTarget.Url("https://example.com/report"),
           snapshot.hyperlink().orElseThrow());
@@ -707,27 +785,41 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals(1, preview.size());
       assertEquals("A1", preview.getFirst().cells().getFirst().address().value());
 
-      sheet.links().clearHyperlink("A1");
-      sheet.comments().clearComment("A1");
+      sheet.links().clearHyperlink(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
+      sheet.comments().clearComment(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       CellReport.BlankReport clearedMetadata =
-          (CellReport.BlankReport) sheet.cells().snapshotCell("A1");
+          (CellReport.BlankReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       assertTrue(clearedMetadata.hyperlink().isEmpty());
       assertTrue(clearedMetadata.comment().isEmpty());
 
-      sheet.links().setHyperlink("A1", new HyperlinkTarget.Document("Budget!B4"));
-      sheet.comments().setComment("A1", new ResolvedComment("Again", "GridGrind", false));
-      sheet.cells().clearRange("A1");
+      sheet
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new HyperlinkTarget.Document("Budget!B4"));
+      sheet
+          .comments()
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedComment("Again", "GridGrind", false));
+      sheet.cells().clearRange(new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"));
       CellReport.BlankReport clearedRange =
-          (CellReport.BlankReport) sheet.cells().snapshotCell("A1");
+          (CellReport.BlankReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"));
       assertTrue(clearedRange.hyperlink().isEmpty());
       assertTrue(clearedRange.comment().isEmpty());
 
       // clearHyperlink and clearComment are no-ops on cells that do not physically exist
-      assertDoesNotThrow(() -> sheet.links().clearHyperlink("B2"));
-      assertDoesNotThrow(() -> sheet.comments().clearComment("B2"));
+      assertDoesNotThrow(() ->
+          sheet.links().clearHyperlink(new dev.erst.gridgrind.core.vocabulary.CellAddress("B2")));
+      assertDoesNotThrow(() ->
+          sheet.comments().clearComment(new dev.erst.gridgrind.core.vocabulary.CellAddress("B2")));
       // calling again on B2 (still non-existent) must still be a no-op, not throw
-      assertDoesNotThrow(() -> sheet.links().clearHyperlink("B2"));
-      assertDoesNotThrow(() -> sheet.comments().clearComment("B2"));
+      assertDoesNotThrow(() ->
+          sheet.links().clearHyperlink(new dev.erst.gridgrind.core.vocabulary.CellAddress("B2")));
+      assertDoesNotThrow(() ->
+          sheet.comments().clearComment(new dev.erst.gridgrind.core.vocabulary.CellAddress("B2")));
     }
   }
 
@@ -738,11 +830,12 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       XssfSheet sheet = new XssfSheet(poiSheet, new StyleAdapter(poiWorkbook), evaluator);
 
-      assertDoesNotThrow(
-          () ->
-              sheet
-                  .links()
-                  .setHyperlink("A1", new HyperlinkTarget.File("support/budget backup.xlsx")));
+      assertDoesNotThrow(() ->
+          sheet
+              .links()
+              .setHyperlink(
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                  new HyperlinkTarget.File("support/budget backup.xlsx")));
 
       Cell cell = poiSheet.getRow(0).getCell(0);
       assertEquals("support/budget%20backup.xlsx", cell.getHyperlink().getAddress());
@@ -759,14 +852,18 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       XssfSheet sheet = new XssfSheet(poiSheet, new StyleAdapter(poiWorkbook), evaluator);
 
-      sheet.cells().setCell("A1", new CellValue.Text("anchor"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("anchor"));
 
       int rowsBefore = sheet.rows().physicalCount();
       int lastRowBefore = sheet.rows().lastIndex();
       int lastColBefore = sheet.columns().lastIndex();
 
       // clear a range that has never been written
-      sheet.cells().clearRange("B2:E5");
+      sheet.cells().clearRange(new dev.erst.gridgrind.core.vocabulary.RangeRef("B2:E5"));
 
       // physicalRowCount, lastRowIndex, and lastColumnIndex must not change
       assertEquals(rowsBefore, sheet.rows().physicalCount(), "physicalRowCount must not increase");
@@ -784,10 +881,16 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
 
       // Row 2 exists (B2 is written) but C2 has never been written.
       // Clearing B2:C2 must not throw even though C2 is absent.
-      sheet.cells().setCell("B2", new CellValue.Text("present"));
-      assertDoesNotThrow(() -> sheet.cells().clearRange("B2:C2"));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("present"));
+      assertDoesNotThrow(
+          () -> sheet.cells().clearRange(new dev.erst.gridgrind.core.vocabulary.RangeRef("B2:C2")));
       // B2 must now be blank after the clear
-      CellReport b2 = sheet.cells().snapshotCell("B2");
+      CellReport b2 =
+          sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"));
       assertEquals("BLANK", b2.type());
     }
   }
@@ -814,9 +917,21 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals(List.of(), emptyLayout.columns());
       assertEquals(List.of(), emptyLayout.rows());
 
-      sheet.cells().setCell("B2", new CellValue.Text("Center"));
-      sheet.links().setHyperlink("A1", new HyperlinkTarget.Url("https://example.com/report"));
-      sheet.comments().setComment("C3", new ResolvedComment("Review", "GridGrind", false));
+      sheet
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Center"));
+      sheet
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new HyperlinkTarget.Url("https://example.com/report"));
+      sheet
+          .comments()
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("C3"),
+              new ResolvedComment("Review", "GridGrind", false));
       sheet.columns().setWidth(0, 0, 12.5);
       sheet.rows().setHeight(0, 0, 19.5);
       sheet
@@ -833,15 +948,31 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                           List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))));
 
       dev.erst.gridgrind.core.model.layout.WindowReport.Dense window =
-          sheet.cells().window("A1", 3, 3);
+          sheet.cells().window(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), 3, 3);
       assertEquals("A1", window.rows().getFirst().cells().getFirst().address().value());
       assertEquals("B2", window.rows().get(1).cells().get(1).address().value());
       assertEquals("Center", window.rows().get(1).cells().get(1).displayValue().orElseThrow());
       assertEquals("C3", window.rows().get(2).cells().get(2).address().value());
-      assertThrows(IllegalArgumentException.class, () -> sheet.cells().window("A1", 0, 1));
-      assertThrows(IllegalArgumentException.class, () -> sheet.cells().window("A1", 1, 0));
-      assertThrows(IllegalArgumentException.class, () -> sheet.cells().window("A1", 1048577, 1));
-      assertThrows(IllegalArgumentException.class, () -> sheet.cells().window("A1", 1, 16385));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              sheet.cells().window(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), 0, 1));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              sheet.cells().window(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), 1, 0));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              sheet
+                  .cells()
+                  .window(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), 1048577, 1));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              sheet
+                  .cells()
+                  .window(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), 1, 16385));
 
       List<CellHyperlinkReport> allHyperlinks = sheet.links().hyperlinks();
       assertEquals(1, allHyperlinks.size());
@@ -917,10 +1048,20 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       XssfSheet sheet = new XssfSheet(poiSheet, new StyleAdapter(poiWorkbook), evaluator);
 
-      sheet.links().setHyperlink("F18", new HyperlinkTarget.Email("Report_Value@example.com"));
-      sheet.links().setHyperlink("F18", new HyperlinkTarget.Email("Summary.Total@example.com"));
+      sheet
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("F18"),
+              new HyperlinkTarget.Email("Report_Value@example.com"));
+      sheet
+          .links()
+          .setHyperlink(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("F18"),
+              new HyperlinkTarget.Email("Summary.Total@example.com"));
 
-      CellReport.BlankReport snapshot = (CellReport.BlankReport) sheet.cells().snapshotCell("F18");
+      CellReport.BlankReport snapshot =
+          (CellReport.BlankReport)
+              sheet.cells().snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("F18"));
       assertEquals(
           new HyperlinkTarget.Email("Summary.Total@example.com"),
           snapshot.hyperlink().orElseThrow());

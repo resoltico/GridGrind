@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.zip.ZipFile;
 import javax.xml.parsers.DocumentBuilderFactory;
-import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -27,6 +26,9 @@ class ExcelDataValidationOperatorPersistenceTest {
   @TempDir Path temporaryDirectory;
 
   @Test
+  @SuppressWarnings(
+      "PMD.AvoidInstantiatingObjectsInLoops") // Each finite comparison case requires its own
+  // immutable range coordinates.
   void persistsAndReadsEveryComparisonOperatorAcrossEveryComparisonFamily() throws IOException {
     Path workbookPath = temporaryDirectory.resolve("validation-operators.xlsx");
     List<ExcelComparisonOperator> operators = List.of(ExcelComparisonOperator.values());
@@ -37,10 +39,11 @@ class ExcelDataValidationOperatorPersistenceTest {
       int validationIndex = 0;
       for (Family family : Family.values()) {
         for (ExcelComparisonOperator operator : operators) {
-          String column = CellReference.convertNumToColString(validationIndex);
+          var range =
+              new dev.erst.gridgrind.core.vocabulary.RangeRef(
+                  0, 2, validationIndex, validationIndex);
           validationIndex++;
-          controller.setDataValidation(
-              sheet, column + "1:" + column + "3", definition(family, operator));
+          controller.setDataValidation(sheet, range, definition(family, operator));
         }
       }
       try (var output = Files.newOutputStream(workbookPath)) {

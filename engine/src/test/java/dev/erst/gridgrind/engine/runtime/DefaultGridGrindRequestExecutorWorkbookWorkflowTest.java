@@ -109,7 +109,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -164,7 +166,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -200,7 +204,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 WorkbookPlan.identified(
                     ProtocolVersion.CURRENT,
                     new PlanId("ledger-audit"),
@@ -236,7 +242,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 WorkbookPlan.identified(
                     ProtocolVersion.CURRENT,
                     new PlanId("bad-open"),
@@ -271,7 +279,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
-            new DefaultGridGrindRequestExecutor(),
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -406,7 +416,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -473,7 +485,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void executesRichTextCellWorkflowAndReportsStructuredRuns() {
     WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
-            new DefaultGridGrindRequestExecutor(),
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
@@ -533,7 +547,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void surfacesRequestWarningsAlongsideSuccessfulExecution() {
     WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
-            new DefaultGridGrindRequestExecutor(),
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
@@ -561,7 +577,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                 3,
                 new StepId("step-04-set-cell"),
                 "SET_CELL",
-                "Formula references same-request sheet names with spaces without single quotes: Budget Review. Use 'Sheet Name'!A1 syntax.")),
+                "Formula references same-request sheet names with spaces without single quotes:"
+                    + " Budget Review. Use 'Sheet Name'!A1 syntax.")),
         success.warnings());
     assertEquals(List.of(), success.inspections());
   }
@@ -571,13 +588,20 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     Path workbookPath = Files.createTempFile("gridgrind-existing-", ".xlsx");
 
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Before"));
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Before"));
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
 
     WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
-            new DefaultGridGrindRequestExecutor(),
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                 new WorkbookPlan.WorkbookPersistence.Overwrite(
@@ -623,7 +647,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
-            new DefaultGridGrindRequestExecutor(),
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -797,7 +823,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
-            new DefaultGridGrindRequestExecutor(),
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -903,7 +931,12 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     Path sourceWorkbook = XlsxRoundTrip.newWorkbookPath("gridgrind-layout-factual-source-");
     try (XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Layout");
-      workbook.sheet("Layout").cells().setCell("A1", new CellValue.Text("Header"));
+      workbook
+          .sheet("Layout")
+          .cells()
+          .setCell(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new dev.erst.gridgrind.core.model.value.ResolvedCellText("Header"));
       workbook.sheet("Layout").columns().setWidth(0, 0, 16.0d);
       ExecutionContextFixtureSupport.saveWorkbook(workbook, sourceWorkbook);
     }
@@ -922,7 +955,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(malformedWorkbook.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -951,7 +986,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
-            new DefaultGridGrindRequestExecutor(),
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -1055,11 +1092,36 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             .orElseThrow());
 
     try (XssfWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
-      assertEquals("Spacer", workbook.sheet("Moves").cells().text("A2"));
-      assertEquals("Pad", workbook.sheet("Moves").cells().text("B1"));
-      assertEquals("Hosting", workbook.sheet("Moves").cells().text("A3"));
-      assertEquals(42.0, workbook.sheet("Moves").cells().number("C3"));
-      assertEquals("Beta", workbook.sheet("Moves").cells().text("E4"));
+      assertEquals(
+          "Spacer",
+          workbook
+              .sheet("Moves")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A2")));
+      assertEquals(
+          "Pad",
+          workbook
+              .sheet("Moves")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("B1")));
+      assertEquals(
+          "Hosting",
+          workbook
+              .sheet("Moves")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("A3")));
+      assertEquals(
+          42.0,
+          workbook
+              .sheet("Moves")
+              .cells()
+              .number(new dev.erst.gridgrind.core.vocabulary.CellAddress("C3")));
+      assertEquals(
+          "Beta",
+          workbook
+              .sheet("Moves")
+              .cells()
+              .text(new dev.erst.gridgrind.core.vocabulary.CellAddress("E4")));
     }
   }
 
@@ -1068,7 +1130,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -1111,7 +1175,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
-                new DefaultGridGrindRequestExecutor(),
+                new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -1141,7 +1207,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
-            new DefaultGridGrindRequestExecutor(),
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -1271,7 +1339,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
-            new DefaultGridGrindRequestExecutor(),
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -1368,7 +1438,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
-            new DefaultGridGrindRequestExecutor(),
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -1468,7 +1540,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
-            new DefaultGridGrindRequestExecutor(),
+            new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD)),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(

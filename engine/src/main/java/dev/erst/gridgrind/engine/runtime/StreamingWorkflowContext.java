@@ -12,7 +12,6 @@ import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
-import java.util.ArrayList;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 
@@ -46,10 +45,10 @@ record StreamingWorkflowContext(
         warnings,
         journal,
         workbookLocation,
-        new ArrayList<>(),
-        new ArrayList<>(),
-        new ArrayList<>(),
-        new ArrayList<>());
+        bindings.session().planAssertions,
+        bindings.session().hostAssertions,
+        bindings.session().preservation,
+        bindings.session().inspections);
   }
 
   WorkbookPlan request() {

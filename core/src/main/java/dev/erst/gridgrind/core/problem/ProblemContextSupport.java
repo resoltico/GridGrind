@@ -17,6 +17,28 @@ final class ProblemContextSupport {
     if (discovered instanceof ProblemContextWorkbookSurfaces.ProblemLocation.Unknown) {
       return current;
     }
+    if (current instanceof ProblemContextWorkbookSurfaces.ProblemLocation.MappedXmlField) {
+      return current;
+    }
+    if (discovered
+        instanceof ProblemContextWorkbookSurfaces.ProblemLocation.MappedXmlField mapped) {
+      return new ProblemContextWorkbookSurfaces.ProblemLocation.MappedXmlField(
+          mapped.sheetName().or(current::sheetNameValue), mapped.xpath(), mapped.mappingRowIndex());
+    }
+    if (current instanceof ProblemContextWorkbookSurfaces.ProblemLocation.NativeContent) {
+      return current;
+    }
+    if (discovered
+        instanceof ProblemContextWorkbookSurfaces.ProblemLocation.NativeContent nativeContent) {
+      WorkbookContentLocation value = nativeContent.content();
+      return new ProblemContextWorkbookSurfaces.ProblemLocation.NativeContent(
+          new WorkbookContentLocation(
+              value.sheetName().or(current::sheetNameValue),
+              value.partName(),
+              value.fieldName(),
+              value.line(),
+              value.column()));
+    }
     if (current instanceof ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell) {
       return current;
     }

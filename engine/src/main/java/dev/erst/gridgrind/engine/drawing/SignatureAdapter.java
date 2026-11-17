@@ -6,16 +6,23 @@ import com.microsoft.schemas.vml.CTImageData;
 import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingCoordinateReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
+import dev.erst.gridgrind.core.problem.WorkbookContentIssue;
+import dev.erst.gridgrind.core.problem.WorkbookContentLocation;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.TextValidation;
+import dev.erst.gridgrind.engine.backend.xssf.UnexpectedNativeContentException;
+import dev.erst.gridgrind.engine.backend.xssf.WorkbookContentRefusalException;
+import dev.erst.gridgrind.engine.media.AuthoredImageAdmission;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.xml.namespace.QName;
 import org.apache.poi.openxml4j.opc.PackagePart;
@@ -25,17 +32,28 @@ import org.apache.poi.xssf.usermodel.XSSFSignatureLine;
 import org.apache.poi.xssf.usermodel.XSSFVMLDrawing;
 import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlObject;
+import org.apache.xmlbeans.impl.values.XmlValueOutOfRangeException;
 import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.officeDocument.x2006.sharedTypes.STTrueFalse;
 
 /** Owns VML signature-line mutation, metadata, previews and anchors. */
-@SuppressWarnings("PMD.CommentRequired")
+// One VML signature boundary integrates native format, factual refusals and authored media
+// admission.
+// Splitting a generic read wrapper solely to reduce its import count would couple separate owners.
+@SuppressWarnings({"PMD.CommentRequired", "PMD.ExcessiveImports"})
 public final class SignatureAdapter {
 
   private static final Pattern VML_ANCHOR_SEPARATOR = Pattern.compile("\\s*,\\s*");
 
   public List<DrawingObjectReport.SignatureLine> signatureLines(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
+    return readNative(
+        Optional.of(sheet.getPackagePart().getPartName().getName()),
+        "signatureLine",
+        () -> signatureLinesNative(sheet));
+  }
+
+  private List<DrawingObjectReport.SignatureLine> signatureLinesNative(XSSFSheet sheet) {
     XSSFVMLDrawing vmlDrawing = sheet.getVMLDrawing(false);
     if (vmlDrawing == null) {
       return List.of();
@@ -54,12 +72,33 @@ public final class SignatureAdapter {
   public void setSignatureLine(XSSFSheet sheet, ResolvedSignatureLine definition) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
+    var admitted = admitPreview(definition);
+    AuthoredImageAdmission.mutate(() -> {
+      deleteIfPresent(sheet, definition.name());
+      installAdmitted(sheet, definition, admitted);
+    });
+  }
 
-    deleteIfPresent(sheet, definition.name());
+  static Optional<AuthoredImageAdmission.AdmittedImage> admitPreview(
+      ResolvedSignatureLine definition) {
+    return definition
+        .plainSignature()
+        .map(bytes ->
+            AuthoredImageAdmission.admitNative(
+                definition.plainSignatureFormat().orElseThrow(), bytes));
+  }
 
-    XSSFSignatureLine signatureLine = configuredSignatureLine(definition);
-    signatureLine.add(sheet, toPoiAnchor(definition.anchor()));
-    applyNameAndCommentMetadata(signatureLine.getSignatureShape(), definition);
+  void installAdmitted(
+      XSSFSheet sheet,
+      ResolvedSignatureLine definition,
+      Optional<AuthoredImageAdmission.AdmittedImage> admitted) {
+    AuthoredImageAdmission.mutate(() -> {
+      if (admitted.isPresent() != definition.plainSignature().isPresent())
+        throw new IllegalStateException("Signature preview admission mismatch");
+      XSSFSignatureLine signatureLine = configuredSignatureLine(definition, admitted);
+      signatureLine.add(sheet, toPoiAnchor(definition.anchor()));
+      applyNameAndCommentMetadata(signatureLine.getSignatureShape(), definition);
+    });
   }
 
   public boolean updateAnchorIfPresent(
@@ -126,7 +165,10 @@ public final class SignatureAdapter {
     return new DrawingObjectReport.SignatureLine(
         objectName,
         anchor(shape, objectName),
-        signatureLineSetup(signatureLine, signingInstructions(signatureLine)),
+        signatureLineSetup(
+            signatureLine,
+            signingInstructions(signatureLine),
+            Optional.of(vmlDrawing.getPackagePart().getPartName().getName())),
         signatureLinePreview(previewFormat, previewPart, previewBytes, previewDimensions));
   }
 
@@ -173,10 +215,11 @@ public final class SignatureAdapter {
                 matchedIndex));
   }
 
-  private static XSSFSignatureLine configuredSignatureLine(ResolvedSignatureLine definition) {
+  private static XSSFSignatureLine configuredSignatureLine(
+      ResolvedSignatureLine definition, Optional<AuthoredImageAdmission.AdmittedImage> admitted) {
     XSSFSignatureLine signatureLine = new XSSFSignatureLine();
     applyOptionalMetadata(signatureLine, definition);
-    applyPlainSignature(signatureLine, definition);
+    applyPlainSignature(signatureLine, definition, admitted);
     return signatureLine;
   }
 
@@ -191,11 +234,18 @@ public final class SignatureAdapter {
   }
 
   private static void applyPlainSignature(
-      XSSFSignatureLine signatureLine, ResolvedSignatureLine definition) {
+      XSSFSignatureLine signatureLine,
+      ResolvedSignatureLine definition,
+      Optional<AuthoredImageAdmission.AdmittedImage> admitted) {
     if (definition.plainSignature().isEmpty()) {
       return;
     }
-    signatureLine.setPlainSignature(definition.plainSignature().orElseThrow().bytes());
+    signatureLine.setPlainSignature(
+        admitted
+            .orElseThrow()
+            .nativeBytes(
+                definition.plainSignatureFormat().orElseThrow(),
+                definition.plainSignature().orElseThrow()));
     signatureLine.setContentType(
         definition.plainSignatureFormat().orElseThrow().defaultContentType());
   }
@@ -258,13 +308,13 @@ public final class SignatureAdapter {
           new DrawingMarkerReport(
               Integer.parseInt(tokens[0]),
               Integer.parseInt(tokens[2]),
-              Integer.parseInt(tokens[1]),
-              Integer.parseInt(tokens[3])),
+              new DrawingCoordinateReport.Pixels(Integer.parseInt(tokens[1])),
+              new DrawingCoordinateReport.Pixels(Integer.parseInt(tokens[3]))),
           new DrawingMarkerReport(
               Integer.parseInt(tokens[4]),
               Integer.parseInt(tokens[6]),
-              Integer.parseInt(tokens[5]),
-              Integer.parseInt(tokens[7])),
+              new DrawingCoordinateReport.Pixels(Integer.parseInt(tokens[5])),
+              new DrawingCoordinateReport.Pixels(Integer.parseInt(tokens[7]))),
           ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
     } catch (NumberFormatException exception) {
       throw new IllegalStateException(
@@ -379,11 +429,21 @@ public final class SignatureAdapter {
   }
 
   public static Optional<DrawingObjectReport.SignatureSetup> signatureLineSetup(
+      CTSignatureLine signatureLine,
+      @Nullable String signingInstructions,
+      Optional<String> partName) {
+    return readNative(
+        partName,
+        "signatureLine.allowComments",
+        () -> signatureLineSetupNative(signatureLine, signingInstructions));
+  }
+
+  private static Optional<DrawingObjectReport.SignatureSetup> signatureLineSetupNative(
       CTSignatureLine signatureLine, @Nullable String signingInstructions) {
     Optional<String> setupId = DrawingAdapter.blankAsOptional(signatureLine.getId());
     Optional<Boolean> allowComments =
         signatureLine.isSetAllowcomments()
-            ? Optional.of(STTrueFalse.TRUE.equals(signatureLine.getAllowcomments()))
+            ? Optional.of(trueFalse(signatureLine.getAllowcomments()))
             : Optional.empty();
     Optional<String> suggestedSigner =
         DrawingAdapter.blankAsOptional(signatureLine.getSuggestedsigner());
@@ -408,6 +468,35 @@ public final class SignatureAdapter {
             suggestedSigner,
             suggestedSigner2,
             suggestedSignerEmail));
+  }
+
+  private static boolean trueFalse(STTrueFalse.Enum value) {
+    return switch (value.intValue()) {
+      case STTrueFalse.INT_T, STTrueFalse.INT_TRUE -> true;
+      case STTrueFalse.INT_F, STTrueFalse.INT_FALSE -> false;
+      default -> throw new IllegalStateException("Unknown pinned STTrueFalse enum alternative");
+    };
+  }
+
+  private static <T> T readNative(Optional<String> partName, String field, Supplier<T> read) {
+    try {
+      return read.get();
+    } catch (WorkbookContentRefusalException | UnexpectedNativeContentException exception) {
+      throw exception;
+    } catch (XmlValueOutOfRangeException exception) {
+      throw new WorkbookContentRefusalException(
+          WorkbookContentIssue.INVALID_NATIVE_VALUE,
+          Optional.of(
+              new WorkbookContentLocation(
+                  Optional.empty(),
+                  partName,
+                  Optional.of(field),
+                  Optional.empty(),
+                  Optional.empty())),
+          exception);
+    } catch (RuntimeException exception) {
+      throw new UnexpectedNativeContentException(exception);
+    }
   }
 
   public static Optional<DrawingObjectReport.SignaturePreview> signatureLinePreview(

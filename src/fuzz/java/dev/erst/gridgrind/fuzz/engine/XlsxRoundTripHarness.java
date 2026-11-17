@@ -1,9 +1,11 @@
 package dev.erst.gridgrind.fuzz.engine;
 
 import dev.erst.gridgrind.core.plan.ResolvedStep;
+import dev.erst.gridgrind.core.semantics.ExecutionConventions;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import dev.erst.gridgrind.engine.runtime.NativeInvocationContext;
 import dev.erst.gridgrind.fuzz.support.FuzzFilesystem;
 import dev.erst.gridgrind.fuzz.support.FuzzWorkbookIo;
 import dev.erst.gridgrind.fuzz.support.GridGrindFuzzData;
@@ -30,7 +32,8 @@ public final class XlsxRoundTripHarness {
     Path workbookPath = directory.resolve("workbook.xlsx");
 
     try {
-      try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+      try (var nativeContext = NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD);
+          XssfWorkbook workbook = XssfWorkbooks.create()) {
         WorkbookExecutionEngine executor = new WorkbookExecutionEngine();
         try {
           executor.apply(workbook, commands);

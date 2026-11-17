@@ -23,14 +23,15 @@ final class FullXssfHostAcceptance {
   }
 
   Context capture(FullXssfWorkflowState state, ExecutionInputBindings bindings) throws IOException {
-    AcceptancePolicy policy = bindings.executionGrant().acceptancePolicy();
+    AcceptancePolicy policy = bindings.acceptancePolicy();
     state.hostAcceptanceSnapshot(
         acceptanceExecutor.captureBeforeMutation(
+            bindings.executionGrant().acceptancePolicy(),
             policy,
             state.executionContext().workbook(),
             state.workbookLocation(),
             materializedSourceArtifact(state.executionContext().request(), bindings)));
-    return new Context(policy);
+    return new Context(bindings.executionGrant().acceptancePolicy(), policy);
   }
 
   Optional<dev.erst.gridgrind.core.problem.GridGrindProblemDetail.Problem> requireCalculation(
@@ -57,23 +58,23 @@ final class FullXssfHostAcceptance {
 
   void verify(FullXssfWorkflowState state, Context context)
       throws IOException, AssertionFailedException, PreservationFailedException {
-    HostAcceptanceVerification verification =
-        acceptanceExecutor.verifyWorkbook(
-            context.policy(),
-            state.hostAcceptanceSnapshot(),
-            state.executionContext().workbook(),
-            state.workbookLocation());
-    state.hostAssertions().addAll(verification.assertions());
-    state.hostPreservation().addAll(verification.preservation());
+    acceptanceExecutor.verifyWorkbook(
+        context.authoredPolicy(),
+        context.policy(),
+        state.hostAcceptanceSnapshot(),
+        state.executionContext().workbook(),
+        state.workbookLocation(),
+        state.hostAssertions(),
+        state.hostPreservation());
   }
 
   StagedArtifactAcceptance stagedArtifactAcceptance(FullXssfWorkflowState state, Context context) {
     return stagedWorkbook ->
-        state
-            .hostPreservation()
-            .addAll(
-                acceptanceExecutor.verifyStagedArtifact(
-                    context.policy(), state.hostAcceptanceSnapshot(), stagedWorkbook));
+        acceptanceExecutor.verifyStagedArtifact(
+            context.policy(),
+            state.hostAcceptanceSnapshot(),
+            stagedWorkbook,
+            state.hostPreservation());
   }
 
   void recordFailure(FullXssfWorkflowState state, Exception exception) {
@@ -114,5 +115,5 @@ final class FullXssfHostAcceptance {
     };
   }
 
-  record Context(AcceptancePolicy policy) {}
+  record Context(AcceptancePolicy authoredPolicy, AcceptancePolicy policy) {}
 }

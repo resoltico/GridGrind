@@ -38,7 +38,9 @@ class ArrayFormulaSourcesTest {
     WorkbookPlan plan = plan(TextSourceSpec.utf8File("formula.txt"));
     assertFalse(SourceBackedPlanResolver.requiresStandardInput(plan));
     WorkbookResult result =
-        new DefaultGridGrindRequestExecutor()
+        new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .execute(plan, ExecutionInputBindingsFixtureSupport.bindings(directory, plan));
     assertInstanceOf(WorkbookResult.Success.class, result, result::toString);
     assertPublishedFormula();
@@ -49,7 +51,9 @@ class ArrayFormulaSourcesTest {
     WorkbookPlan plan = plan(TextSourceSpec.standardInput());
     assertTrue(SourceBackedPlanResolver.requiresStandardInput(plan));
     WorkbookResult result =
-        new DefaultGridGrindRequestExecutor()
+        new DefaultGridGrindRequestExecutor(
+                NativeInvocationContext.enterOwned(
+                    dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
             .execute(
                 plan,
                 ExecutionInputBindingsFixtureSupport.bindings(
@@ -64,7 +68,9 @@ class ArrayFormulaSourcesTest {
     WorkbookResult.Failure failure =
         assertInstanceOf(
             WorkbookResult.Failure.class,
-            new DefaultGridGrindRequestExecutor()
+            new DefaultGridGrindRequestExecutor(
+                    NativeInvocationContext.enterOwned(
+                        dev.erst.gridgrind.core.semantics.ExecutionConventions.STANDARD))
                 .execute(
                     plan,
                     ExecutionInputBindingsFixtureSupport.bindings(
@@ -100,7 +106,11 @@ class ArrayFormulaSourcesTest {
     try (var workbook = ExecutionContextFixtureSupport.openWorkbook(output)) {
       var cell =
           assertInstanceOf(
-              CellReport.FormulaReport.class, workbook.sheet("Budget").cells().snapshotCell("B1"));
+              CellReport.FormulaReport.class,
+              workbook
+                  .sheet("Budget")
+                  .cells()
+                  .snapshotCell(new dev.erst.gridgrind.core.vocabulary.CellAddress("B1")));
       assertEquals("SUM(1,2)", cell.formula().orElseThrow());
     }
   }

@@ -3,13 +3,14 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.engine.api.GridGrindSecretResolver;
-import dev.erst.gridgrind.engine.backend.xssf.WorkbookTempFileFactory;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Transport-neutral authored-input bindings supplied alongside one executed workbook plan. */
 public final class ExecutionInputBindings {
+  private final ExecutionSession session;
+  private final MediaMaterializationUse mediaUse;
   private final Path workingDirectory;
   private final Path tempRoot;
   private final Optional<StandardInputBinding> standardInput;
@@ -39,7 +40,7 @@ public final class ExecutionInputBindings {
     this(
         workingDirectory,
         tempRoot,
-        Optional.of(new StandardInputBinding(standardInputBytes)),
+        Optional.of(new StandardInputBinding(standardInputBytes, executionGrant)),
         Objects.requireNonNull(executionGrant, "executionGrant"),
         Optional.empty());
   }
@@ -54,7 +55,7 @@ public final class ExecutionInputBindings {
     this(
         workingDirectory,
         tempRoot,
-        Optional.of(new StandardInputBinding(standardInputBytes)),
+        Optional.of(new StandardInputBinding(standardInputBytes, executionGrant)),
         Objects.requireNonNull(executionGrant, "executionGrant"),
         Optional.of(Objects.requireNonNull(secretResolver, "secretResolver")));
   }
@@ -101,7 +102,8 @@ public final class ExecutionInputBindings {
         secretResolver,
         Optional.empty(),
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(),
+        new ExecutionSession(tempRoot, executionGrant));
   }
 
   private ExecutionInputBindings(
@@ -112,7 +114,32 @@ public final class ExecutionInputBindings {
       Optional<GridGrindSecretResolver> secretResolver,
       Optional<InputResolutionFailures> inputResolutionFailures,
       Optional<InputResolutionOrigins> inputResolutionOrigins,
-      Optional<RequestPathAccess> requestPathAccess) {
+      Optional<RequestPathAccess> requestPathAccess,
+      ExecutionSession session) {
+    this(
+        workingDirectory,
+        tempRoot,
+        standardInput,
+        executionGrant,
+        secretResolver,
+        inputResolutionFailures,
+        inputResolutionOrigins,
+        requestPathAccess,
+        session,
+        new MediaMaterializationUse(session.media));
+  }
+
+  private ExecutionInputBindings(
+      Path workingDirectory,
+      Path tempRoot,
+      Optional<StandardInputBinding> standardInput,
+      ExecutionGrant executionGrant,
+      Optional<GridGrindSecretResolver> secretResolver,
+      Optional<InputResolutionFailures> inputResolutionFailures,
+      Optional<InputResolutionOrigins> inputResolutionOrigins,
+      Optional<RequestPathAccess> requestPathAccess,
+      ExecutionSession session,
+      MediaMaterializationUse mediaUse) {
     Objects.requireNonNull(workingDirectory, "workingDirectory must not be null");
     Objects.requireNonNull(tempRoot, "tempRoot must not be null");
     Objects.requireNonNull(standardInput, "standardInput must not be null");
@@ -121,6 +148,8 @@ public final class ExecutionInputBindings {
     Objects.requireNonNull(inputResolutionFailures, "inputResolutionFailures must not be null");
     Objects.requireNonNull(inputResolutionOrigins, "inputResolutionOrigins must not be null");
     Objects.requireNonNull(requestPathAccess, "requestPathAccess must not be null");
+    this.session = Objects.requireNonNull(session);
+    this.mediaUse = Objects.requireNonNull(mediaUse);
     this.workingDirectory = workingDirectory.toAbsolutePath().normalize();
     this.tempRoot = tempRoot.toAbsolutePath().normalize();
     this.standardInput = standardInput;
@@ -146,10 +175,83 @@ public final class ExecutionInputBindings {
     return standardInput.isPresent();
   }
 
-  /** Returns one defensive copy of the bound stdin bytes when a stdin binding is present. */
-  public Optional<byte[]> standardInputBytes() {
+  /** Returns a read-only snapshot view with an independent cursor for internal decoding. */
+  Optional<java.nio.ByteBuffer> standardInputSnapshot() throws java.io.IOException {
     requireStandardInputAuthority(executionGrant);
-    return standardInput.map(StandardInputBinding::bytes);
+    if (standardInput.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(session.inputs.standardInput(standardInput.orElseThrow().opener));
+  }
+
+  Optional<java.nio.ByteBuffer> standardInputSnapshotWithin(InputSnapshotLimit limit)
+      throws java.io.IOException {
+    requireStandardInputAuthority(executionGrant);
+    if (standardInput.isEmpty()) return Optional.empty();
+    return Optional.of(
+        session.inputs.standardInputWithin(standardInput.orElseThrow().opener, limit));
+  }
+
+  dev.erst.gridgrind.engine.media.MediaAdmissionBudget mediaBudget() {
+    return session.media;
+  }
+
+  MediaMaterializationUse mediaUse() {
+    return mediaUse;
+  }
+
+  ExecutionInputBindings withNewMediaUse() {
+    return new ExecutionInputBindings(
+        workingDirectory,
+        tempRoot,
+        standardInput,
+        executionGrant,
+        secretResolver,
+        inputResolutionFailures,
+        inputResolutionOrigins,
+        requestPathAccess,
+        session,
+        new MediaMaterializationUse(session.media));
+  }
+
+  ExecutionSession session() {
+    return session;
+  }
+
+  dev.erst.gridgrind.core.grant.AcceptancePolicy acceptancePolicy() {
+    return session.acceptancePolicy;
+  }
+
+  void resolvedAcceptancePolicy(dev.erst.gridgrind.core.grant.AcceptancePolicy policy) {
+    session.acceptancePolicy = Objects.requireNonNull(policy);
+  }
+
+  void recordExecutionStrategy(
+      dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.ExecutionStrategy value) {
+    session.recordExecutionStrategy(value);
+  }
+
+  java.util.Optional<dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.ExecutionStrategy>
+      executionStrategy() {
+    return session.executionStrategy();
+  }
+
+  PublicationFacts publicationFacts() {
+    return session.publication;
+  }
+
+  InputSnapshots snapshots() {
+    return session.inputs;
+  }
+
+  /** Creates host bindings without invoking the lazy payload capability. */
+  public ExecutionInputBindings(
+      Path workingDirectory,
+      Path tempRoot,
+      ExecutionGrant grant,
+      Optional<dev.erst.gridgrind.engine.api.GridGrindPayloadOpener> source,
+      Optional<GridGrindSecretResolver> resolver) {
+    this(workingDirectory, tempRoot, source.map(StandardInputBinding::new), grant, resolver);
   }
 
   /** Returns the trusted host grant required for this execution. */
@@ -165,10 +267,9 @@ public final class ExecutionInputBindings {
           "host grant does not permit secret reference " + reference.id());
     }
     GridGrindSecretResolver resolver =
-        secretResolver.orElseThrow(
-            () ->
-                new ExecutionAuthorityDeniedException(
-                    "host did not supply a resolver for secret reference " + reference.id()));
+        secretResolver.orElseThrow(() ->
+            new ExecutionAuthorityDeniedException(
+                "host did not supply a resolver for secret reference " + reference.id()));
     char[] material =
         Objects.requireNonNull(resolver.resolve(reference), "secret resolver returned null");
     try {
@@ -193,16 +294,27 @@ public final class ExecutionInputBindings {
 
   /** Returns one temp-file factory rooted at this execution's explicit temp directory. */
   TempFileFactory tempFileFactory() {
-    WorkbookTempFileFactory workbookTempFileFactory = WorkbookTempFileFactory.rooted(tempRoot);
-    return workbookTempFileFactory::createTempFile;
+    return session::createTempFile;
+  }
+
+  ExecutionInputBindings forRun() {
+    return new ExecutionInputBindings(
+        workingDirectory, tempRoot, standardInput, executionGrant, secretResolver);
+  }
+
+  void own(RequestPathAccess.Cleanup cleanup) {
+    session.own(cleanup);
+  }
+
+  void closeRunResources() throws java.io.IOException {
+    session.close();
   }
 
   /** Returns the request-scoped no-follow filesystem capability prepared during preflight. */
   RequestPathAccess requestPathAccess() {
-    return requestPathAccess.orElseThrow(
-        () ->
-            new IllegalStateException(
-                "request-owned filesystem access requires phase-four preparation"));
+    return requestPathAccess.orElseThrow(() ->
+        new IllegalStateException(
+            "request-owned filesystem access requires phase-four preparation"));
   }
 
   boolean hasRequestPathAccess() {
@@ -218,7 +330,15 @@ public final class ExecutionInputBindings {
         secretResolver,
         Optional.of(Objects.requireNonNull(failures, "failures must not be null")),
         inputResolutionOrigins,
-        requestPathAccess);
+        requestPathAccess,
+        session,
+        mediaUse);
+  }
+
+  ExecutionInputBindings withInputResolutionScope(String path) {
+    return inputResolutionOrigins
+        .map(origins -> withInputResolutionOrigins(origins.scoped(path)))
+        .orElse(this);
   }
 
   ExecutionInputBindings withInputResolutionOrigins(InputResolutionOrigins origins) {
@@ -230,7 +350,9 @@ public final class ExecutionInputBindings {
         secretResolver,
         inputResolutionFailures,
         Optional.of(Objects.requireNonNull(origins, "origins must not be null")),
-        requestPathAccess);
+        requestPathAccess,
+        session,
+        mediaUse);
   }
 
   ExecutionInputBindings withRequestPathAccess(RequestPathAccess access) {
@@ -245,35 +367,48 @@ public final class ExecutionInputBindings {
         secretResolver,
         inputResolutionFailures,
         inputResolutionOrigins,
-        Optional.of(Objects.requireNonNull(access, "access must not be null")));
+        Optional.of(Objects.requireNonNull(access, "access must not be null")),
+        session,
+        mediaUse);
   }
 
-  boolean collectInputResolutionFailure(Exception failure, Object source) {
+  Optional<dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation> inputOrigin(
+      Object source) {
+    return inputResolutionOrigins.flatMap(origins -> origins.locationFor(source));
+  }
+
+  Optional<dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation>
+      lastInputOrigin(Object source) {
+    return inputResolutionOrigins.flatMap(origins -> origins.lastLocationFor(source));
+  }
+
+  boolean collectInputResolutionFailure(
+      Exception failure,
+      Object source,
+      Optional<dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation>
+          location) {
     if (inputResolutionFailures.isEmpty()) {
       return false;
     }
-    inputResolutionFailures
-        .orElseThrow()
-        .add(
-            failure,
-            inputResolutionOrigins.flatMap(origins -> origins.locationFor(source)),
-            source);
+    inputResolutionFailures.orElseThrow().add(failure, location, source);
     return true;
   }
 
   /** Immutable standard-input byte payload bound to one execution. */
   public static final class StandardInputBinding {
-    private final byte[] bytes;
+    private final dev.erst.gridgrind.engine.api.GridGrindPayloadOpener opener;
 
     /** Creates one immutable stdin binding from the provided bytes. */
-    public StandardInputBinding(byte[] bytes) {
+    public StandardInputBinding(byte[] bytes, ExecutionGrant grant) {
+      Objects.requireNonNull(grant)
+          .requireInputSnapshotBytes(0, Objects.requireNonNull(bytes).length);
       Objects.requireNonNull(bytes, "bytes must not be null");
-      this.bytes = bytes.clone();
+      byte[] snapshot = bytes.clone();
+      this.opener = () -> new java.io.ByteArrayInputStream(snapshot);
     }
 
-    /** Returns one defensive copy of the bound stdin bytes. */
-    public byte[] bytes() {
-      return bytes.clone();
+    private StandardInputBinding(dev.erst.gridgrind.engine.api.GridGrindPayloadOpener opener) {
+      this.opener = Objects.requireNonNull(opener);
     }
   }
 }

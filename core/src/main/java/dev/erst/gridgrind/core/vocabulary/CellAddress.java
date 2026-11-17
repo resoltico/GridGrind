@@ -1,32 +1,40 @@
 package dev.erst.gridgrind.core.vocabulary;
 
-import dev.erst.gridgrind.core.problem.FieldValidationProblem;
-import dev.erst.gridgrind.core.problem.FieldValidationProblemMappers;
-import dev.erst.gridgrind.core.problem.InvalidRequestException;
-import java.util.Objects;
-import java.util.Optional;
+import dev.erst.gridgrind.core.limits.Limit;
 
-/** One local A1-style cell address within Excel .xlsx bounds. */
-public record CellAddress(String value) implements WireString {
+/** One concrete local cell position, with zero-based indices and canonical A1 presentation. */
+public record CellAddress(int rowIndex, int columnIndex) implements WireString {
   public CellAddress {
-    Objects.requireNonNull(value, "address must not be null");
-    ProtocolCellAddressValidation.violation(value)
-        .ifPresent(
-            violation -> {
-              FieldValidationProblem mapped =
-                  FieldValidationProblemMappers.address("address", violation);
-              throw new InvalidRequestException(
-                  new FieldValidationProblem(
-                      mapped.fieldName(), Optional.empty(), mapped.rule(), mapped.operands()),
-                  Optional.empty(),
-                  Optional.empty(),
-                  Optional.empty(),
-                  null);
-            });
+    if (rowIndex < 0
+        || rowIndex > Limit.MAX_ROW_INDEX
+        || columnIndex < 0
+        || columnIndex > Limit.MAX_COLUMN_INDEX) {
+      throw ProtocolCellAddressValidation.invalid(ProtocolCellAddressValidation.Violation.BOUNDS);
+    }
+  }
+
+  /** Parses one local A1 address; case and absolute markers do not affect position identity. */
+  public CellAddress(String address) {
+    this(ProtocolCellAddressValidation.parseAddress(address));
+  }
+
+  private CellAddress(CellAddress address) {
+    this(address.rowIndex(), address.columnIndex());
+  }
+
+  @Override
+  public String value() {
+    int column = columnIndex + 1;
+    StringBuilder label = new StringBuilder();
+    while (column > 0) {
+      label.append((char) ('A' + (column - 1) % 26));
+      column = (column - 1) / 26;
+    }
+    return label.reverse().append(rowIndex + 1).toString();
   }
 
   @Override
   public String toString() {
-    return value;
+    return value();
   }
 }

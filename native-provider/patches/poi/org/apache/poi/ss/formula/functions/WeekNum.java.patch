@@ -1,0 +1,14 @@
+--- org/apache/poi/ss/formula/functions/WeekNum.java
++++ org/apache/poi/ss/formula/functions/WeekNum.java
+@@ -65,10 +65,7 @@
+         }
+         LocalDate localDate;
+         try {
+-            Date dateToConvert = DateUtil.getJavaDate(serialNum, false);
+-            localDate = dateToConvert.toInstant()
+-                    .atZone(ZoneId.systemDefault())
+-                    .toLocalDate();
++            localDate = DateUtil.getLocalDateTime(serialNum, org.apache.poi.ss.usermodel.DateSystemContext.is1904()).toLocalDate();
+         } catch (Exception e) {
+             return ErrorEval.NUM_ERROR;
+         }

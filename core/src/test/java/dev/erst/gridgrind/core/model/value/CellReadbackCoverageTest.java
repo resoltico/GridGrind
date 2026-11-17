@@ -1,9 +1,8 @@
 package dev.erst.gridgrind.core.model.value;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.layout.WindowDimensionsReport;
 import dev.erst.gridgrind.core.model.layout.WindowReport;
@@ -224,9 +223,11 @@ class CellReadbackCoverageTest {
   void cellValueTemporalAndWindowReportsCoverResidualValidationBranches() {
     CellValue.Blank blank = new CellValue.Blank();
     CellValue.Text text = new CellValue.Text("Ada");
-    CellTemporalReport notDate = CellTemporalReport.notDate();
-    CellTemporalReport date = CellTemporalReport.temporal(CellTemporalKind.DATE, "2026-07-01");
-    CellTemporalReport time = CellTemporalReport.temporal(CellTemporalKind.TIME, "12:00");
+    CellTemporalReport notDate = new CellTemporalReport.NotTemporal();
+    CellTemporalReport.Interpreted date =
+        new CellTemporalReport.Interpreted(CellTemporalKind.DATE, "2026-07-01");
+    CellTemporalReport.Interpreted time =
+        new CellTemporalReport.Interpreted(CellTemporalKind.TIME, "12:00");
     CellValue.NumberValue number = new CellValue.NumberValue(42.0d);
     CellValue.BooleanValue bool = new CellValue.BooleanValue(true);
     CellValue.ErrorValue error = new CellValue.ErrorValue("#CIRCULAR_REF!");
@@ -269,10 +270,10 @@ class CellReadbackCoverageTest {
     assertEquals("BOOLEAN", bool.type());
     assertEquals("ERROR", error.type());
     assertEquals("#CIRCULAR_REF!", error.value());
-    assertFalse(notDate.isDate());
-    assertTrue(date.isDate());
-    assertEquals(Optional.of(CellTemporalKind.DATE), date.kind());
-    assertEquals(Optional.of(CellTemporalKind.TIME), time.kind());
+    assertInstanceOf(CellTemporalReport.NotTemporal.class, notDate);
+    assertInstanceOf(CellTemporalReport.Interpreted.class, date);
+    assertEquals(CellTemporalKind.DATE, date.kind());
+    assertEquals(CellTemporalKind.TIME, time.kind());
     assertEquals("SPARSE", sparse.type());
     assertEquals("DENSE", dense.type());
 
@@ -298,19 +299,15 @@ class CellReadbackCoverageTest {
         () -> formulaText("Ada", Optional.of(java.util.Arrays.asList(run("Ada"), null))));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellTemporalReport(true, Optional.empty(), Optional.of("2026-07-01")));
+        () -> new CellTemporalReport.Interpreted(CellTemporalKind.ELAPSED, "12:00"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellTemporalReport(true, Optional.of(CellTemporalKind.DATE), Optional.empty()));
+        () -> new CellTemporalReport.Interpreted(CellTemporalKind.DATE, "not-a-date"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellTemporalReport(true, Optional.of(CellTemporalKind.DATE), Optional.of(" ")));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new CellTemporalReport(false, Optional.of(CellTemporalKind.DATE), Optional.empty()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new CellTemporalReport(false, Optional.empty(), Optional.of("2026-07-01")));
+        () ->
+            new CellTemporalReport.Unrepresentable(
+                CellTemporalKind.ELAPSED, CellTemporalReason.NONFINITE));
     assertThrows(
         IllegalArgumentException.class,
         () ->

@@ -176,13 +176,13 @@ class ExecutionPathCoverageTest {
   }
 
   @Test
-  void relativePathTraversalEscapingWorkingDirectoryIsRejected() {
-    Path workingDirectory = Path.of("/tmp/gridgrind");
+  void relativePathTraversalEscapingWorkingDirectoryIsRejected(
+      @org.junit.jupiter.api.io.TempDir Path workingDirectory) throws IOException {
 
     IllegalArgumentException traversalFailure =
         org.junit.jupiter.api.Assertions.assertThrows(
             IllegalArgumentException.class,
-            () -> ExecutionRequestPaths.normalizePath("../../etc/passwd", workingDirectory));
+            () -> new RequestPathIdentity(workingDirectory).resolve("../../etc/passwd"));
     assertTrue(traversalFailure.getMessage().contains("../../etc/passwd"));
 
     // Sibling traversal that stays within working directory is allowed
@@ -193,8 +193,7 @@ class ExecutionPathCoverageTest {
     RequestPathEscapeException absoluteFailure =
         org.junit.jupiter.api.Assertions.assertThrows(
             RequestPathEscapeException.class,
-            () ->
-                ExecutionRequestPaths.normalizePath("/tmp/other/workbook.xlsx", workingDirectory));
+            () -> new RequestPathIdentity(workingDirectory).resolve("/tmp/other/workbook.xlsx"));
     assertTrue(absoluteFailure.getMessage().contains("/tmp/other/workbook.xlsx"));
 
     assertEquals(

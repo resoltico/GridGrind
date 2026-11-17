@@ -68,7 +68,7 @@ class RequestPathAccessTest {
     Path link = executionRoot.resolve("link.txt");
     Files.createSymbolicLink(link, target.getFileName());
 
-    try (RequestPathAccess access = requestPathAccess()) {
+    try (RequestPathAccess access = requestPathAccess(link)) {
       assertThrows(
           UnsafePathAccessException.class,
           () -> access.materializeRead("link.txt", "cell text", "gridgrind-test-", ".txt"));
@@ -80,6 +80,7 @@ class RequestPathAccessTest {
     Files.write(executionRoot.resolve("source.txt"), new byte[] {1});
     ExecutionGrant grant =
         new ExecutionGrant(
+            16L * 1024 * 1024,
             List.of(),
             List.of(),
             new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
@@ -196,7 +197,7 @@ class RequestPathAccessTest {
     Path rootLink = executionRoot.resolve("root-link");
     Files.createSymbolicLink(rootLink, target.getFileName());
 
-    try (RequestPathAccess access = requestPathAccess()) {
+    try (RequestPathAccess access = requestPathAccess(executionRoot)) {
       assertThrows(
           UnsafePathAccessException.class,
           () -> access.materializeRead(".", "cell text", "gridgrind-test-", ".txt"));
@@ -207,7 +208,8 @@ class RequestPathAccessTest {
             new RequestPathAccess(
                     rootLink,
                     (prefix, suffix) -> Files.createTempFile(prefix, suffix),
-                    ExecutionGrantTestSupport.noPublication())
+                    ExecutionGrantTestSupport.noPublication(
+                        List.of(), List.of(rootLink.resolve("file.txt"))))
                 .materializeRead("file.txt", "cell text", "gridgrind-test-", ".txt"));
   }
 
@@ -278,7 +280,7 @@ class RequestPathAccessTest {
     Files.createDirectory(executionRoot.resolve("source-directory"));
     Files.createDirectory(executionRoot.resolve("output-directory"));
 
-    try (RequestPathAccess access = requestPathAccess()) {
+    try (RequestPathAccess access = requestPathAccess(executionRoot.resolve("source-directory"))) {
       Path first = access.materializeRead("source.txt", "cell text", "gridgrind-test-", ".txt");
       Path second = access.materializeRead("source.txt", "cell text", "gridgrind-test-", ".txt");
       assertEquals(first, second);
@@ -309,12 +311,70 @@ class RequestPathAccessTest {
     }
   }
 
-  private RequestPathAccess requestPathAccess() throws java.io.IOException {
+  @Test
+  void exactHardlinkReadsRequireDistinctGrantsAndConsumeDistinctSnapshotBytes() throws Exception {
+    Path source = Files.write(executionRoot.resolve("source.txt"), new byte[] {1, 2});
+    Path hardlink = Files.createLink(executionRoot.resolve("hardlink.txt"), source);
+    try (RequestPathAccess access = requestPathAccess()) {
+      access.materializeRead("source.txt", "cell text", "gridgrind-test-", ".txt");
+      assertThrows(
+          ExecutionAuthorityDeniedException.class,
+          () -> access.materializeRead("hardlink.txt", "cell text", "gridgrind-test-", ".txt"));
+    }
+    var grant =
+        new ExecutionGrant(
+            2,
+            List.of(
+                new ExecutionGrant.ReadAuthority.File(source),
+                new ExecutionGrant.ReadAuthority.File(hardlink)),
+            List.of(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
+            List.of(),
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
+    try (RequestPathAccess access =
+        new RequestPathAccess(executionRoot, Files::createTempFile, grant)) {
+      Path first = access.materializeRead("source.txt", "cell text", "gridgrind-test-", ".txt");
+      assertEquals(
+          first, access.materializeRead("source.txt", "cell text", "gridgrind-test-", ".txt"));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> access.materializeRead("hardlink.txt", "cell text", "gridgrind-test-", ".txt"));
+      assertEquals(1, access.materializedReadIdentities().size());
+    }
+  }
+
+  @Test
+  void nativeAliasesReuseOneImmutableSnapshotAndDetectExistingOutputCollisions() throws Exception {
+    Path source = Files.write(executionRoot.resolve("source.txt"), new byte[] {1, 2});
+    if (!Files.exists(executionRoot.resolve("SOURCE.TXT")))
+      return; // Actual case-sensitive providers use distinct names.
+    try (RequestPathAccess access = requestPathAccess()) {
+      Path first = access.materializeRead("SOURCE.TXT", "cell text", "gridgrind-test-", ".txt");
+      assertEquals(
+          first, access.materializeRead("source.txt", "cell text", "gridgrind-test-", ".txt"));
+      assertEquals(1, access.materializedReadIdentities().size());
+      assertThrows(
+          OutputPathAlreadyExistsException.class,
+          () ->
+              access.prepareOutput(
+                  "SOURCE.TXT", "persistence", WorkbookArtifactWriteDisposition.CREATE_NEW));
+      Files.delete(source);
+      assertEquals(first, access.materializedReadPath("SOURCE.TXT"));
+    }
+  }
+
+  private RequestPathAccess requestPathAccess(Path... additionalReadable)
+      throws java.io.IOException {
     Path tempRoot = Files.createDirectories(executionRoot.resolve("private-temp"));
     return new RequestPathAccess(
         executionRoot,
         (prefix, suffix) -> Files.createTempFile(tempRoot, prefix, suffix),
         ExecutionGrantTestSupport.noPublication(
-            List.of(), List.of(executionRoot.resolve("source.txt"))));
+            List.of(),
+            java.util.stream.Stream.concat(
+                    java.util.stream.Stream.of(executionRoot.resolve("source.txt")),
+                    java.util.Arrays.stream(additionalReadable))
+                .toList()));
   }
 }

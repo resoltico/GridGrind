@@ -27,17 +27,16 @@ class ExcelConditionalFormattingOperatorPersistenceTest {
       var sheet = workbook.createSheet("Rules");
       List<ConditionalFormattingRuleSpec> rules =
           operators.stream()
-              .<ConditionalFormattingRuleSpec>map(
-                  operator ->
-                      new ConditionalFormattingRuleSpec.CellValueRule(
-                          operator,
-                          "10",
-                          switch (operator) {
-                            case BETWEEN, NOT_BETWEEN -> Optional.of("20");
-                            default -> Optional.empty();
-                          },
-                          true,
-                          Optional.empty()))
+              .<ConditionalFormattingRuleSpec>map(operator ->
+                  new ConditionalFormattingRuleSpec.CellValueRule(
+                      operator,
+                      "10",
+                      switch (operator) {
+                        case BETWEEN, NOT_BETWEEN -> Optional.of("20");
+                        default -> Optional.empty();
+                      },
+                      true,
+                      Optional.empty()))
               .toList();
       new ConditionalFormattingAdapter()
           .setConditionalFormatting(

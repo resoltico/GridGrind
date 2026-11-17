@@ -4,9 +4,9 @@ import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.Objects;
 
-/** Resolved scalar shared by observations, cell-write operands and exact-value expectations. */
+/** Effective scalar reported by observations and used for exact-value expectations. */
 @Union(discriminator = "type", catalog = true, displayOrder = 0)
-public sealed interface CellValue extends ResolvedCellWrite
+public sealed interface CellValue
     permits CellValue.Blank,
         CellValue.Text,
         CellValue.NumberValue,
@@ -19,7 +19,7 @@ public sealed interface CellValue extends ResolvedCellWrite
 
   /** An effective blank value. */
   @Variant(id = "BLANK", summary = "An effective blank cell value.")
-  record Blank() implements CellValue {}
+  record Blank() implements CellValue, ResolvedCellWrite {}
 
   /** Exact effective text. */
   @Variant(id = "TEXT", summary = "One exact effective text value.")
@@ -33,12 +33,13 @@ public sealed interface CellValue extends ResolvedCellWrite
   @Variant(
       id = "NUMBER",
       summary =
-          "One effective numeric value. Nonfinite observed values retain their JSON string representation; authored writes and numeric expectations must be finite.")
+          "One effective numeric value. Nonfinite observed values retain their JSON string"
+              + " representation; authored writes and numeric expectations must be finite.")
   record NumberValue(double value) implements CellValue {}
 
   /** Exact effective boolean data. */
   @Variant(id = "BOOLEAN", summary = "One exact effective boolean value.")
-  record BooleanValue(boolean value) implements CellValue {}
+  record BooleanValue(boolean value) implements CellValue, ResolvedCellWrite {}
 
   /** Reported Excel error data, including evaluation-only states. */
   @Variant(

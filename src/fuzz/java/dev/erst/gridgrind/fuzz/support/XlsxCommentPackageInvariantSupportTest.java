@@ -5,8 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.semantics.ExecutionConventions;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import dev.erst.gridgrind.engine.runtime.NativeInvocationContext;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -53,12 +55,15 @@ class XlsxCommentPackageInvariantSupportTest {
   private Path workbookWithComment(String prefix) throws IOException {
     Path workbookPath = Files.createTempFile(temporary, prefix, ".xlsx");
     Files.deleteIfExists(workbookPath);
-    try (XssfWorkbook workbook = XssfWorkbooks.create()) {
+    try (var nativeContext = NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD);
+        XssfWorkbook workbook = XssfWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
       workbook
           .sheet("Budget")
           .comments()
-          .setComment("A1", new ResolvedComment("Review", "GridGrind", true));
+          .setComment(
+              new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+              new ResolvedComment("Review", "GridGrind", true));
       FuzzWorkbookIo.saveWorkbook(workbook, workbookPath);
     }
     return workbookPath;

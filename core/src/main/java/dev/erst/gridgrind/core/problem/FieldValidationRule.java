@@ -6,7 +6,9 @@ public sealed interface FieldValidationRule
         FieldValidationBoundRule,
         FieldValidationNamingRule,
         FieldValidationAddressRule,
-        FieldValidationLayoutRule {
+        FieldValidationLayoutRule,
+        FieldValidationMediaRule,
+        FieldValidationTemporalRule {
   /** Renders the canonical public message for one field-validation problem. */
   String message(FieldValidationProblem problem);
 

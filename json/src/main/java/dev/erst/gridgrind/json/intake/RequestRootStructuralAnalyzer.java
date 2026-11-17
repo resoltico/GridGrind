@@ -25,10 +25,8 @@ final class RequestRootStructuralAnalyzer {
     List<RequestBindingFailure> bindingFailures = new ArrayList<>();
     if (!(parsed.root() instanceof RequestJsonObject root)) {
       if (parsed.problems().stream()
-          .noneMatch(
-              problem ->
-                  problem instanceof RequestInvalidEncoding
-                      || problem instanceof RequestInvalidJson)) {
+          .noneMatch(problem ->
+              problem instanceof RequestInvalidEncoding || problem instanceof RequestInvalidJson)) {
         problems.add(
             new RequestMalformedScalar(
                 "request", "a JSON object at the root", parsed.root().byteOffset()));

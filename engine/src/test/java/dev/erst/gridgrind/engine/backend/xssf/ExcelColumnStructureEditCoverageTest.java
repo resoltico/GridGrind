@@ -413,10 +413,8 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       seedDataValidation(untouchedValidationSheet);
       setString(untouchedValidationSheet, "K1", "Tail");
 
-      assertDoesNotThrow(
-          () ->
-              StructuralEdits.shiftColumns(
-                  untouchedValidationSheet, new ExcelColumnSpan(10, 10), 1));
+      assertDoesNotThrow(() ->
+          StructuralEdits.shiftColumns(untouchedValidationSheet, new ExcelColumnSpan(10, 10), 1));
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
