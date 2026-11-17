@@ -25,28 +25,28 @@ final class StoredChartOracle {
   static ChartReport.DataSource source(XmlObject source) {
     if (source == null) return new ChartReport.DataSource.Missing();
     Node root = source.getDomNode();
-    for (Element choice : elements(root)) {
-      return switch (choice.getLocalName()) {
-        case "numRef" ->
-            new ChartReport.DataSource.NumericReference(
-                text(choice, "f"),
-                child(choice, "numCache")
-                    .<ChartReport.NumericCache>map(StoredChartOracle::numbers)
-                    .orElseGet(ChartReport.NumericCache.Missing::new));
-        case "strRef" ->
-            new ChartReport.DataSource.StringReference(
-                text(choice, "f"),
-                child(choice, "strCache")
-                    .<ChartReport.StringCache>map(StoredChartOracle::strings)
-                    .orElseGet(ChartReport.StringCache.Missing::new));
-        case "numLit" -> new ChartReport.DataSource.NumericLiteral(numbers(choice));
-        case "strLit" -> new ChartReport.DataSource.StringLiteral(strings(choice));
-        case "multiLvlStrRef" ->
-            ChartReport.DataSource.Unsupported.unmodeled("MULTI_LEVEL_STRING_REFERENCE");
-        default -> throw new IllegalStateException("Unrecognized oracle chart source choice");
-      };
-    }
-    return new ChartReport.DataSource.Missing();
+    var choices = elements(root);
+    if (choices.isEmpty()) return new ChartReport.DataSource.Missing();
+    Element choice = choices.getFirst();
+    return switch (choice.getLocalName()) {
+      case "numRef" ->
+          new ChartReport.DataSource.NumericReference(
+              text(choice, "f"),
+              child(choice, "numCache")
+                  .<ChartReport.NumericCache>map(StoredChartOracle::numbers)
+                  .orElseGet(ChartReport.NumericCache.Missing::new));
+      case "strRef" ->
+          new ChartReport.DataSource.StringReference(
+              text(choice, "f"),
+              child(choice, "strCache")
+                  .<ChartReport.StringCache>map(StoredChartOracle::strings)
+                  .orElseGet(ChartReport.StringCache.Missing::new));
+      case "numLit" -> new ChartReport.DataSource.NumericLiteral(numbers(choice));
+      case "strLit" -> new ChartReport.DataSource.StringLiteral(strings(choice));
+      case "multiLvlStrRef" ->
+          ChartReport.DataSource.Unsupported.unmodeled("MULTI_LEVEL_STRING_REFERENCE");
+      default -> throw new IllegalStateException("Unrecognized oracle chart source choice");
+    };
   }
 
   static ChartReport.Title formula(XmlObject reference) {
