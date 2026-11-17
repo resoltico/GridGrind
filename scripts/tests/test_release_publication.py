@@ -10,6 +10,8 @@ import unittest
 from unittest import mock
 import urllib.error
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 SPEC = importlib.util.spec_from_file_location("release_publication", Path(__file__).parents[1] / "release-publication.py")
 publication = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = publication
@@ -21,7 +23,7 @@ ASSET = publication.Asset(Path("/fixture/gridgrind.jar"), "gridgrind.jar", 3, DI
 
 
 def release(draft=True, prerelease=True, body=NOTES):
-    return {"id": 7, "tag_name": "v0.77.0", "draft": draft, "prerelease": prerelease, "body": body}
+    return {"id": 7, "tag_name": "v0.77.0", "draft": draft, "prerelease": prerelease, "body": body, "target_commitish": COMMIT, "name": "GridGrind 0.77.0"}
 
 
 def remote_asset():
@@ -281,3 +283,83 @@ class PublicationTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PublicationConfirmationTest(unittest.TestCase):
+    """Owner transitions distinguish their exact prior state from contradictions."""
+    helper = PublicationTest.helper
+    def setUp(self):
+        patcher = mock.patch('release_confirmation.time.sleep')
+        self.sleep = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_update_expose_finalize_ack_lag_and_lost_response(self):
+        for stage in ('prepare', 'expose', 'finalize'):
+            for fault in ('lag', 'lost'):
+                with self.subTest(stage=stage, fault=fault):
+                    api = Api(release(draft=stage != 'finalize', body='old' if stage == 'prepare' else NOTES))
+                    helper = self.helper(api); records = []; helper.recorder = records.append
+                    request = api.request; normal_release = helper.release; pending = []
+                    def call(method, route, body=None):
+                        prior = copy.deepcopy(api.current)
+                        result = request(method, route, body)
+                        if method == 'PATCH':
+                            if fault == 'lag': pending.append(prior)
+                            else: raise publication.PublicationError('Lost response', uncertain=True, category='transport')
+                        return result
+                    def observed():
+                        return pending.pop(0) if pending else normal_release()
+                    api.request = call; helper.release = observed
+                    helper.run(stage)
+                    self.assertEqual(1, sum(method == 'PATCH' for method, _, _ in api.mutations))
+                    first = records[0]
+                    self.assertEqual('state-confirmed', first['outcome'])
+                    if fault == 'lag': self.assertEqual('pending', first['observations'][0]['result'])
+                    else: self.assertEqual('transport', first['requestError']['category'])
+
+    def test_applied_upload_late_error_confirms_exact_assets_once(self):
+        api = Api(release(), []); helper = self.helper(api); uploads = helper.uploader
+        records = []; helper.recorder = records.append
+        def upload(*args):
+            uploads(*args)
+            raise publication.PublicationError('Lost upload response', uncertain=True, category='transport')
+        helper.uploader = upload
+        helper.run('prepare')
+        self.assertEqual(1, len(self.uploads))
+        self.assertEqual('failed', records[-1]['request'])
+        self.assertEqual('state-confirmed', records[-1]['outcome'])
+
+    def test_foreign_assets_on_prior_transition_state_refuse_immediately(self):
+        api = Api(release()); helper = self.helper(api); normal = helper.release; request = api.request; pending = []
+        def call(method, route, body=None):
+            before = copy.deepcopy(api.current); value = request(method, route, body)
+            if method == 'PATCH':
+                pending.append(before); api.assets.append({**remote_asset(), 'name': 'foreign.bin'})
+            return value
+        api.request = call
+        helper.release = lambda: pending.pop(0) if pending else normal()
+        with self.assertRaisesRegex(publication.PublicationError, 'asset names'):
+            helper.run('expose')
+        self.sleep.assert_not_called()
+        self.assertEqual(1, len(api.mutations))
+
+    def test_foreign_draft_target_is_rejected_before_any_mutation(self):
+        api = Api({**release(), 'target_commitish': '9' * 40})
+        with self.assertRaisesRegex(publication.PublicationError, 'target'):
+            self.helper(api).run('prepare')
+        self.assertEqual([], api.mutations)
+
+    def test_boolean_asset_size_cannot_confirm_zero_or_one_byte_upload(self):
+        for size in (0, 1):
+            with self.subTest(size=size):
+                api = Api(release(), []); calls = []
+                asset = publication.Asset(Path('/synthetic'), 'synthetic', size, DIGEST)
+                def upload(*_):
+                    calls.append(True)
+                    api.assets = [{'name': asset.name, 'size': bool(size), 'digest': DIGEST, 'state': 'uploaded'}]
+                helper = publication.Publication(api, 'owner/GridGrind', '0.77.0', COMMIT, NOTES, (asset,), upload)
+                with self.assertRaisesRegex(publication.PublicationError, 'asset differs'):
+                    helper.run('prepare')
+                self.assertEqual([True], calls)
+                with self.assertRaisesRegex(publication.PublicationError, 'digest, size'):
+                    helper.verify(api.current, 'draft')

@@ -14,19 +14,23 @@ import re
 import subprocess
 import sys
 import time
+import http.client
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from release_confirmation import ReleaseFailure, confirm, diagnostic, tool_write
 
 
-class PublicationError(Exception):
+class PublicationError(ReleaseFailure):
     pass
 
 
 class ApiError(PublicationError):
-    def __init__(self, status):
+    def __init__(self, status, method="GET", request_id=None):
         self.status = status
-        super().__init__("GitHub API returned HTTP " + str(status))
+        super().__init__("GitHub API returned HTTP " + str(status),
+                         uncertain=method != "GET" and (status in (408, 429) or status >= 500),
+                         category="http", status=status, request_id=request_id)
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -63,15 +67,16 @@ class Github:
                 return json.loads(raw) if raw else None
             except urllib.error.HTTPError as error:
                 status = error.code
+                request_id = error.headers.get("X-GitHub-Request-Id") if error.headers else None
                 error.close()
                 retryable = status == 429 or 500 <= status < 600
                 if method != "GET" or not retryable or attempt + 1 == attempts:
-                    raise ApiError(status) from error
-            except (urllib.error.URLError, TimeoutError, OSError) as error:
+                    raise ApiError(status, method, request_id) from None
+            except (urllib.error.URLError, TimeoutError, OSError, http.client.HTTPException) as error:
                 if attempt + 1 == attempts:
-                    raise PublicationError("GitHub API request failed or timed out; inspect remote state before retrying") from error
+                    raise PublicationError("GitHub API request failed or timed out; inspect remote state before retrying", uncertain=method != "GET", category="transport") from None
             except (ValueError, UnicodeError) as error:
-                raise PublicationError("GitHub API returned invalid JSON") from error
+                raise PublicationError("GitHub API returned invalid JSON", uncertain=method != "GET", category="response") from None
             time.sleep(attempt + 1)
         raise PublicationError("GitHub API request did not complete")
 
@@ -108,12 +113,7 @@ def upload(repo, tag, assets):
     environment.pop("GH_DEBUG", None)
     command = ["gh", "release", "upload", tag, "--repo", repo, "--clobber"]
     command.extend(str(asset.path) for asset in assets)
-    try:
-        result = subprocess.run(command, env=environment, capture_output=True, timeout=600, check=False)
-    except (OSError, subprocess.TimeoutExpired) as error:
-        raise PublicationError("Draft asset upload did not complete; inspect remote draft before retrying") from error
-    if result.returncode:
-        raise PublicationError("Draft asset upload failed; inspect remote draft before retrying")
+    tool_write(command, env=environment, capture_output=True, timeout=600)
 
 
 def validate_release_identity(release):
@@ -126,7 +126,7 @@ def validate_release_identity(release):
 
 
 class Publication:
-    def __init__(self, api, repo, version, commit, notes, assets, uploader=upload):
+    def __init__(self, api, repo, version, commit, notes, assets, uploader=upload, recorder=None):
         self.api = api
         self.repo = repo
         self.version = version
@@ -135,6 +135,8 @@ class Publication:
         self.notes = notes
         self.assets = assets
         self.uploader = uploader
+        self.observations = []
+        self.recorder = recorder or self.observations.append
 
     def validate_tag(self):
         record = self.api.request("GET", "/git/ref/tags/" + self.tag)
@@ -204,6 +206,8 @@ class Publication:
     def verify(self, release, state):
         if release is None:
             raise PublicationError("Release is absent; prepare it first")
+        if release.get("tag_name") != self.tag or release.get("target_commitish") != self.commit:
+            raise PublicationError("Release identity differs from the verified commit")
         actual_state = "draft" if release["draft"] else "prerelease" if release["prerelease"] else "stable"
         if actual_state != state:
             raise PublicationError("Expected %s release, found %s" % (state, actual_state))
@@ -224,6 +228,8 @@ class Publication:
         current = self.release()
         if current is None or current["id"] != identifier or not current["draft"]:
             raise PublicationError("Release is no longer the expected draft; no public assets will be overwritten")
+        if current.get("target_commitish") != self.commit:
+            raise PublicationError("Draft target differs from the verified commit")
         return current
 
     def release_fields(self, draft, prerelease, latest):
@@ -236,6 +242,32 @@ class Publication:
             "make_latest": "true" if latest else "false",
         }
 
+    def observe_release(self, identifier, state, prior=None, assets=True, allow_absent=False):
+        current = self.release()
+        if current is None:
+            if allow_absent:
+                return None
+            raise PublicationError("Previously observed release disappeared")
+        if (current["tag_name"] != self.tag or current.get("target_commitish") != self.commit
+                or identifier is not None and current["id"] != identifier):
+            raise PublicationError("Release identity differs from the intended publication")
+        actual = "draft" if current["draft"] else "prerelease" if current["prerelease"] else "stable"
+        relevant = lambda row: {k: row.get(k) for k in ("id", "tag_name", "target_commitish", "body", "draft", "prerelease", "name")}
+        if actual != state or current.get("body") != self.notes or current.get("name") != "GridGrind " + self.version:
+            if prior is not None and relevant(current) == relevant(prior):
+                if assets:
+                    self.verify(current, actual)
+                return None
+            raise PublicationError("Release state or notes contradict the intended publication")
+        if assets:
+            self.verify(current, state)
+        return current
+
+    def transition(self, operation, release, state, fields):
+        return confirm(operation,
+                       lambda: self.api.request("PATCH", "/releases/" + str(release["id"]), fields),
+                       lambda: self.observe_release(release["id"], state, release), self.recorder)
+
     def run(self, stage):
         self.validate_tag()
         release = self.release()
@@ -246,19 +278,45 @@ class Publication:
                 self.verify(release, "prerelease")
                 return
             if release is None:
-                self.api.request("POST", "/releases", self.release_fields(True, True, False))
-                release = self.release()
-            if release is None:
-                raise PublicationError("Draft creation returned no observable release; inspect remote state")
+                acknowledged = []
+                def create():
+                    row = self.api.request("POST", "/releases", self.release_fields(True, True, False))
+                    if row is not None:
+                        acknowledged.append(validate_release_identity(row)["id"])
+                release = confirm("release-create", create,
+                                  lambda: self.observe_release(acknowledged[0] if acknowledged else None,
+                                                               "draft", assets=False, allow_absent=True), self.recorder)
             current = self.require_draft(release["id"])
-            names = {row.get("name") for row in self.remote_assets(current)}
-            if names - {asset.name for asset in self.assets}:
+            before = self.remote_assets(current)
+            names = [row.get("name") for row in before]
+            if len(set(names)) != len(names) or set(names) - {asset.name for asset in self.assets}:
                 raise PublicationError("Draft has unexpected assets; review them before resuming")
             self.require_draft(release["id"])
-            self.api.request("PATCH", "/releases/" + str(release["id"]), self.release_fields(True, True, False))
+            # This update deliberately replaces the exact preflight draft metadata.
+            confirm("release-draft-update",
+                    lambda: self.api.request("PATCH", "/releases/" + str(release["id"]), self.release_fields(True, True, False)),
+                    lambda: self.observe_release(release["id"], "draft", current, assets=False), self.recorder)
             self.require_draft(release["id"])
-            self.uploader(self.repo, self.tag, self.assets)
-            self.verify(self.release(), "draft")
+            def uploaded():
+                observed = self.observe_release(release["id"], "draft", assets=False)
+                if observed is None:
+                    return None
+                rows = self.remote_assets(observed)
+                by_name = {row["name"]: row for row in rows}
+                if len(by_name) != len(rows) or set(by_name) - {asset.name for asset in self.assets}:
+                    raise PublicationError("Draft has unexpected or duplicate assets")
+                expected = {asset.name: asset for asset in self.assets}
+                prior = {row["name"]: row for row in before}
+                pending = len(rows) != len(expected)
+                for name, row in by_name.items():
+                    asset = expected[name]
+                    if (type(row.get("size")) is not int
+                            or (row.get("digest"), row.get("size"), row.get("state")) != (asset.digest, asset.size, "uploaded")):
+                        if row != prior.get(name):
+                            raise PublicationError("Draft asset differs from both reviewed bytes and exact prior state")
+                        pending = True
+                return None if pending else observed
+            confirm("release-assets-upload", lambda: self.uploader(self.repo, self.tag, self.assets), uploaded, self.recorder)
         elif stage == "expose":
             if release is None:
                 raise PublicationError("Cannot expose an absent release")
@@ -266,15 +324,31 @@ class Publication:
             self.verify(release, state)
             if state == "draft":
                 self.require_draft(release["id"])
-                self.api.request("PATCH", "/releases/" + str(release["id"]), self.release_fields(False, True, False))
-            self.verify(self.release(), "prerelease")
+                self.transition("release-expose", release, "prerelease", self.release_fields(False, True, False))
         elif stage == "finalize":
             self.verify(release, "prerelease")
-            self.api.request("PATCH", "/releases/" + str(release["id"]), self.release_fields(False, False, True))
-            self.verify(self.release(), "stable")
-            latest = self.api.request("GET", "/releases/latest")
-            if not isinstance(latest, dict) or latest.get("id") != release["id"] or latest.get("tag_name") != self.tag:
-                raise PublicationError("Stable release exists but latest pointer does not match; inspect public state")
+            try:
+                prior_latest = self.api.request("GET", "/releases/latest")
+            except ApiError as error:
+                if error.status != 404:
+                    raise
+                prior_latest = None
+            self.transition("release-finalize", release, "stable", self.release_fields(False, False, True))
+            def latest():
+                try:
+                    row = self.api.request("GET", "/releases/latest")
+                except ApiError as error:
+                    if error.status == 404 and prior_latest is None:
+                        return None
+                    raise
+                if isinstance(row, dict) and row.get("id") == release["id"] and row.get("tag_name") == self.tag:
+                    self.verify(row, "stable")
+                    return self.observe_release(release["id"], "stable")
+                if row == prior_latest:
+                    return None
+                raise PublicationError("GitHub latest points to an unexpected release")
+            # The PATCH already happened; this operation performs observations only.
+            confirm("github-latest-readback", lambda: None, latest, self.recorder)
         else:
             raise PublicationError("Unknown publication stage")
 
@@ -304,7 +378,12 @@ def main(argv=None):
     token = os.environ.get("GH_TOKEN")
     if not token:
         raise PublicationError("GH_TOKEN is required")
-    Publication(Github(args.repo, token), args.repo, args.version, args.commit, notes, assets).run(args.stage)
+    publication = Publication(Github(args.repo, token), args.repo, args.version, args.commit, notes, assets)
+    try:
+        publication.run(args.stage)
+    finally:
+        for observation in publication.observations:
+            print(json.dumps(observation, sort_keys=True), file=sys.stderr)
     print("Release publication stage verified: " + args.stage)
     return 0
 
@@ -312,6 +391,6 @@ def main(argv=None):
 if __name__ == "__main__":
     try:
         sys.exit(main())
-    except (PublicationError, OSError, UnicodeError) as error:
-        print("Release publication stopped: " + str(error), file=sys.stderr)
+    except (ReleaseFailure, OSError, UnicodeError) as error:
+        print("Release publication stopped: " + str(diagnostic(error)), file=sys.stderr)
         sys.exit(1)

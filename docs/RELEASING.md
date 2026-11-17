@@ -158,6 +158,13 @@ promotes the GitHub release to stable/latest. There is no atomic transaction acr
 GHCR. A failure can leave an inspectable prerelease or partial registry state; it does not establish
 a completed stable release. Publication receipts and diagnostics are retained separately.
 
+Each mutation is attempted once. Bounded read-only observations confirm the exact intended state
+after delayed visibility or an uncertain acknowledgement, including a command that failed after
+applying its change. Contradictory identities or content refuse immediately; unconfirmed state
+stops publication. Receipts distinguish a failed acknowledgement from a state confirmed by
+observation and retain bounded, redacted API or command diagnostics. Unexpected code errors
+remain failures. The release-control regression suite runs in ordinary CI without publishing.
+
 ## Expiry, changes and retries
 
 Missing, deleted or expired artifacts refuse publication. The seven-day candidate retention is

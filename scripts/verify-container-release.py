@@ -13,6 +13,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from release_confirmation import RegistryReadError
 
 DIGEST = re.compile(r"sha256:[0-9a-f]{64}\Z")
 ACCEPT = ", ".join(("application/vnd.oci.image.index.v1+json", "application/vnd.oci.image.manifest.v1+json",
@@ -52,8 +53,11 @@ class BlobRedirect(urllib.request.HTTPRedirectHandler):
         return redirected
 
 
-def read(opener, request, limit):
-    for attempt in range(3):
+
+def read(opener, request, limit, renew=None):
+    attempt = 0
+    refreshed = False
+    while attempt < 3:
         try:
             with opener.open(request, timeout=30) as response:
                 length = response.headers.get("Content-Length")
@@ -64,14 +68,21 @@ def read(opener, request, limit):
             return raw
         except urllib.error.HTTPError as error:
             status = error.code
+            request_id = error.headers.get("X-GitHub-Request-Id") if error.headers else None
+            same_resource = error.geturl() == (request.full_url if isinstance(request, urllib.request.Request) else request)
             error.close()
+            if status == 401 and same_resource and renew is not None and not refreshed:
+                refreshed = True
+                request = renew()
+                continue
             if status not in {429, 500, 502, 503, 504} or attempt == 2:
-                raise ValueError("Registry read failed with HTTP " + str(status)) from None
+                raise RegistryReadError(status, request_id) from None
         except (urllib.error.URLError, TimeoutError, OSError):
             if attempt == 2:
                 # Never expose signed redirect URLs or bearer credentials in diagnostics.
                 raise ValueError("Registry read failed or timed out") from None
         time.sleep(2 ** attempt)
+        attempt += 1
     raise ValueError("Registry read did not complete")
 
 
@@ -169,28 +180,63 @@ class Registry:
         self.metadata = urllib.request.build_opener(NoRedirect())
         self.blobs = urllib.request.build_opener(BlobRedirect())
         scope = urllib.parse.urlencode({"service": "ghcr.io", "scope": "repository:" + repository + ":pull"})
-        self.token = json.loads(read(self.metadata, "https://ghcr.io/token?" + scope, LIMIT))["token"]
+        self.token_url = "https://ghcr.io/token?" + scope
+        self.refresh()
+
+    def refresh(self):
+        self.token = json.loads(read(self.metadata, self.token_url, LIMIT))["token"]
         require(isinstance(self.token, str) and self.token, "No public registry token")
 
     def request(self, kind, reference):
         return urllib.request.Request("https://ghcr.io/v2/" + self.repository + "/" + kind + "/" + reference,
                                       headers={"Authorization": "Bearer " + self.token, "Accept": ACCEPT})
 
+    def read(self, kind, reference, limit, opener):
+        def renew():
+            self.refresh()
+            return self.request(kind, reference)
+        return read(opener, self.request(kind, reference), limit, renew)
+
+    def open(self, kind, reference, *, timeout=60):
+        # Streaming graph downloads need the same single refresh budget. Never
+        # follow a challenge-supplied realm or change the fixed repository scope.
+        opener = self.metadata if kind == "manifests" else self.blobs
+        for attempt in range(2):
+            try:
+                request = self.request(kind, reference)
+                return opener.open(request, timeout=timeout)
+            except urllib.error.HTTPError as error:
+                status = error.code
+                request_id = error.headers.get("X-GitHub-Request-Id") if error.headers else None
+                same_resource = error.geturl() == request.full_url
+                error.close()
+                if status != 401 or not same_resource or attempt:
+                    raise RegistryReadError(status, request_id) from None
+                self.refresh()
+
     def fetch(self, digest):
         require(isinstance(digest, str) and DIGEST.fullmatch(digest), "Invalid manifest digest")
-        raw = read(self.metadata, self.request("manifests", digest), LIMIT)
+        raw = self.read("manifests", digest, LIMIT, self.metadata)
         require("sha256:" + hashlib.sha256(raw).hexdigest() == digest, "Manifest size/digest mismatch")
         return json.loads(raw)
 
     def fetch_blob(self, descriptor):
         name, _ = blob_descriptor(descriptor)
-        raw = read(self.blobs, self.request("blobs", name), BLOB_LIMIT)
+        raw = self.read("blobs", name, BLOB_LIMIT, self.blobs)
         return verify_blob(raw, descriptor)
 
-    def verify_tag(self, tag, digest):
+    def tag_digest(self, tag):
         require(re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}", tag), "Invalid OCI tag")
-        raw = read(self.metadata, self.request("manifests", tag), LIMIT)
-        require("sha256:" + hashlib.sha256(raw).hexdigest() == digest, "Published tag points to a different index")
+        try:
+            raw = self.read("manifests", tag, LIMIT, self.metadata)
+        except RegistryReadError as error:
+            if error.status == 404:
+                return None
+            raise
+        return "sha256:" + hashlib.sha256(raw).hexdigest()
+
+    def verify_tag(self, tag, digest):
+        require(self.tag_digest(tag) == digest, "Published tag points to a different index")
 
 
 def main():
