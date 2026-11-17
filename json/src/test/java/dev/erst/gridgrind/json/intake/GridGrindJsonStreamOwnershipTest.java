@@ -28,11 +28,23 @@ class GridGrindJsonStreamOwnershipTest {
 
           @Override
           public int read() {
-            count++;
+            recordRead(1);
+            return ' ';
+          }
+
+          @Override
+          public int read(byte[] bytes, int offset, int length) {
+            java.util.Objects.checkFromIndexSize(offset, length, bytes.length);
+            recordRead(length);
+            java.util.Arrays.fill(bytes, offset, offset + length, (byte) ' ');
+            return length;
+          }
+
+          private void recordRead(int length) {
+            count += length;
             if (count > GridGrindJson.maxRequestDocumentBytes() + 1) {
               throw new AssertionError("Request reader consumed beyond overflow sentinel");
             }
-            return ' ';
           }
 
           @Override

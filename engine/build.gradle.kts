@@ -188,7 +188,8 @@ val parityTest = tasks.register<Test>("parityTest") {
     description = "Runs the XSSF behavioural parity corpus."
     group = "verification"
     testClassesDirs = paritySourceSet.output.classesDirs
-    classpath = paritySourceSet.runtimeClasspath
+    // Parity invokes native owners directly, so its explicit runtime view includes all repairs.
+    classpath = nativeOwnerClasses + paritySourceSet.runtimeClasspath
     useJUnitPlatform()
     failOnNoDiscoveredTests = true
     shouldRunAfter(tasks.named<Test>("test"))

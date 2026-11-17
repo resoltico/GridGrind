@@ -298,7 +298,7 @@ class WireStringPropertyTest {
 
   private static String canonicalCoordinates(String text) {
     String value = text.replace("$", "").toUpperCase(java.util.Locale.ROOT);
-    String[] endpoints = value.split(":");
+    String[] endpoints = value.split(":", -1);
     return endpoints.length == 2 && endpoints[0].equals(endpoints[1]) ? endpoints[0] : value;
   }
 
