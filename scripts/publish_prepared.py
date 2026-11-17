@@ -20,7 +20,7 @@ from release_candidate import (CandidateError, Github, canonical, candidate, dig
                                read_json, require, sha_bytes, sha_file, write_json)
 from release_pair import expected_identity, download_pair
 from release_oci import (command, inspect, unpack, promote, check_sbom, source_payload, Ghcr)
-from release_sources import verify_archive, tracked
+from release_sources import verify_archive, tracked, source_projection, working_input_hashes
 
 
 class PublicationProgress:
@@ -141,10 +141,10 @@ def publish(args):
     write_json(args.download/'independent-acceptance.json',ack)
     # Current controls and all declared commit inputs must still match, never artifact-supplied executable code.
     require({r['path']for r in manifest['inputHashes']}==set(tracked(args.source)), 'Input inventory omits or invents committed source/control files')
-    for row in manifest['inputHashes']:
-        path=Path(row['path']);require(path.is_file()and not path.is_symlink()and path.stat().st_size==row['size']and sha_file(path)==row['sha256'],'Current source/control bytes differ from prepared inputs')
+    projection=source_projection(args.source)
+    require(working_input_hashes(args.source,projection)==manifest['inputHashes'], 'Current source/control projection differs from prepared inputs')
     files=assets_for(delivery,args.version)
-    verify_archive(delivery/'assets'/('gridgrind-'+args.version+'-sources.tar.gz'),args.source,args.version)
+    verify_archive(delivery/'assets'/('gridgrind-'+args.version+'-sources.tar.gz'),args.source,args.version,projection)
     inspections={};layouts={}
     for role in ('runtime','source'):
         selected=manifest['oci'][role];layout=args.download/(role+'-layout');root=unpack(delivery/selected['path'],layout);result=inspect(layout,root,role)
