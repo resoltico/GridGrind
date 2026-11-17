@@ -5,6 +5,8 @@ Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](C
 
 ## [Unreleased]
 
+- Publication confirms remote state without repeating ambiguous writes, refreshes expired registry read credentials and retains redacted API and command diagnostics.
+
 ## [0.78.0] - 2026-11-17
 
 - GridGrind-owned code is AGPL-3.0-only. Contributions grant commercial relicensing rights; separate commercial terms require a signed agreement.

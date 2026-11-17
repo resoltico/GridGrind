@@ -3,9 +3,12 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import sys
 import unittest
 from unittest import mock
 import urllib.request
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 spec = importlib.util.spec_from_file_location("release_image_verifier", Path(__file__).parents[1] / "verify-container-release.py")
 v = importlib.util.module_from_spec(spec)

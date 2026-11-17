@@ -20,6 +20,7 @@ from release_candidate import (CandidateError, Github, canonical, candidate, dig
                                read_json, require, sha_bytes, sha_file, write_json)
 from release_pair import expected_identity, download_pair
 from release_oci import (command, inspect, unpack, promote, check_sbom, source_payload, Ghcr)
+from release_confirmation import confirm, diagnostic, redact, tool_write
 from release_sources import verify_archive, tracked, source_projection, working_input_hashes
 
 
@@ -38,6 +39,8 @@ class PublicationProgress:
         temporary=self.path.with_suffix('.json.partial')
         with temporary.open('wb')as output:output.write(canonical(self.value)+b'\n')
         temporary.replace(self.path)
+    def observation(self, value):
+        self.value.setdefault('writeObservations', []).append(value);self.save()
     def start(self,phase):
         self.value['activePhase']=phase;self.save()
     def complete(self):
@@ -98,10 +101,8 @@ def anonymous_graph(repository,expected,output):
     (output/'blobs/sha256').mkdir(parents=True)
     for name,row in expected['graph']['nodes'].items():
         manifest=row['mediaType']in('application/vnd.oci.image.index.v1+json','application/vnd.oci.image.manifest.v1+json')
-        request=registry.request('manifests'if manifest else'blobs',name)
-        opener=registry.metadata if manifest else registry.blobs
         path=output/'blobs/sha256'/name[7:];size=0;h=hashlib.sha256()
-        with opener.open(request,timeout=60)as response,path.open('xb')as dest:
+        with registry.open('manifests'if manifest else'blobs',name,timeout=60)as response,path.open('xb')as dest:
             for block in iter(lambda:response.read(1024*1024),b''):
                 size+=len(block);require(size<=row['size'],'Anonymous source blob exceeds reviewed size');h.update(block);dest.write(block)
         require(size==row['size']and 'sha256:'+h.hexdigest()==name,'Anonymous source image graph differs')
@@ -112,13 +113,36 @@ def anonymous_source_image(repository,expected,output,files):
     source_payload(anonymous_graph(repository,expected,output),expected,files)
 
 
-def ensure_tag(api,publication,ident):
+def ensure_tag(api,publication,ident,recorder=None):
     guard_main(api,ident)
-    try:api.get('/git/ref/tags/v'+ident['version'])
+    try:
+        api.get('/git/ref/tags/v'+ident['version'])
     except api.legacy.ApiError as error:
         require(error.status==404,'Version tag preflight failed')
-        api.mutate('POST','/git/refs',{'ref':'refs/tags/v'+ident['version'],'sha':ident['sourceCommit']})
+        def observed():
+            try:
+                publication.validate_tag()
+            except api.legacy.ApiError as failure:
+                if failure.status==404:
+                    return None
+                raise
+            return ident['sourceCommit']
+        confirm('version-tag-create',
+                lambda: api.mutate('POST','/git/refs',{'ref':'refs/tags/v'+ident['version'],'sha':ident['sourceCommit']}),
+                observed, recorder)
     publication.validate_tag()
+
+
+def point_latest(client,repository,runtime_root,remote,public,recorder=None):
+    prior_latest=remote.tag('latest')
+    prior_public=public.tag_digest('latest')
+    def latest_observed():
+        actual=remote.tag('latest')
+        anonymous=public.tag_digest('latest')
+        require(actual in (prior_latest,runtime_root),'Latest index changed to an unexpected root')
+        require(anonymous in (prior_public,runtime_root),'Public latest index changed to an unexpected root')
+        return runtime_root if actual==anonymous==runtime_root else None
+    confirm('latest-index-copy',lambda:tool_write([str(client),'image','copy','--force-recursive','ghcr.io/'+repository+'@'+runtime_root,'ghcr.io/'+repository+':latest'],capture_output=True),latest_observed,recorder)
 
 
 def publish(args):
@@ -162,6 +186,7 @@ def publish(args):
     for role,tag in [('source',args.version+'-sources'),('runtime',args.version)]:
         require(remote.tag(tag)in(None,inspections[role]['graph']['root']['digest']),'Different registry version graph already exists')
     progress=PublicationProgress(record['pairSha256'],ident,jar_sha,inspections)
+    publication.recorder=progress.observation
     if existing is not None and not existing['draft']and not existing['prerelease']:
         progress.start('read-only-stable-postflight')
         publication.validate_tag();publication.verify(existing,'stable')
@@ -181,7 +206,7 @@ def publish(args):
     login=subprocess.run([str(args.client),'registry','login','ghcr.io','--user',os.environ['GITHUB_ACTOR'],'--pass-stdin'],
                          input=os.environ['GH_TOKEN'].encode(),capture_output=True,timeout=60)
     require(login.returncode==0,'Registry login failed')
-    guard_main(api,ident);progress.start('version-tag');ensure_tag(api,publication,ident);progress.complete()
+    guard_main(api,ident);progress.start('version-tag');ensure_tag(api,publication,ident,progress.observation);progress.complete()
     progress.start('release-draft');publication.run('prepare');progress.complete()
     guard_main(api,ident);progress.start('release-expose');publication.run('expose');progress.complete()
     progress.start('anonymous-source-assets')
@@ -189,13 +214,13 @@ def publish(args):
     progress.complete()
     guard_main(api,ident)
     progress.start('source-index-copy')
-    source_root=promote(args.client,layouts['source'],inspections['source'],repository,args.version+'-sources',os.environ['GITHUB_ACTOR'],os.environ['GH_TOKEN'],args.download/'published-source-authenticated')
+    source_root=promote(args.client,layouts['source'],inspections['source'],repository,args.version+'-sources',os.environ['GITHUB_ACTOR'],os.environ['GH_TOKEN'],args.download/'published-source-authenticated',progress.observation)
     progress.complete();progress.start('anonymous-source-index')
     anonymous_source_image(repository,inspections['source'],args.download/'published-source-anonymous',source_files(delivery,args.version))
     progress.complete()
     guard_main(api,ident)
     progress.start('runtime-index-copy')
-    runtime_root=promote(args.client,layouts['runtime'],inspections['runtime'],repository,args.version,os.environ['GITHUB_ACTOR'],os.environ['GH_TOKEN'],args.download/'published-runtime-authenticated')
+    runtime_root=promote(args.client,layouts['runtime'],inspections['runtime'],repository,args.version,os.environ['GITHUB_ACTOR'],os.environ['GH_TOKEN'],args.download/'published-runtime-authenticated',progress.observation)
     progress.complete();progress.start('public-runtime-verification')
     module=verify_module();public=module.Registry(repository)
     source_manifest=read_json(delivery/'assets'/('gridgrind-container-sources-'+args.version+'.manifest.json'))
@@ -209,8 +234,7 @@ def publish(args):
     progress.complete()
     guard_main(api,ident)
     progress.start('latest-index-pointer')
-    command([str(args.client),'image','copy','--force-recursive','ghcr.io/'+repository+'@'+runtime_root,'ghcr.io/'+repository+':latest'],capture_output=True)
-    public.verify_tag('latest',runtime_root)
+    point_latest(args.client,repository,runtime_root,remote,public,progress.observation)
     progress.complete();guard_main(api,ident);progress.start('stable-release-finalization');publication.run('finalize');progress.complete()
     progress.value.update({'independentAcceptanceSha256':args.acceptance_sha,'sourceIndex':source_root,'runtimeIndex':runtime_root,
                'retention':'Five semver version roots; protected subject/fallback/unassociated metadata can retain old graphs/storage indefinitely. No physical storage bound or concurrent external referrer merge guarantee.'})
@@ -224,11 +248,22 @@ def main():
     p.add_argument('--download',type=Path,required=True);p.add_argument('--client',type=Path,required=True)
     publish(p.parse_args())
 
+def stopped(error):
+    details=diagnostic(error)
+    if isinstance(error,CandidateError):
+        details.update(category='refusal',message=redact(str(error)))
+    path=Path('build/publication-receipt.json')
+    try:
+        if path.is_file():
+            value=read_json(path);value['status']='STOPPED_INSPECT_REMOTE_STATE';value['failure']=details
+            path.write_bytes(canonical(value)+b'\n')
+    except Exception:
+        # Failure evidence is best effort and must never replace the actual error.
+        pass
+    return 'Prepared publication stopped: '+json.dumps(details,sort_keys=True)+'. No automatic mutation retry; inspect remote state.'
+
+
 if __name__=='__main__':
     try:main()
-    except Exception:
-        path=Path('build/publication-receipt.json')
-        if path.is_file():
-            value=read_json(path);value['status']='STOPPED_INSPECT_REMOTE_STATE'
-            path.write_bytes(canonical(value)+b'\n')
-        raise SystemExit('Prepared publication stopped. No automatic mutation retry: inspect GitHub and registry state before selecting a continuation.')from None
+    except Exception as error:
+        raise SystemExit(stopped(error))from None

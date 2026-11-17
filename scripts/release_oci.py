@@ -19,6 +19,7 @@ import tarfile
 import urllib.error
 import urllib.parse
 import urllib.request
+from release_confirmation import RegistryReadError, confirm, tool_write
 from release_candidate import (CandidateError, canonical, digest, read_json, require, sha_bytes, sha_file, write_json)
 
 INDEX = 'application/vnd.oci.image.index.v1+json'
@@ -204,30 +205,46 @@ class Ghcr:
         self.opener = urllib.request.build_opener(NoRedirect())
         query = urllib.parse.urlencode({'service': 'ghcr.io', 'scope': 'repository:' + repository + ':pull,push'})
         auth = base64.b64encode((actor + ':' + token).encode()).decode()
-        request = urllib.request.Request('https://ghcr.io/token?' + query, headers={'Authorization': 'Basic ' + auth})
-        with self.opener.open(request, timeout=30) as response: value = json.load(response)
+        self.auth_request = urllib.request.Request('https://ghcr.io/token?' + query, headers={'Authorization': 'Basic ' + auth})
+        self.refresh()
+    def refresh(self):
+        with self.opener.open(self.auth_request, timeout=30) as response: value = json.load(response)
         self.token = value.get('token'); require(isinstance(self.token, str) and self.token, 'No registry service token')
     def tag(self, tag):
         require(re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}', tag), 'Invalid registry tag')
-        request = urllib.request.Request('https://ghcr.io/v2/' + self.repository + '/manifests/' + tag,
-                                        headers={'Authorization': 'Bearer ' + self.token, 'Accept': INDEX})
-        try:
-            with self.opener.open(request, timeout=30) as response: raw = response.read(4 * 1024 * 1024 + 1)
-        except urllib.error.HTTPError as error:
-            status = error.code; error.close()
-            if status == 404: return None
-            raise CandidateError('Registry tag preflight failed with HTTP ' + str(status)) from None
+        for attempt in range(2):
+            request = urllib.request.Request('https://ghcr.io/v2/' + self.repository + '/manifests/' + tag,
+                                            headers={'Authorization': 'Bearer ' + self.token, 'Accept': INDEX})
+            try:
+                with self.opener.open(request, timeout=30) as response: raw = response.read(4 * 1024 * 1024 + 1)
+                break
+            except urllib.error.HTTPError as error:
+                status = error.code; request_id = error.headers.get("X-GitHub-Request-Id") if error.headers else None
+                same_resource = error.geturl() == request.full_url; error.close()
+                if status == 401 and same_resource and attempt == 0:
+                    self.refresh()
+                    continue
+                if status == 404: return None
+                raise RegistryReadError(status, request_id) from None
         require(len(raw) <= 4 * 1024 * 1024, 'Oversized registry index')
         return sha_bytes(raw)
 
-def promote(client, layout, inspected, repository, tag, actor, token, verification_dir):
+def promote(client, layout, inspected, repository, tag, actor, token, verification_dir, recorder=None):
     root = inspected['graph']['root']['digest']; remote = Ghcr(repository, actor, token)
     existing = remote.tag(tag)
     require(existing in (None, root), 'Refusing to replace a different version index')
     # Only the declared root is copied. Regctl may maintain its reviewed bounded subject metadata.
-    command([str(client), 'image', 'copy', '--force-recursive', 'ocidir://' + str(Path(layout).resolve()) + '@' + root,
-             'ghcr.io/' + repository + ':' + tag], capture_output=True)
-    require(remote.tag(tag) == root, 'Published tag differs from reviewed index')
+    def observed():
+        actual = remote.tag(tag)
+        if actual == root:
+            return actual
+        require(actual == existing, 'Published tag changed to an unexpected index')
+        return None
+    confirm('version-index-copy',
+            lambda: tool_write([str(client), 'image', 'copy', '--force-recursive',
+                                'ocidir://' + str(Path(layout).resolve()) + '@' + root,
+                                'ghcr.io/' + repository + ':' + tag], capture_output=True),
+            observed, recorder)
     output = Path(verification_dir)
     command([str(client), 'image', 'copy', '--force-recursive', 'ghcr.io/' + repository + '@' + root,
              'ocidir://' + str(output.resolve()) + ':verified'], capture_output=True)
