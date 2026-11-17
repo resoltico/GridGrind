@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.customxml.*;
 import dev.erst.gridgrind.core.semantics.ExecutionConventions;
 import dev.erst.gridgrind.engine.customxml.MappedDateInputException;
-import dev.erst.gridgrind.engine.runtime.NativeInvocationContext;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.util.Optional;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.util.AreaReference;

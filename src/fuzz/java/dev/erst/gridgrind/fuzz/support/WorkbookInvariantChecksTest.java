@@ -165,7 +165,7 @@ import dev.erst.gridgrind.engine.backend.xssf.*;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
-import dev.erst.gridgrind.engine.runtime.NativeInvocationContext;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;

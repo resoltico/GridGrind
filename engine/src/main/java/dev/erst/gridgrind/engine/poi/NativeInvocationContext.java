@@ -1,4 +1,4 @@
-package dev.erst.gridgrind.engine.runtime;
+package dev.erst.gridgrind.engine.poi;
 
 import dev.erst.gridgrind.core.model.value.ExcelDateSystem;
 import dev.erst.gridgrind.core.semantics.ExecutionConventions;
@@ -38,7 +38,8 @@ public final class NativeInvocationContext implements AutoCloseable {
     }
   }
 
-  void requireOpen() {
+  /** Refuses reuse after this invocation's context has been closed. */
+  public void requireOpen() {
     if (closed) throw new IllegalStateException("Native invocation context is already closed");
   }
 
@@ -65,7 +66,8 @@ public final class NativeInvocationContext implements AutoCloseable {
     if (first instanceof RuntimeException runtime) throw runtime;
   }
 
-  void closePreserving(Throwable primary) {
+  /** Closes this owner while retaining the original failure and suppressing secondary cleanup. */
+  public void closePreserving(Throwable primary) {
     try {
       close();
     } catch (RuntimeException | Error cleanup) {
@@ -73,9 +75,10 @@ public final class NativeInvocationContext implements AutoCloseable {
     }
   }
 
+  /** Adds a bounded secondary failure unless it is the primary failure itself. */
   @SuppressWarnings({"ReferenceEquality", "PMD.CompareObjectsWithEquals"})
   // Throwable self-suppression is forbidden by identity.
-  static void suppress(Throwable primary, Throwable secondary) {
+  public static void suppress(Throwable primary, Throwable secondary) {
     if (primary != secondary && primary.getSuppressed().length < 8)
       primary.addSuppressed(secondary);
   }

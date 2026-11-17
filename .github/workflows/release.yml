@@ -118,7 +118,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ./check.sh prepareReleaseNotes "-Pversion=$VERSION" --no-build-cache 2>&1 | tee build/release-work/check.log
+          ./check.sh prepareReleaseNotes "-Pversion=$VERSION" --no-build-cache --continue 2>&1 | tee build/release-work/check.log
       - name: Exercise bounded active fuzzing
         shell: bash
         run: |

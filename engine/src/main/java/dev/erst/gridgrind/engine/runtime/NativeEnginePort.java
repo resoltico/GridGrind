@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.semantics.ExecutionConventions;
 import dev.erst.gridgrind.engine.api.GridGrindProgressSink;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;

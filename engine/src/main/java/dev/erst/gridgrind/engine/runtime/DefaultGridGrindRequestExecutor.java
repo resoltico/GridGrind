@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbook;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;

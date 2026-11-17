@@ -9,6 +9,8 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.*;
 import dev.erst.gridgrind.core.semantics.ExecutionConventions;
 import dev.erst.gridgrind.core.vocabulary.*;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContextFixtureSupport;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +30,7 @@ class NativeInvocationFinalizationTest {
     var order = new ArrayList<String>();
     var real = NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD);
     var context =
-        new NativeInvocationContext(
+        NativeInvocationContextFixtureSupport.withTeardown(
             List.of(
                 real::close,
                 () -> {
@@ -70,7 +72,7 @@ class NativeInvocationFinalizationTest {
   void existingAssertionFailureRemainsPrimaryWhenNativeTeardownFails() {
     var real = NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD);
     var context =
-        new NativeInvocationContext(
+        NativeInvocationContextFixtureSupport.withTeardown(
             List.of(
                 real::close,
                 () -> {
@@ -100,7 +102,7 @@ class NativeInvocationFinalizationTest {
     var real = NativeInvocationContext.enterOwned(ExecutionConventions.STANDARD);
     var secondary = new IllegalStateException("owned cleanup failure");
     var context =
-        new NativeInvocationContext(
+        NativeInvocationContextFixtureSupport.withTeardown(
             List.of(
                 real::close,
                 () -> {
@@ -139,7 +141,7 @@ class NativeInvocationFinalizationTest {
     var fatal = new AssertionError("fatal cleanup failure");
     var last = new IllegalStateException("last cleanup failure");
     var context =
-        new NativeInvocationContext(
+        NativeInvocationContextFixtureSupport.withTeardown(
             List.of(
                 () -> {
                   throw first;

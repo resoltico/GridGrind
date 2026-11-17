@@ -33,7 +33,7 @@ jobs:
 
       - name: Run the supported whole-repo deterministic gate
         # Ordinary checks include deterministic seed replay; active campaigns remain opt-in.
-        run: ./check.sh
+        run: ./check.sh --continue
 
       - name: Retain failed check diagnostics
         if: failure()

@@ -31,6 +31,7 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.backend.xssf.InvalidSigningConfigurationException;
 import dev.erst.gridgrind.engine.backend.xssf.OoxmlSecurityTestSupport;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.nio.file.Files;
 import java.nio.file.Path;

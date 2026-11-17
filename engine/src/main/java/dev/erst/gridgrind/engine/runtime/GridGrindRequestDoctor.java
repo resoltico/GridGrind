@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInpu
 import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;

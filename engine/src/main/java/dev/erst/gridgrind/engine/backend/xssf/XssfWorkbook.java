@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.backend.xssf;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedFormulaEnvironment;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
+import dev.erst.gridgrind.core.model.value.ExcelDateSystem;
 import dev.erst.gridgrind.core.result.SheetSummaryReport;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.engine.customxml.CustomXmlAdapter;
@@ -164,6 +165,13 @@ public final class XssfWorkbook implements AutoCloseable {
   @Override
   public void close() throws IOException {
     persistence.close();
+  }
+
+  /** Returns the receiving workbook's native serial calendar as a core value. */
+  public ExcelDateSystem dateSystem() {
+    return context.workbook().isDate1904()
+        ? ExcelDateSystem.MAC_1904
+        : ExcelDateSystem.WINDOWS_1900;
   }
 
   /** Returns the mutable XSSF workbook delegate used by workbook-scoped controllers. */

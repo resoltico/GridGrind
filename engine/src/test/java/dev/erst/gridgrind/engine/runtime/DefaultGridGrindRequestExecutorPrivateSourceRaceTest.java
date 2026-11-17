@@ -22,6 +22,7 @@ import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;

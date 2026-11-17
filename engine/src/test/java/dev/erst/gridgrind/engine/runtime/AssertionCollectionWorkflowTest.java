@@ -30,6 +30,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

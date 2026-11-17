@@ -26,6 +26,7 @@ import dev.erst.gridgrind.engine.backend.streaming.StreamingWorkbookWriter;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookExecutionEngine;
 import dev.erst.gridgrind.engine.backend.xssf.WorkbookLocation;
 import dev.erst.gridgrind.engine.backend.xssf.XssfWorkbooks;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;

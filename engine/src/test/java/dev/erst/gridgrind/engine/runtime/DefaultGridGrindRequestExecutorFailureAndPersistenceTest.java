@@ -50,6 +50,7 @@ import dev.erst.gridgrind.engine.backend.xssf.WorkbookNotFoundException;
 import dev.erst.gridgrind.engine.backend.xssf.XlsxRoundTrip;
 import dev.erst.gridgrind.engine.formulas.InvalidFormulaException;
 import dev.erst.gridgrind.engine.formulas.UnsupportedFormulaException;
+import dev.erst.gridgrind.engine.poi.NativeInvocationContext;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

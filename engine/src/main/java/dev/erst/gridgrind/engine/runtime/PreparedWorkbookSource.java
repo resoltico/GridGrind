@@ -29,11 +29,7 @@ final class PreparedWorkbookSource implements AutoCloseable {
       throw new IllegalStateException("Source resource already prepared");
     }
     xssf = Objects.requireNonNull(workbook);
-    dateSystem =
-        Optional.of(
-            workbook.xssfWorkbook().isDate1904()
-                ? dev.erst.gridgrind.core.model.value.ExcelDateSystem.MAC_1904
-                : dev.erst.gridgrind.core.model.value.ExcelDateSystem.WINDOWS_1900);
+    dateSystem = Optional.of(workbook.dateSystem());
   }
 
   void retain(WorkbookArtifactIo.MaterializedWorkbook workbook) {
