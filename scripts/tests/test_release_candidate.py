@@ -398,3 +398,37 @@ class InspectionReportTest(unittest.TestCase):
             self.assertEqual({'graph','platforms','graphSha256'},set(compact))
             self.assertIs(full,returned)
             oci.check_sbom(returned,[{'group':'dev.erst.gridgrind','artifact':'native-provider','version':'0.78.0'}])
+
+
+class RuntimeImageReferenceTest(unittest.TestCase):
+    def test_same_operational_index_is_used_for_both_platforms_not_selected_ids(self):
+        from types import SimpleNamespace
+        root=D; jar=c.sha_bytes(b'jar'); leaves={'linux/amd64':Q,'linux/arm64':'sha256:'+'4'*64}; operations=[]
+        runtime={'graph':{'root':{'digest':root}},'platforms':{p:{'digest':h}for p,h in leaves.items()}}
+        def command(args,**kwargs):
+            operations.append(args)
+            if args[:3]==['docker','image','inspect']:
+                self.assertEqual(root,args[-1]);platform=args[args.index('--platform')+1]
+                return SimpleNamespace(stdout=json.dumps([{'Id':leaves[platform],'Os':'linux','Architecture':platform.split('/')[1],
+                                                          'Descriptor':{'digest':leaves[platform]}}]))
+            self.assertEqual(['docker','run'],args[:2]);self.assertEqual(root,args[-2])
+            return SimpleNamespace(stdout=jar[7:]+'  /app/gridgrind.jar\n')
+        with mock.patch.object(delivery,'command',side_effect=command),mock.patch.object(delivery,'run_logged')as suites,\
+             mock.patch.object(delivery,'xml_counts'),mock.patch.object(delivery.shutil,'copytree'),mock.patch.object(delivery,'sha_file',return_value=jar):
+            bindings,receipts=delivery.verify_runtime_images({'version':'0.78.0'},runtime,jar)
+        self.assertEqual({p:root for p in leaves},bindings)
+        self.assertEqual(2,suites.call_count)
+        for invocation,platform in zip(suites.call_args_list,leaves):
+            self.assertIn('-PcontainerImage='+root,invocation.args[0]);self.assertIn('-PcontainerPlatform='+platform,invocation.args[0])
+            self.assertEqual(root,receipts[platform]['operationalImageRoot'])
+            self.assertEqual(leaves[platform],receipts[platform]['selectedInspectionId'])
+            self.assertEqual(leaves[platform],receipts[platform]['platformManifest'])
+        self.assertEqual(4,len(operations))
+
+    def test_selected_platform_or_descriptor_mismatch_remains_a_refusal(self):
+        from types import SimpleNamespace
+        runtime={'graph':{'root':{'digest':D}},'platforms':{'linux/amd64':{'digest':Q}}}
+        for bad in ({'Id':Q,'Os':'linux','Architecture':'arm64','Descriptor':{'digest':Q}},
+                    {'Id':Q,'Os':'linux','Architecture':'amd64','Descriptor':{'digest':D}}):
+            with self.subTest(selected=bad),mock.patch.object(delivery,'command',return_value=SimpleNamespace(stdout=json.dumps([bad]))):
+                with self.assertRaisesRegex(c.CandidateError,'platform/config'):delivery.verify_runtime_images({'version':'0.78.0'},runtime,D)

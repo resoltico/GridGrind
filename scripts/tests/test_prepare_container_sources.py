@@ -3,6 +3,7 @@
 import hashlib
 import importlib.util
 import io
+import json
 import os
 from pathlib import Path
 import re
@@ -181,6 +182,29 @@ class ManifestDescriptorTest(unittest.TestCase):
         ]:
             with self.subTest(info=info), self.assertRaises(ValueError):
                 collector.manifest_digest(info)
+
+
+class LocalImageReferenceTest(unittest.TestCase):
+    def test_resolve_once_then_select_metadata_through_addressable_root(self):
+        root='sha256:'+'a'*64;leaf='sha256:'+'b'*64;calls=[]
+        def run(args):
+            calls.append(args)
+            if args==['docker','image','inspect','candidate:tag']:return json.dumps([{'Id':root}])
+            self.assertEqual(['docker','image','inspect','--platform','linux/arm64',root],args)
+            return json.dumps([{'Id':leaf,'Os':'linux','Architecture':'arm64',
+                               'Descriptor':{'mediaType':'application/vnd.oci.image.manifest.v1+json','digest':leaf}}])
+        operational,selected=collector.resolve_platform_image('candidate:tag','linux/arm64',run)
+        self.assertEqual(root,operational);self.assertEqual(leaf,collector.manifest_digest(selected))
+        self.assertEqual(2,len(calls));self.assertNotEqual(operational,selected['Id'])
+
+    def test_invalid_root_and_selected_platform_are_not_fallbacks(self):
+        for values in ([{'Id':'not-immutable'}],[{'Id':'sha256:'+'a'*64}]):
+            calls=[]
+            def run(args):
+                calls.append(args)
+                if len(calls)==1:return json.dumps(values)
+                return json.dumps([{'Os':'linux','Architecture':'amd64'}])
+            with self.subTest(values=values),self.assertRaises(ValueError):collector.resolve_platform_image('tag','linux/arm64',run)
 
 
 class SourceCacheTest(unittest.TestCase):

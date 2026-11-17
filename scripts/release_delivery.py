@@ -226,6 +226,29 @@ def build_oci(value, source=False):
     return archive, layout, result, tag
 
 
+def verify_runtime_images(value, runtime, jar_sha):
+    version = value['version']
+    bindings = {}
+    platform_receipts = {}
+    retained_root = runtime['graph']['root']['digest']
+    for arch in ('amd64', 'arm64'):
+        platform = 'linux/'+arch; expected = runtime['platforms'][platform]['digest']
+        result = command(['docker', 'image', 'inspect', '--platform', platform, retained_root], capture_output=True, text=True)
+        selected = json.loads(result.stdout)[0]
+        require(selected['Os']+'/'+selected['Architecture'] == platform and selected.get('Descriptor', {}).get('digest') == expected, 'Selected test platform/config does not bind reviewed manifest')
+        output = command(['docker', 'run', '--rm', '--platform', platform, '--entrypoint', 'sha256sum', retained_root, '/app/gridgrind.jar'], capture_output=True, text=True).stdout
+        require(output.split()[0] == jar_sha[7:], 'Image JAR differs from retained JAR')
+        bindings[platform] = retained_root
+        run_logged(['./gradlew', ':cli:containerTest', '-Pversion='+version, '-PcontainerImage='+retained_root, '-PcontainerPlatform='+platform], 'container-'+arch+'.log')
+        xml_counts('cli/build/test-results/containerTest')
+        shutil.copytree('cli/build/test-results/containerTest', WORK/('container-results-'+arch))
+        platform_receipts[platform] = {'containerPlatformProperty': platform, 'retainedIndex': runtime['graph']['root']['digest'],
+                                      'operationalImageRoot': retained_root, 'selectedInspectionId': selected['Id'], 'platformManifest': expected,
+                                      'selectedConfigArchitecture': selected['Architecture'], 'jarSha256': jar_sha}
+        require(sha_file('cli/build/libs/gridgrind.jar') == jar_sha, 'Runtime checks rebuilt or changed delivery JAR')
+    return bindings, platform_receipts
+
+
 def assemble(component_file, component_files):
     value = read_json(WORK/'identity.json'); version = value['version']
     require(not DELIVERY.exists(), 'Delivery staging must be absent')
@@ -249,24 +272,8 @@ def assemble(component_file, component_files):
     check_sbom(runtime, components)
     store_version = properties('release/transfer-tools.properties')['DOCKER_SERVER_VERSION']
     load_for_testing(runtime_archive, runtime, tag, store_version)
-    bindings = {}
-    platform_receipts = {}
     jar_sha = sha_file(assets/'gridgrind.jar')
-    for arch in ('amd64', 'arm64'):
-        platform = 'linux/'+arch; expected = runtime['platforms'][platform]['digest']
-        result = command(['docker', 'image', 'inspect', '--platform', platform, tag], capture_output=True, text=True)
-        selected = json.loads(result.stdout)[0]
-        require(selected['Os']+'/'+selected['Architecture'] == platform and selected.get('Descriptor', {}).get('digest') == expected, 'Selected test platform/config does not bind reviewed manifest')
-        output = command(['docker', 'run', '--rm', '--platform', platform, '--entrypoint', 'sha256sum', tag, '/app/gridgrind.jar'], capture_output=True, text=True).stdout
-        require(output.split()[0] == jar_sha[7:], 'Image JAR differs from retained JAR')
-        bindings[platform] = selected['Id']
-        run_logged(['./gradlew', ':cli:containerTest', '-Pversion='+version, '-PcontainerImage='+selected['Id'], '-PcontainerPlatform='+platform], 'container-'+arch+'.log')
-        xml_counts('cli/build/test-results/containerTest')
-        shutil.copytree('cli/build/test-results/containerTest', WORK/('container-results-'+arch))
-        platform_receipts[platform] = {'containerPlatformProperty': platform, 'retainedIndex': runtime['graph']['root']['digest'],
-                                      'selectedImageId': selected['Id'], 'platformManifest': expected,
-                                      'selectedConfigArchitecture': selected['Architecture'], 'jarSha256': jar_sha}
-        require(sha_file('cli/build/libs/gridgrind.jar') == jar_sha, 'Runtime checks rebuilt or changed delivery JAR')
+    bindings, platform_receipts = verify_runtime_images(value, runtime, jar_sha)
     run_logged(['./gradlew', ':cli:devcontainerTest', '-Pversion='+version], 'devcontainer.log')
     write_json(WORK/'runtime-test-bindings.json', platform_receipts)
     pins = properties('release/container-runtime.properties'); vendor = WORK/'vendor'; vendor.mkdir()
