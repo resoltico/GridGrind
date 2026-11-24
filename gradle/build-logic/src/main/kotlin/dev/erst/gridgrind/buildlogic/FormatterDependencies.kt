@@ -14,11 +14,9 @@ internal fun Project.configureFormatterDependencies() {
         // The compiler's separately owned formatter API remains unchanged.
         if (id.version == formatterVersion) {
             allVariants {
-                withDependencies {
-                    forEach { dependency ->
-                        selected["${dependency.group}:${dependency.name}"]?.let { version ->
-                            dependency.version { require(version) }
-                        }
+                withDependencyConstraints {
+                    for ((module, version) in selected) {
+                        add("$module:$version")
                     }
                 }
             }
