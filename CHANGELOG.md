@@ -6,6 +6,8 @@ Earlier release history through `0.68.0` is archived in [CHANGELOG_ARCHIVE.md](C
 ## [Unreleased]
 
 - Publication confirms remote state without repeating ambiguous writes, refreshes expired registry read credentials and retains redacted API and command diagnostics.
+- Engine mutation reports use the repaired native classes required by the engine tests.
+- Builds use Gradle 9.9.2, Error Prone 2.53.0 and Spotless 8.12.0. The contributor image uses Docker CLI 29.10.0 and Buildx 0.39.1, and release builds use BuildKit 0.35.1.
 
 ## [0.78.0] - 2026-11-17
 

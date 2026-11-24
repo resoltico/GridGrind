@@ -2,6 +2,7 @@ import dev.erst.gridgrind.buildlogic.NativeProviderModuleArguments
 import dev.erst.gridgrind.buildlogic.NativeProviderVariants
 import dev.erst.gridgrind.buildlogic.coverageTestTasks
 import info.solidsoft.gradle.pitest.PitestPluginExtension
+import info.solidsoft.gradle.pitest.PitestTask
 import org.gradle.api.tasks.testing.Test
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 import org.gradle.testing.jacoco.tasks.JacocoReport
@@ -105,7 +106,9 @@ configure<PitestPluginExtension> {
     )
 }
 
-tasks.named("pitest") {
+tasks.named<PitestTask>("pitest") {
+    // PIT runs the native owner tests and needs repaired classes ahead of the stock JARs.
+    additionalClasspath.setFrom(nativeOwnerClasses, additionalClasspath.from.toList())
     mustRunAfter(":core:pitest")
 }
 
