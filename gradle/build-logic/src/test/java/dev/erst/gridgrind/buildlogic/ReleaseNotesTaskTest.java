@@ -69,7 +69,7 @@ class ReleaseNotesTaskTest {
 
   private ReleaseNotesTask task(String text) throws Exception {
     var project = ProjectBuilder.builder().withProjectDir(root.toFile()).build();
-    var task = project.getTasks().create("prepareReleaseNotes", ReleaseNotesTask.class);
+    var task = project.getTasks().register("prepareReleaseNotes", ReleaseNotesTask.class).get();
     task.getReleaseVersion().set("1.2.3");
     task.getChangelog().set(Files.writeString(root.resolve("CHANGELOG.md"), text).toFile());
     task.getNotes().set(root.resolve("notes.md").toFile());

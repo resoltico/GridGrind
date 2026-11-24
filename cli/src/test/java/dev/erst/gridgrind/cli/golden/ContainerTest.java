@@ -65,7 +65,7 @@ class ContainerTest {
         GoldenSnapshots.JSON.readTree(
             DockerFixture.assertSuccess(
                 docker.runWorkbook(workspace, "version", "--format", "structured")));
-    assertEquals(ProductInfo.version(), version.path("version").asText());
+    assertEquals(ProductInfo.version(), version.path("version").asString());
     assertTrue(
         DockerFixture.assertSuccess(docker.runWorkbook(workspace, "license"))
             .contains("GNU AFFERO GENERAL PUBLIC LICENSE"));
@@ -163,9 +163,9 @@ class ContainerTest {
       Set<String> platforms = new HashSet<>();
       for (var entry : manifest.path("manifests")) {
         platforms.add(
-            entry.path("platform").path("os").asText()
+            entry.path("platform").path("os").asString()
                 + "/"
-                + entry.path("platform").path("architecture").asText());
+                + entry.path("platform").path("architecture").asString());
       }
       assertTrue(platforms.containsAll(Set.of("linux/amd64", "linux/arm64")), platforms.toString());
     }
@@ -272,7 +272,7 @@ class ContainerTest {
         GoldenSnapshots.JSON
             .readTree(DockerFixture.assertSuccess(written))
             .path("status")
-            .asText());
+            .asString());
     var readPlan =
         GoldenSnapshots.JSON.readTree(
             """
@@ -298,10 +298,10 @@ class ContainerTest {
             secrets.toString());
     String result = DockerFixture.assertSuccess(read);
     var document = GoldenSnapshots.JSON.readTree(result);
-    assertEquals("SUCCEEDED", document.path("status").asText());
+    assertEquals("SUCCEEDED", document.path("status").asString());
     var security = document.path("inspections").get(0).path("security");
-    assertEquals("ENCRYPTED", security.path("encryption").path("type").asText());
+    assertEquals("ENCRYPTED", security.path("encryption").path("type").asString());
     assertEquals(1, security.path("signatures").size());
-    assertEquals("VALID", security.path("signatures").get(0).path("state").asText());
+    assertEquals("VALID", security.path("signatures").get(0).path("state").asString());
   }
 }

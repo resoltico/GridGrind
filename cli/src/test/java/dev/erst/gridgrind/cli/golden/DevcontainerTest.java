@@ -42,31 +42,31 @@ class DevcontainerTest {
             .has(
                 "ghcr.io/devcontainers/features/docker-outside-of-docker:1.10.2@sha256:661b0fd4c57a7e0bd14d99701ab9bc824719678a9319118728f8d9c59441b7e4"));
     var feature = config.path("features").properties().iterator().next().getValue();
-    assertEquals("none", feature.path("dockerDashComposeVersion").asText());
+    assertEquals("none", feature.path("dockerDashComposeVersion").asString());
     assertFalse(feature.path("installDockerBuildx").asBoolean());
     assertFalse(feature.path("installDockerComposeSwitch").asBoolean());
     assertFalse(feature.path("moby").asBoolean());
-    assertEquals("vscode", config.path("remoteUser").asText());
-    assertEquals("/workspaces/gridgrind", config.path("workspaceFolder").asText());
+    assertEquals("vscode", config.path("remoteUser").asString());
+    assertEquals("/workspaces/gridgrind", config.path("workspaceFolder").asString());
     assertEquals(
-        "./scripts/devcontainer-prepare-user-home.sh", config.path("postStartCommand").asText());
+        "./scripts/devcontainer-prepare-user-home.sh", config.path("postStartCommand").asString());
     String mounts = config.path("mounts").toString();
     assertTrue(mounts.contains("target=/home/vscode/.gradle"));
     assertTrue(mounts.contains("target=/home/vscode/.cache"));
     var editor = config.path("customizations").path("vscode");
     java.util.Set<String> installed = new java.util.HashSet<>();
-    for (var extension : editor.path("extensions")) installed.add(extension.asText());
+    for (var extension : editor.path("extensions")) installed.add(extension.asString());
     for (String extension :
         List.of("redhat.java", "vscjava.vscode-gradle", "vscjava.vscode-java-test")) {
       assertTrue(installed.contains(extension));
       assertEquals(
           "workspace",
-          editor.path("settings").path("remote.extensionKind").path(extension).get(0).asText());
+          editor.path("settings").path("remote.extensionKind").path(extension).get(0).asString());
     }
     boolean defaultRuntime = false;
     for (var runtime : editor.path("settings").path("java.configuration.runtimes")) {
       defaultRuntime |=
-          "/opt/java/openjdk".equals(runtime.path("path").asText())
+          "/opt/java/openjdk".equals(runtime.path("path").asString())
               && runtime.path("default").asBoolean();
     }
     assertTrue(defaultRuntime);

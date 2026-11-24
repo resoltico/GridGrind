@@ -52,7 +52,7 @@ class CanonicalUnionTagsTest {
     var mapper = GridGrindJsonMapperSupport.JSON_MAPPER;
     byte[] valid = mapper.writeValueAsBytes(value);
     ObjectNode node = (ObjectNode) mapper.readTree(valid);
-    assertEquals(id, node.path(tag).asText());
+    assertEquals(id, node.path(tag).asString());
     assertFalse(node.has(removed));
     assertEquals(value, mapper.readValue(valid, union));
     node.remove(tag);

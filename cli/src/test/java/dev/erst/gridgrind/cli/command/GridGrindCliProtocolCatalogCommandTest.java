@@ -162,10 +162,10 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     JsonNode output = GridGrindCliJson.readBytes(stdout.toByteArray(), JsonNode.class);
     String rendered = stdout.toString(StandardCharsets.UTF_8);
 
-    assertEquals("EXISTING", output.path("id").asText());
-    assertEquals("requestOwnedPathRule", output.path("noteRefs").get(0).asText());
-    assertEquals("requestOwnedPathRule", output.path("notes").get(0).path("id").asText());
-    assertEquals(noteText, output.path("notes").get(0).path("text").asText());
+    assertEquals("EXISTING", output.path("id").asString());
+    assertEquals("requestOwnedPathRule", output.path("noteRefs").get(0).asString());
+    assertEquals("requestOwnedPathRule", output.path("notes").get(0).path("id").asString());
+    assertEquals(noteText, output.path("notes").get(0).path("text").asString());
     assertEquals(1, occurrenceCount(rendered, noteText));
   }
 
@@ -182,7 +182,7 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
             .path("action")
             .path("rows")
             .path("type")
-            .asText());
+            .asString());
     assertTrue(
         setRange.path("stepTemplate").path("template").path("action").path("rows").has("cells"));
     assertEquals(
@@ -193,7 +193,7 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
             .path("action")
             .path("values")
             .path("type")
-            .asText());
+            .asString());
     assertTrue(
         appendRow.path("stepTemplate").path("template").path("action").path("values").has("cells"));
   }
@@ -217,11 +217,11 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     JsonNode type = encryption.path("type");
 
     assertFalse(type.path("fields").toString().contains("\"mode\""));
-    assertEquals("OPTIONAL", catalogField(type, "cipher").path("requirement").asText());
-    assertEquals("OPTIONAL", catalogField(type, "hash").path("requirement").asText());
-    assertTrue(type.path("summary").asText().contains("AGILE packages only"));
-    assertTrue(type.path("summary").asText().contains("AES_256"));
-    assertTrue(type.path("summary").asText().contains("SHA_512"));
+    assertEquals("OPTIONAL", catalogField(type, "cipher").path("requirement").asString());
+    assertEquals("OPTIONAL", catalogField(type, "hash").path("requirement").asString());
+    assertTrue(type.path("summary").asString().contains("AGILE packages only"));
+    assertTrue(type.path("summary").asString().contains("AES_256"));
+    assertTrue(type.path("summary").asString().contains("SHA_512"));
   }
 
   @Test
@@ -236,45 +236,49 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     JsonNode evaluatedNumber = catalogType(cellValues, "NUMBER");
     JsonNode facets = catalogField(projection.path("type"), "facets");
 
-    assertEquals("OPTIONAL", catalogField(number, "displayValue").path("requirement").asText());
+    assertEquals("OPTIONAL", catalogField(number, "displayValue").path("requirement").asString());
     assertEquals(
-        "FORMAT", catalogField(number, "displayValue").path("projectedByFacets").get(0).asText());
-    assertEquals("OPTIONAL", catalogField(number, "style").path("requirement").asText());
-    assertEquals("STYLE", catalogField(number, "style").path("projectedByFacets").get(0).asText());
-    assertEquals("OPTIONAL", catalogField(number, "hyperlink").path("requirement").asText());
+        "FORMAT", catalogField(number, "displayValue").path("projectedByFacets").get(0).asString());
+    assertEquals("OPTIONAL", catalogField(number, "style").path("requirement").asString());
     assertEquals(
-        "HYPERLINK", catalogField(number, "hyperlink").path("projectedByFacets").get(0).asText());
-    assertEquals("OPTIONAL", catalogField(number, "comment").path("requirement").asText());
+        "STYLE", catalogField(number, "style").path("projectedByFacets").get(0).asString());
+    assertEquals("OPTIONAL", catalogField(number, "hyperlink").path("requirement").asString());
     assertEquals(
-        "COMMENT", catalogField(number, "comment").path("projectedByFacets").get(0).asText());
-    assertEquals("OPTIONAL", catalogField(number, "value").path("requirement").asText());
-    assertEquals("VALUE", catalogField(number, "value").path("projectedByFacets").get(0).asText());
-    assertEquals("OPTIONAL", catalogField(number, "temporal").path("requirement").asText());
+        "HYPERLINK", catalogField(number, "hyperlink").path("projectedByFacets").get(0).asString());
+    assertEquals("OPTIONAL", catalogField(number, "comment").path("requirement").asString());
     assertEquals(
-        "TEMPORAL", catalogField(number, "temporal").path("projectedByFacets").get(0).asText());
-    assertTrue(number.path("summary").asText().contains("TEMPORAL"));
-    assertEquals("OPTIONAL", catalogField(text, "runs").path("requirement").asText());
+        "COMMENT", catalogField(number, "comment").path("projectedByFacets").get(0).asString());
+    assertEquals("OPTIONAL", catalogField(number, "value").path("requirement").asString());
     assertEquals(
-        "RICH_TEXT_RUNS", catalogField(text, "runs").path("projectedByFacets").get(0).asText());
-    assertEquals("OPTIONAL", catalogField(formula, "formula").path("requirement").asText());
+        "VALUE", catalogField(number, "value").path("projectedByFacets").get(0).asString());
+    assertEquals("OPTIONAL", catalogField(number, "temporal").path("requirement").asString());
     assertEquals(
-        "FORMULA", catalogField(formula, "formula").path("projectedByFacets").get(0).asText());
-    assertEquals("OPTIONAL", catalogField(formula, "value").path("requirement").asText());
-    assertEquals("VALUE", catalogField(formula, "value").path("projectedByFacets").get(0).asText());
+        "TEMPORAL", catalogField(number, "temporal").path("projectedByFacets").get(0).asString());
+    assertTrue(number.path("summary").asString().contains("TEMPORAL"));
+    assertEquals("OPTIONAL", catalogField(text, "runs").path("requirement").asString());
+    assertEquals(
+        "RICH_TEXT_RUNS", catalogField(text, "runs").path("projectedByFacets").get(0).asString());
+    assertEquals("OPTIONAL", catalogField(formula, "formula").path("requirement").asString());
+    assertEquals(
+        "FORMULA", catalogField(formula, "formula").path("projectedByFacets").get(0).asString());
+    assertEquals("OPTIONAL", catalogField(formula, "value").path("requirement").asString());
+    assertEquals(
+        "VALUE", catalogField(formula, "value").path("projectedByFacets").get(0).asString());
     assertFalse(catalogField(evaluatedText, "value").has("projectedByFacets"));
-    assertEquals("REQUIRED", catalogField(evaluatedNumber, "value").path("requirement").asText());
-    assertEquals("OPTIONAL", catalogField(formula, "runs").path("requirement").asText());
+    assertEquals("REQUIRED", catalogField(evaluatedNumber, "value").path("requirement").asString());
+    assertEquals("OPTIONAL", catalogField(formula, "runs").path("requirement").asString());
     assertEquals(
-        "RICH_TEXT_RUNS", catalogField(formula, "runs").path("projectedByFacets").get(0).asText());
-    assertEquals("OPTIONAL", catalogField(formula, "temporal").path("requirement").asText());
+        "RICH_TEXT_RUNS",
+        catalogField(formula, "runs").path("projectedByFacets").get(0).asString());
+    assertEquals("OPTIONAL", catalogField(formula, "temporal").path("requirement").asString());
     assertEquals(
-        "TEMPORAL", catalogField(formula, "temporal").path("projectedByFacets").get(0).asText());
-    assertEquals("FORMAT", facets.path("enumValueDocs").get(2).path("value").asText());
+        "TEMPORAL", catalogField(formula, "temporal").path("projectedByFacets").get(0).asString());
+    assertEquals("FORMAT", facets.path("enumValueDocs").get(2).path("value").asString());
     assertTrue(
-        facets.path("enumValueDocs").get(2).path("summary").asText().contains("displayValue"));
-    assertEquals("VALUE", facets.path("enumValueDocs").get(0).path("value").asText());
+        facets.path("enumValueDocs").get(2).path("summary").asString().contains("displayValue"));
+    assertEquals("VALUE", facets.path("enumValueDocs").get(0).path("value").asString());
     assertTrue(
-        facets.path("enumValueDocs").get(0).path("summary").asText().contains("formula results"));
+        facets.path("enumValueDocs").get(0).path("summary").asString().contains("formula results"));
   }
 
   @Test
@@ -348,7 +352,7 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
 
   private static JsonNode catalogType(JsonNode group, String id) {
     for (JsonNode type : group.path("types")) {
-      if (id.equals(type.path("id").asText())) {
+      if (id.equals(type.path("id").asString())) {
         return type;
       }
     }
@@ -357,7 +361,7 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
 
   private static JsonNode catalogField(JsonNode type, String name) {
     for (JsonNode field : type.path("fields")) {
-      if (name.equals(field.path("name").asText())) {
+      if (name.equals(field.path("name").asString())) {
         return field;
       }
     }
@@ -376,8 +380,8 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(0, exitCode);
     JsonNode output = GridGrindCliJson.readBytes(stdout.toByteArray(), JsonNode.class);
-    assertEquals("cellValueSpecTypes", output.path("group").asText());
-    assertEquals("type", output.path("discriminatorField").asText());
+    assertEquals("cellValueSpecTypes", output.path("group").asString());
+    assertEquals("type", output.path("discriminatorField").asString());
     assertTrue(stdout.toString(StandardCharsets.UTF_8).contains("\"TEXT\""));
   }
 
@@ -394,7 +398,7 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(0, exitCode);
     JsonNode output = GridGrindCliJson.readBytes(stdout.toByteArray(), JsonNode.class);
-    assertEquals("mutationActionTypes", output.path("group").asText());
+    assertEquals("mutationActionTypes", output.path("group").asString());
     assertTrue(output.path("types").isArray());
     assertTrue(stdout.toString(StandardCharsets.UTF_8).contains("\"SET_CELL\""));
   }
@@ -411,7 +415,7 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(0, exitCode);
     JsonNode output = GridGrindCliJson.readBytes(stdout.toByteArray(), JsonNode.class);
-    assertEquals("chartSpecType", output.path("group").asText());
+    assertEquals("chartSpecType", output.path("group").asString());
     String rendered = stdout.toString(StandardCharsets.UTF_8);
     assertTrue(rendered.contains("\"ChartSpec\""));
     assertTrue(rendered.contains("\"plots\""));

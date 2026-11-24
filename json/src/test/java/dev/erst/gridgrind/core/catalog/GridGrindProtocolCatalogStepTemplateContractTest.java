@@ -71,7 +71,7 @@ class GridGrindProtocolCatalogStepTemplateContractTest {
             .path("action")
             .path("rows")
             .path("type")
-            .asText());
+            .asString());
     assertTrue(
         tree(setRange.stepTemplate().orElseThrow().template())
             .path("action")
@@ -83,7 +83,7 @@ class GridGrindProtocolCatalogStepTemplateContractTest {
             .path("action")
             .path("values")
             .path("type")
-            .asText());
+            .asString());
     assertTrue(
         tree(appendRow.stepTemplate().orElseThrow().template())
             .path("action")

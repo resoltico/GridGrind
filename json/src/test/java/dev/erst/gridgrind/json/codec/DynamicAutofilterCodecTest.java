@@ -18,8 +18,8 @@ class DynamicAutofilterCodecTest {
         new AutofilterFilterCriterionSpec.Dynamic("today", Optional.of(45_200d), Optional.empty());
     var wire = mapper.writerFor(AutofilterFilterCriterionSpec.class).writeValueAsString(value);
     var tree = mapper.readTree(wire);
-    assertEquals("DYNAMIC", tree.path("type").asText());
-    assertEquals("today", tree.path("dynamicType").asText());
+    assertEquals("DYNAMIC", tree.path("type").asString());
+    assertEquals("today", tree.path("dynamicType").asString());
     assertEquals(value, mapper.readValue(wire, AutofilterFilterCriterionSpec.class));
   }
 
@@ -31,8 +31,8 @@ class DynamicAutofilterCodecTest {
             "today", Optional.of(45_200d), Optional.empty());
     var wire = mapper.writerFor(AutofilterFilterCriterionReport.class).writeValueAsString(value);
     var tree = mapper.readTree(wire);
-    assertEquals("DYNAMIC", tree.path("type").asText());
-    assertEquals("today", tree.path("dynamicType").asText());
+    assertEquals("DYNAMIC", tree.path("type").asString());
+    assertEquals("today", tree.path("dynamicType").asString());
     assertEquals(value, mapper.readValue(wire, AutofilterFilterCriterionReport.class));
   }
 

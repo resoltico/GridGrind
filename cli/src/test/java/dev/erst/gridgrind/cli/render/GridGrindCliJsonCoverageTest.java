@@ -336,7 +336,7 @@ class GridGrindCliJsonCoverageTest {
             .path("context")
             .path("argument")
             .path("type")
-            .asText());
+            .asString());
     assertEquals(
         "--query",
         parseArgumentsDiagnostic
@@ -345,8 +345,8 @@ class GridGrindCliJsonCoverageTest {
             .path("context")
             .path("argument")
             .path("argument")
-            .asText());
-    assertEquals("REJECTED", parseArgumentsDiagnostic.path("status").asText());
+            .asString());
+    assertEquals("REJECTED", parseArgumentsDiagnostic.path("status").asString());
 
     assertEquals(
         Set.of("protocolVersion", "command", "problems", "status"),
@@ -363,7 +363,7 @@ class GridGrindCliJsonCoverageTest {
             .path("context")
             .path("request")
             .path("type")
-            .asText());
+            .asString());
     assertEquals(
         "LOCATED",
         readRequestDiagnostic
@@ -372,7 +372,7 @@ class GridGrindCliJsonCoverageTest {
             .path("context")
             .path("json")
             .path("type")
-            .asText());
+            .asString());
     assertEquals(
         "steps[0].target.type",
         readRequestDiagnostic
@@ -381,7 +381,7 @@ class GridGrindCliJsonCoverageTest {
             .path("context")
             .path("json")
             .path("jsonPath")
-            .asText());
+            .asString());
     assertEquals(
         7,
         readRequestDiagnostic
@@ -400,7 +400,7 @@ class GridGrindCliJsonCoverageTest {
             .path("json")
             .path("jsonColumn")
             .asInt());
-    assertEquals("REJECTED", readRequestDiagnostic.path("status").asText());
+    assertEquals("REJECTED", readRequestDiagnostic.path("status").asString());
   }
 
   private static RecipeKeywordMatchReport sampleRecipeKeywordMatchReport() {

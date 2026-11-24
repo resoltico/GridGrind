@@ -3,6 +3,7 @@ module dev.erst.gridgrind.engine {
   requires java.desktop;
   requires java.xml;
   requires java.xml.crypto;
+  requires static com.google.errorprone.annotations;
   requires static org.jspecify;
   requires dev.erst.gridgrind.nativeprovider;
   requires org.apache.poi.poi;

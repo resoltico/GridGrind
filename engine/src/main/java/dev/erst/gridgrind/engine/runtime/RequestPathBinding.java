@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import com.google.errorprone.annotations.MustBeClosed;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.Channels;
@@ -196,7 +197,8 @@ final class RequestPathBinding implements AutoCloseable {
   /** Opens one directory stream for descriptor binding. */
   @FunctionalInterface
   interface DirectoryStreamFactory {
-    /** Opens the supplied directory without imposing an application-level path policy. */
+    /** Opens the supplied directory and transfers ownership of the stream to the caller. */
+    @MustBeClosed
     DirectoryStream<Path> open(Path directory) throws IOException;
   }
 

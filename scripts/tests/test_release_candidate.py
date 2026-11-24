@@ -110,13 +110,25 @@ class CandidateContractTest(unittest.TestCase):
 
 class ArtifactZipTest(unittest.TestCase):
     def test_namespace_rejected_before_destination_creation(self):
-        for names in ([('../escape',b'x')],[('/absolute',b'x')],[('a',b'x'),('a',b'y')],[('a',b'x'),('a/b',b'y')]):
+        for names in ([('../escape',b'x')],[('/absolute',b'x')],[('a',b'x'),('a/b',b'y')]):
             with self.subTest(names=names),tempfile.TemporaryDirectory()as temp:
                 root=Path(temp);path=root/'artifact.zip'
                 with zipfile.ZipFile(path,'w')as z:
                     for name,data in names:z.writestr(name,data)
                 with self.assertRaises(c.CandidateError):c.extract_zip(path,root/'out',c.sha_file(path))
                 self.assertFalse((root/'out').exists())
+
+    def test_duplicate_entry_rejected_before_destination_creation(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            path = root / 'artifact.zip'
+            with zipfile.ZipFile(path, 'w') as archive:
+                archive.writestr('a', b'x')
+                with self.assertWarnsRegex(UserWarning, "Duplicate name: 'a'"):
+                    archive.writestr('a', b'y')
+            with self.assertRaises(c.CandidateError):
+                c.extract_zip(path, root / 'out', c.sha_file(path))
+            self.assertFalse((root / 'out').exists())
 
     def test_symlink_mode_and_transport_digest_refuse(self):
         with tempfile.TemporaryDirectory()as temp:

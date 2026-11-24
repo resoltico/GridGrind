@@ -235,9 +235,9 @@ class DistributionTest {
     assertEquals(version.stdout(), failed.stdout());
     var notice = GoldenSnapshots.JSON.readTree(failed.stderr());
     assertEquals(3, notice.size());
-    assertEquals("RESPONSE_WRITE_FAILED", notice.path("reason").asText());
-    assertEquals("STDOUT", notice.path("wroteTo").asText());
-    assertEquals(existing.toString(), notice.path("responsePath").asText());
+    assertEquals("RESPONSE_WRITE_FAILED", notice.path("reason").asString());
+    assertEquals("STDOUT", notice.path("wroteTo").asString());
+    assertEquals(existing.toString(), notice.path("responsePath").asString());
     var license = GoldenLauncher.runProcess(List.of(launcher, "license"), temporary, 60);
     assertEquals(0, license.exit(), license.stderr());
     for (String text :

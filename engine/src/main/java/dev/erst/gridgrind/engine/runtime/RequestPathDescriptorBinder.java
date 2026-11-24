@@ -132,7 +132,8 @@ final class RequestPathDescriptorBinder {
   }
 
   @SuppressWarnings({
-    "StreamResourceLeak", // A successful secure stream transfers ownership to the descriptor chain.
+    "MustBeClosedChecker", // A successful secure stream transfers ownership to the descriptor
+    // chain.
     "PMD.CloseResource"
   })
   private static SecureDirectoryStream<Path> secureDirectory(

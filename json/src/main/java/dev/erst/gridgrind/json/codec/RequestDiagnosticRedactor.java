@@ -112,9 +112,7 @@ public final class RequestDiagnosticRedactor {
   }
 
   private static Optional<String> requestPath(JsonNode context) {
-    JsonNode json = context.path("json");
-    JsonNode jsonPath = json.path("jsonPath");
-    return jsonPath.isTextual() ? Optional.of(jsonPath.textValue()) : Optional.empty();
+    return context.path("json").path("jsonPath").stringValueOpt();
   }
 
   private boolean isSecretRequestPath(Optional<String> requestPath) {
@@ -125,7 +123,7 @@ public final class RequestDiagnosticRedactor {
 
   private static boolean redactTextualProperty(ObjectNode object, String propertyName) {
     JsonNode value = object.get(propertyName);
-    if (value == null || !value.isTextual()) {
+    if (value == null || !value.isString()) {
       return false;
     }
     object.put(propertyName, REDACTED_VALUE);

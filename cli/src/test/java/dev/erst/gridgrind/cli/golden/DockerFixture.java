@@ -149,7 +149,7 @@ final class DockerFixture implements AutoCloseable {
                     60)));
     String buildx = "";
     for (var plugin : plugins)
-      if ("buildx".equals(plugin.path("Name").asText())) buildx = plugin.path("Path").asText();
+      if ("buildx".equals(plugin.path("Name").asString())) buildx = plugin.path("Path").asString();
     if (buildx.isBlank())
       throw new IllegalStateException("docker buildx must be installed for container verification");
     Path pluginDirectory = Files.createDirectories(config.resolve("cli-plugins"));
