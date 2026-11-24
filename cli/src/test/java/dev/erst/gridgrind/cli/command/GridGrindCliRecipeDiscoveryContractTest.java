@@ -39,8 +39,8 @@ class GridGrindCliRecipeDiscoveryContractTest extends GridGrindCliTestSupport {
   void printRecipeCatalogLookupReturnsTaskStarterDetailSurface() throws IOException {
     JsonNode output = runRecipeCatalogLookup("DASHBOARD");
 
-    assertEquals("DASHBOARD", output.path("id").asText());
-    assertEquals("TASK_STARTER", output.path("type").asText());
+    assertEquals("DASHBOARD", output.path("id").asString());
+    assertEquals("TASK_STARTER", output.path("type").asString());
     assertTrue(output.has("intentTags"), "task lookup must expose top-level intent tags");
     assertTrue(
         output.has("discoveryProfile"), "task lookup must expose discovery-profile metadata");
@@ -62,13 +62,13 @@ class GridGrindCliRecipeDiscoveryContractTest extends GridGrindCliTestSupport {
   void printRecipeCatalogLookupReturnsExampleSpecificDetailSurface() throws IOException {
     JsonNode output = runRecipeCatalogLookup("BUDGET");
 
-    assertEquals("BUDGET", output.path("id").asText());
-    assertEquals("EXAMPLE", output.path("type").asText());
+    assertEquals("BUDGET", output.path("id").asString());
+    assertEquals("EXAMPLE", output.path("type").asString());
     assertTrue(output.has("intentTags"), "example lookup must expose intent tags");
     assertTrue(
         output.has("requestProfile"),
         "example lookup must expose the exact runnable request profile");
-    assertEquals("NEW", output.path("requestProfile").path("sourceType").asText());
+    assertEquals("NEW", output.path("requestProfile").path("sourceType").asString());
     assertTrue(output.path("requestProfile").path("stepCount").asInt() > 0);
     assertTrue(output.path("requestProfile").path("mutationActionTypes").isArray());
   }
@@ -118,7 +118,7 @@ class GridGrindCliRecipeDiscoveryContractTest extends GridGrindCliTestSupport {
 
   private static JsonNode recipeWithView(JsonNode recipes, String view) {
     for (JsonNode recipe : recipes) {
-      if (view.equals(recipe.path("type").asText())) {
+      if (view.equals(recipe.path("type").asString())) {
         return recipe;
       }
     }

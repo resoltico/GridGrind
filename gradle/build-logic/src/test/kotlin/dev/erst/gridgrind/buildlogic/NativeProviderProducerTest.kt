@@ -87,7 +87,7 @@ class NativeProviderProducerTest {
         fun compiled(name: String) = classes.resolve("org/apache/poi/$name.class").apply { parentFile.mkdirs(); writeBytes(byteArrayOf(-54, -2, -70, -66, 0, 0, 0, 70, 0)) }
         compiled("Owned")
         val nested = compiled("Owned\$Nested")
-        val task = project.tasks.create("resources", AssembleNativeProviderResources::class.java)
+        val task = project.tasks.register("resources", AssembleNativeProviderResources::class.java).get()
         task.preparedSources.set(prepared); task.recipeDirectory.set(recipes); task.recipeFiles.from(recipes)
         task.classDirectories.from(classes); task.sourceArchives.from(emptyList<Any>())
         task.apacheLicense.set(license); task.projectLicense.set(license)

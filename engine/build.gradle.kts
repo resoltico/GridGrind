@@ -139,6 +139,7 @@ dependencies {
         }
     }
     api(project(":core"))
+    compileOnly(libs.errorprone.annotations)
     implementation(libs.jakarta.activation)
     implementation(libs.jakarta.xml.bind)
     implementation(libs.poi.ooxml)

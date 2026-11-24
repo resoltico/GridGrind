@@ -44,7 +44,7 @@ class PruneJarOutputsTaskTest {
 
   private PruneJarOutputsTask task(Path libraries) {
     var project = ProjectBuilder.builder().withProjectDir(projectDirectory.toFile()).build();
-    PruneJarOutputsTask task = project.getTasks().create("prune", PruneJarOutputsTask.class);
+    PruneJarOutputsTask task = project.getTasks().register("prune", PruneJarOutputsTask.class).get();
     task.getLibsDirectory().set(libraries.toFile());
     return task;
   }

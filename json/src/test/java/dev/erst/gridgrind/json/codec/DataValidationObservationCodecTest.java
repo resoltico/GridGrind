@@ -15,14 +15,14 @@ class DataValidationObservationCodecTest {
     var prompt = new DataValidationPromptReport("Select", "Choose a value", true);
     String promptJson = mapper.writeValueAsString(prompt);
     var promptTree = mapper.readTree(promptJson);
-    assertEquals("Select", promptTree.path("title").asText());
-    assertEquals("Choose a value", promptTree.path("text").asText());
+    assertEquals("Select", promptTree.path("title").asString());
+    assertEquals("Choose a value", promptTree.path("text").asString());
     assertEquals(prompt, mapper.readValue(promptJson, DataValidationPromptReport.class));
     var error =
         new DataValidationErrorAlertReport(
             ExcelDataValidationErrorStyle.STOP, "Invalid", "Try again", true);
     String errorJson = mapper.writeValueAsString(error);
-    assertEquals("Invalid", mapper.readTree(errorJson).path("title").asText());
+    assertEquals("Invalid", mapper.readTree(errorJson).path("title").asString());
     assertEquals(error, mapper.readValue(errorJson, DataValidationErrorAlertReport.class));
   }
 }

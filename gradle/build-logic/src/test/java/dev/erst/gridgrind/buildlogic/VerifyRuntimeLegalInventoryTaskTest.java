@@ -76,7 +76,7 @@ class VerifyRuntimeLegalInventoryTaskTest {
   private VerifyRuntimeLegalInventoryTask task(String name, Path artifact, Path notice) {
     var project = ProjectBuilder.builder().withProjectDir(projectDirectory.toFile()).build();
     VerifyRuntimeLegalInventoryTask task =
-        project.getTasks().create(name, VerifyRuntimeLegalInventoryTask.class);
+        project.getTasks().register(name, VerifyRuntimeLegalInventoryTask.class).get();
     task.getRuntimeArtifacts().from(artifact.toFile());
     task.getNoticeFile().set(notice.toFile());
     return task;

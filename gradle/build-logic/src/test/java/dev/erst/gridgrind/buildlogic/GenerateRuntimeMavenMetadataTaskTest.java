@@ -97,7 +97,7 @@ class GenerateRuntimeMavenMetadataTaskTest {
 
   private GenerateRuntimeMavenMetadataTask task(String name) {
     var project = ProjectBuilder.builder().withProjectDir(root.toFile()).build();
-    var task = project.getTasks().create(name, GenerateRuntimeMavenMetadataTask.class);
+    var task = project.getTasks().register(name, GenerateRuntimeMavenMetadataTask.class).get();
     task.getOutputDirectory().set(root.resolve(name + "-output").toFile());
     return task;
   }

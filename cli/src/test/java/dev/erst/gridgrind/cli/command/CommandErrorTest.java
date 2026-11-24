@@ -99,7 +99,7 @@ class CommandErrorTest {
                 CommandError.class));
     var mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
     var missingStatus = (tools.jackson.databind.node.ObjectNode) mapper.readTree(json);
-    assertEquals("REJECTED", missingStatus.remove("status").asText());
+    assertEquals("REJECTED", missingStatus.remove("status").asString());
     assertThrows(
         JacksonException.class,
         () ->

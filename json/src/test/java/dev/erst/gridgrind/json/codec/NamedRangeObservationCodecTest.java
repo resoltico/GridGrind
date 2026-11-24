@@ -20,8 +20,8 @@ class NamedRangeObservationCodecTest {
     var mapper = GridGrindJsonMapperSupport.WIRE_JSON_MAPPER;
     String wire = mapper.writerFor(NamedRangeReport.class).writeValueAsString(expected);
     var tree = mapper.readTree(wire);
-    assertEquals("stored[]", tree.path("scope").path("sheetName").asText());
-    assertEquals("", tree.path("refersToFormula").asText());
+    assertEquals("stored[]", tree.path("scope").path("sheetName").asString());
+    assertEquals("", tree.path("refersToFormula").asString());
     assertEquals(expected, mapper.readValue(wire, NamedRangeReport.class));
   }
 }

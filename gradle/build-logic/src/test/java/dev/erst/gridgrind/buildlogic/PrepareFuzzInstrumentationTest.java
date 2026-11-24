@@ -156,7 +156,7 @@ class PrepareFuzzInstrumentationTest {
   private PrepareFuzzInstrumentation task() throws Exception {
     var project = ProjectBuilder.builder().withProjectDir(directory.toFile()).build();
     var task =
-        project.getTasks().create("prepareInstrumentation", PrepareFuzzInstrumentation.class);
+        project.getTasks().register("prepareInstrumentation", PrepareFuzzInstrumentation.class).get();
     task.getUpstreamJar().set(upstreamJar().toFile());
     task.getAgentJar().set(directory.resolve("prepared.jar").toFile());
     return task;

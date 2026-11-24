@@ -16,6 +16,7 @@ import org.gradle.api.tasks.bundling.AbstractArchiveTask
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.jvm.toolchain.JavaToolchainService
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.getByType
@@ -43,6 +44,10 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 providers.gradleProperty("gridgrindJavaVersion").map(String::toInt).get()
             val gridgrindJavaTargetVersion =
                 providers.gradleProperty("gridgrindJavaTargetVersion").map(String::toInt).get()
+            val pmdJavaRuntime = extensions.getByType<JavaToolchainService>().launcherFor {
+                languageVersion.set(JavaLanguageVersion.of(gridgrindJavaVersion))
+            }.map { launcher -> launcher.metadata.installationPath.file("lib/jrt-fs.jar") }
+            dependencies.add("pmdAux", files(pmdJavaRuntime))
             val expectedArchiveNames = objects.listProperty(String::class.java)
             val pruneJarOutputs =
                 tasks.register<PruneJarOutputsTask>("pruneJarOutputs") { val pruneTask = this

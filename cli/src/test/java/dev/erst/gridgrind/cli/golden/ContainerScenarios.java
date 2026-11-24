@@ -40,23 +40,23 @@ final class ContainerScenarios {
       assertEquals("", result.stdout());
       String responseText = Files.readString(response, StandardCharsets.UTF_8);
       var document = GoldenSnapshots.JSON.readTree(responseText);
-      assertEquals("SUCCEEDED", document.path("status").asText());
-      if ("SAVE_AS".equals(plan.path("persistence").path("type").asText())) {
-        String output = plan.path("persistence").path("path").asText();
+      assertEquals("SUCCEEDED", document.path("status").asString());
+      if ("SAVE_AS".equals(plan.path("persistence").path("type").asString())) {
+        String output = plan.path("persistence").path("path").asString();
         assertTrue(Files.isRegularFile(requests.resolve(output)), output);
         assertFalse(
             Files.exists(workspace.resolve(output)), "Output must follow the request directory");
       }
       if ("create".equals(name)) {
-        assertEquals("VERBOSE", document.path("journal").path("level").asText());
+        assertEquals("VERBOSE", document.path("journal").path("level").asString());
         assertFalse(document.path("journal").has("events"));
         assertFalse(result.stderr().isBlank(), "VERBOSE progress must reach stderr");
         for (String line : result.stderr().lines().toList()) {
           var event = GoldenSnapshots.JSON.readTree(line);
           assertTrue(
-              List.of("STARTED", "SUCCEEDED", "FAILED").contains(event.path("status").asText()));
-          assertFalse(event.path("timestamp").asText().isBlank());
-          assertFalse(event.path("category").asText().isBlank());
+              List.of("STARTED", "SUCCEEDED", "FAILED").contains(event.path("status").asString()));
+          assertFalse(event.path("timestamp").asString().isBlank());
+          assertFalse(event.path("category").asString().isBlank());
           assertFalse(event.has("detail"));
         }
       } else {

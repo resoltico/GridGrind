@@ -38,12 +38,13 @@ class GridGrindJsonPersistenceEnvelopeTest {
     ObjectNode journal = (ObjectNode) responseTree.path("journal");
 
     assertEquals(1, rendered.split("\"persistence\":", -1).length - 1);
-    assertEquals("SAVE_AS", responseTree.path("persistence").path("type").asText());
+    assertEquals("SAVE_AS", responseTree.path("persistence").path("type").asString());
     assertEquals(
-        "PUBLISHED", responseTree.path("persistence").path("publication").path("status").asText());
+        "PUBLISHED",
+        responseTree.path("persistence").path("publication").path("status").asString());
     assertEquals(
         "/work/out/report.xlsx",
-        responseTree.path("persistence").path("publication").path("executionPath").asText());
+        responseTree.path("persistence").path("publication").path("executionPath").asString());
     assertFalse(journal.has("persistence"));
   }
 
@@ -75,12 +76,12 @@ class GridGrindJsonPersistenceEnvelopeTest {
     ObjectNode context = (ObjectNode) responseTree.path("problem").path("context");
 
     assertEquals(1, rendered.split("\"persistence\":", -1).length - 1);
-    assertEquals("SAVE_AS", responseTree.path("persistence").path("type").asText());
+    assertEquals("SAVE_AS", responseTree.path("persistence").path("type").asString());
     assertEquals(
         "NOT_ATTEMPTED",
-        responseTree.path("persistence").path("publication").path("status").asText());
+        responseTree.path("persistence").path("publication").path("status").asString());
     assertFalse(context.has("persistence"));
-    assertEquals("/work/out/report.xlsx", context.path("persistencePath").asText());
+    assertEquals("/work/out/report.xlsx", context.path("persistencePath").asString());
     assertFalse(context.has("sourceWorkbookPath"));
   }
 
@@ -110,10 +111,10 @@ class GridGrindJsonPersistenceEnvelopeTest {
         (ObjectNode) GridGrindJsonMapperSupport.JSON_MAPPER.readTree(responseBytes);
 
     assertEquals(1, rendered.split("\"persistence\":", -1).length - 1);
-    assertEquals("OVERWRITE", responseTree.path("persistence").path("type").asText());
+    assertEquals("OVERWRITE", responseTree.path("persistence").path("type").asString());
     assertEquals(
         "NOT_ATTEMPTED",
-        responseTree.path("persistence").path("publication").path("status").asText());
+        responseTree.path("persistence").path("publication").path("status").asString());
     assertFalse(responseTree.path("persistence").has("sourcePath"));
     assertEquals(persistFailure, GridGrindJson.readWorkbookResult(responseBytes));
   }
