@@ -2,7 +2,7 @@
 
 # All Java roles share this immutable JDK/Ubuntu base. The pin is checked against
 # release/container-runtime.properties by the image/source contract tests.
-FROM eclipse-temurin:27.0.1.0-jdk-resolute@sha256:653c788ead947fce2b3452b434f25f69adf9b60c9f41e4639b3592caa719f683 AS java-base
+FROM eclipse-temurin:27.0.1.1_4-jdk-resolute@sha256:a235abaaf912abaa4e806f6977009dc999ef04f1a75c9156626780884e807ee1 AS java-base
 
 COPY release/container-runtime.properties /usr/share/gridgrind/container-runtime.properties
 
